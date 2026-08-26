@@ -396,7 +396,8 @@ function generate_multipath_outbound(node) {
 		max_reorder_bytes: strToInt(node.multipath_max_reorder_bytes),
 		leg1_replay_bytes: strToInt(node.multipath_leg1_replay_bytes),
 		leg1_replay_timeout: strToTime(node.multipath_leg1_replay_timeout),
-		handshake_timeout: strToTime(node.multipath_handshake_timeout)
+		handshake_timeout: strToTime(node.multipath_handshake_timeout),
+		status_file: RUN_DIR + '/multipath-status/' + node['.name'] + '.json'
 	};
 }
 

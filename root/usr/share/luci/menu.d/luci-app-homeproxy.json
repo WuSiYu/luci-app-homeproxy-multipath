@@ -36,10 +36,18 @@
 	},
 	"admin/services/homeproxy/status": {
 		"title": "Service Status",
-		"order": 30,
+		"order": 40,
 		"action": {
 			"type": "view",
 			"path": "homeproxy/status"
+		}
+	},
+	"admin/services/homeproxy/multipath": {
+		"title": "Multipath Status",
+		"order": 30,
+		"action": {
+			"type": "view",
+			"path": "homeproxy/multipath"
 		}
 	}
 }

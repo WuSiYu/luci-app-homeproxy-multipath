@@ -7,7 +7,7 @@
 
 'use strict';
 
-import { access, error, lstat, open, popen, readfile, writefile } from 'fs';
+import { access, error, glob, lstat, open, popen, readfile, writefile } from 'fs';
 
 /* Kanged from ucode/luci */
 function shellquote(s) {
@@ -184,6 +184,30 @@ const methods = {
 				content = replace(content, /^[^\n]*\n/, '');
 
 			return { content };
+		}
+	},
+
+	multipath_status: {
+		call: function() {
+			let nodes = [];
+			for (let file in (glob(`${RUN_DIR}/multipath-status/*.json`) || [])) {
+				const filestat = lstat(file);
+				if (!filestat || filestat.type !== 'file' || filestat.size <= 0 || filestat.size > 1024 * 1024)
+					continue;
+
+				let document;
+				try {
+					document = json(readfile(file));
+				} catch (e) {
+					continue;
+				}
+				if (type(document) !== 'object' || document.schema_version !== 1 || type(document.node) !== 'object')
+					continue;
+
+				push(nodes, document);
+			}
+
+			return { nodes };
 		}
 	},
 
