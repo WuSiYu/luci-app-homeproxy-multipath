@@ -16,6 +16,8 @@ const callMultipathStatus = rpc.declare({
 	expect: { '': {} }
 });
 
+const sectionState = new Map();
+
 const css = `
 .mp-page {
 	--mp-border: #d7dce2;
@@ -35,7 +37,7 @@ const css = `
 	align-items: end;
 	justify-content: space-between;
 	gap: 16px;
-	margin: 0 0 14px;
+	margin: 12px 0 14px;
 }
 .mp-toolbar h2 {
 	margin: 0 0 3px;
@@ -160,11 +162,32 @@ const css = `
 }
 .mp-rx { color: var(--mp-rx); }
 .mp-tx { color: var(--mp-tx); }
+.mp-section {
+	margin-top: 10px;
+	min-width: 0;
+}
 .mp-section-title {
 	font-size: .78rem;
 	font-weight: 650;
-	margin: 16px 0 7px;
+	margin: 0;
+	padding: 7px 2px;
 	color: #363d45;
+	cursor: pointer;
+	user-select: none;
+	border-bottom: 1px solid #edf0f2;
+}
+.mp-section-title::marker {
+	color: var(--mp-muted);
+}
+.mp-section-title:hover {
+	color: #111820;
+}
+.mp-section-title:focus-visible {
+	outline: 2px solid var(--mp-rx);
+	outline-offset: 2px;
+}
+.mp-section-content {
+	min-width: 0;
 }
 .mp-traffic-row,
 .mp-mode-row {
@@ -346,7 +369,8 @@ const css = `
 		color: #edf1f5;
 	}
 	.mp-panel { box-shadow: none; }
-	.mp-section-title { color: #e0e5ea; }
+	.mp-section-title { color: #e0e5ea; border-color: #3b434c; }
+	.mp-section-title:hover { color: #fff; }
 	.mp-traffic-row, .mp-mode-row, .mp-params dt, .mp-params dd, .mp-flow-table th, .mp-flow-table td { border-color: #3b434c; }
 	.mp-state-good { background: #17351f; }
 	.mp-state-warn, .mp-notice { background: #3b2d15; }
@@ -435,6 +459,18 @@ function renderParameters(entries) {
 	return E('dl', { 'class': 'mp-params' }, children);
 }
 
+function renderCollapsible(key, title, content) {
+	const open = sectionState.has(key) ? sectionState.get(key) : true;
+	return E('details', {
+		'class': 'mp-section',
+		'open': open ? '' : null,
+		'toggle': (event) => sectionState.set(key, event.currentTarget.open)
+	}, [
+		E('summary', { 'class': 'mp-section-title' }, [ title ]),
+		E('div', { 'class': 'mp-section-content' }, content)
+	]);
+}
+
 function activationDescription(activation) {
 	if (!activation)
 		return '-';
@@ -473,44 +509,48 @@ function renderAggregate(node, stale) {
 			renderMetric(_('Upload'), formatRate(current.tx_bytes_per_second), 'mp-tx'),
 			renderMetric(_('Cumulative traffic'), formatBytes(number(cumulative.rx_bytes) + number(cumulative.tx_bytes)))
 		]),
-		E('div', { 'class': 'mp-section-title' }, [ _('Traffic') ]),
-		E('div', { 'class': 'mp-traffic-row' }, [
-			E('span', {}, [ _('Current') ]),
-			E('strong', { 'class': 'mp-rx' }, [ _('RX %s').format(formatRate(current.rx_bytes_per_second)) ]),
-			E('strong', { 'class': 'mp-tx' }, [ _('TX %s').format(formatRate(current.tx_bytes_per_second)) ])
+		renderCollapsible('aggregate:' + node.tag + ':traffic', _('Traffic'), [
+			E('div', { 'class': 'mp-traffic-row' }, [
+				E('span', {}, [ _('Current') ]),
+				E('strong', { 'class': 'mp-rx' }, [ _('RX %s').format(formatRate(current.rx_bytes_per_second)) ]),
+				E('strong', { 'class': 'mp-tx' }, [ _('TX %s').format(formatRate(current.tx_bytes_per_second)) ])
+			]),
+			E('div', { 'class': 'mp-traffic-row' }, [
+				E('span', {}, [ _('Since process start') ]),
+				E('strong', { 'class': 'mp-rx' }, [ _('RX %s').format(formatBytes(cumulative.rx_bytes)) ]),
+				E('strong', { 'class': 'mp-tx' }, [ _('TX %s').format(formatBytes(cumulative.tx_bytes)) ])
+			])
 		]),
-		E('div', { 'class': 'mp-traffic-row' }, [
-			E('span', {}, [ _('Since process start') ]),
-			E('strong', { 'class': 'mp-rx' }, [ _('RX %s').format(formatBytes(cumulative.rx_bytes)) ]),
-			E('strong', { 'class': 'mp-tx' }, [ _('TX %s').format(formatBytes(cumulative.tx_bytes)) ])
+		renderCollapsible('aggregate:' + node.tag + ':state', _('Aggregation state'), [
+			E('div', { 'class': 'mp-mode-row' }, [
+				E('span', {}, [ _('Preferred only'), E('strong', {}, [ String(number(logical.preferred_only_connections)) ]) ]),
+				E('span', {}, [ _('TX aggregating'), E('strong', {}, [ String(number(logical.tx_aggregating_connections)) ]) ]),
+				E('span', {}, [ _('RX aggregation observed'), E('strong', {}, [ String(number(logical.rx_aggregating_connections)) ]) ]),
+				E('span', {}, [ _('Booster degraded'), E('strong', {}, [ String(number(logical.booster_degraded_connections)) ]) ])
+			])
 		]),
-		E('div', { 'class': 'mp-section-title' }, [ _('Aggregation state') ]),
-		E('div', { 'class': 'mp-mode-row' }, [
-			E('span', {}, [ _('Preferred only'), E('strong', {}, [ String(number(logical.preferred_only_connections)) ]) ]),
-			E('span', {}, [ _('TX aggregating'), E('strong', {}, [ String(number(logical.tx_aggregating_connections)) ]) ]),
-			E('span', {}, [ _('RX aggregation observed'), E('strong', {}, [ String(number(logical.rx_aggregating_connections)) ]) ]),
-			E('span', {}, [ _('Booster degraded'), E('strong', {}, [ String(number(logical.booster_degraded_connections)) ]) ])
+		renderCollapsible('aggregate:' + node.tag + ':parameters', _('Effective multipath parameters'), [
+			renderParameters([
+				[ _('Aggregation server'), node.aggregation_server || '-' ],
+				[ _('UDP outbound'), displayTag(node.udp_outbound) ],
+				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled') ],
+				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : '-' ],
+				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : '-' ],
+				[ _('Activation window'), formatDuration(parameters.activation_window_ms) ],
+				[ _('Chunk size'), formatBytes(parameters.chunk_size) ],
+				[ _('Queue'), '%d frames · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)) ],
+				[ _('Maximum reorder buffer'), '%d frames · %s'.format(number(parameters.max_reorder_frames), formatBytes(parameters.max_reorder_bytes)) ],
+				[ _('Booster replay'), '%s · %s'.format(formatBytes(parameters.leg1_replay_bytes), formatDuration(parameters.leg1_replay_timeout_ms)) ],
+				[ _('Handshake timeout'), formatDuration(parameters.handshake_timeout_ms) ],
+				[ _('Last activation'), activationDescription(logical.last_activation) ]
+			])
 		]),
-		E('div', { 'class': 'mp-section-title' }, [ _('Effective multipath parameters') ]),
-		renderParameters([
-			[ _('Aggregation server'), node.aggregation_server || '-' ],
-			[ _('UDP outbound'), displayTag(node.udp_outbound) ],
-			[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled') ],
-			[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : '-' ],
-			[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : '-' ],
-			[ _('Activation window'), formatDuration(parameters.activation_window_ms) ],
-			[ _('Chunk size'), formatBytes(parameters.chunk_size) ],
-			[ _('Queue'), '%d frames · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)) ],
-			[ _('Maximum reorder buffer'), '%d frames · %s'.format(number(parameters.max_reorder_frames), formatBytes(parameters.max_reorder_bytes)) ],
-			[ _('Booster replay'), '%s · %s'.format(formatBytes(parameters.leg1_replay_bytes), formatDuration(parameters.leg1_replay_timeout_ms)) ],
-			[ _('Handshake timeout'), formatDuration(parameters.handshake_timeout_ms) ],
-			[ _('Last activation'), activationDescription(logical.last_activation) ]
-		]),
-		E('div', { 'class': 'mp-section-title' }, [ _('Live buffers') ]),
-		renderParameters([
-			[ _('Replay pending'), formatBytes(logical.replay_bytes) ],
-			[ _('Reorder buffered'), '%s · %d frames'.format(formatBytes(logical.reorder_bytes), number(logical.reorder_frames)) ],
-			[ _('Connections since start'), String(number(logical.connections_total)) ]
+		renderCollapsible('aggregate:' + node.tag + ':buffers', _('Live buffers'), [
+			renderParameters([
+				[ _('Replay pending'), formatBytes(logical.replay_bytes) ],
+				[ _('Reorder buffered'), '%s · %d frames'.format(formatBytes(logical.reorder_bytes), number(logical.reorder_frames)) ],
+				[ _('Connections since start'), String(number(logical.connections_total)) ]
+			])
 		])
 	]);
 }
@@ -569,24 +609,26 @@ function renderLeg(leg, stale) {
 			E('span', {}, [ _('Connecting'), E('strong', {}, [ String(number(leg.connecting_connections)) ]) ]),
 			E('span', {}, [ _('Retrying'), E('strong', {}, [ String(number(leg.retrying_connections)) ]) ])
 		]),
-		E('div', { 'class': 'mp-section-title' }, [ _('Leg parameters and counters') ]),
-		renderParameters([
-			[ _('Local TX bandwidth'), bandwidth ? bandwidth + ' Mbps' : _('Automatic') ],
-			[ _('Local TX share'), number(leg.tx_share_percent).toFixed(1) + '%' ],
-			[ _('Scheduler weight'), String(number(leg.tx_weight)) ],
-			[ _('Queue backlog'), '%s / %s'.format(formatBytes(leg.backlog_bytes), formatBytes(queueCapacity)) ],
-			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
-			[ _('Join count'), String(number(leg.join_count)) ],
-			[ _('Connection attempts'), String(number(leg.attempt_count)) ]
+		renderCollapsible('leg:' + leg.id + ':' + leg.tag + ':parameters', _('Leg parameters and counters'), [
+			renderParameters([
+				[ _('Local TX bandwidth'), bandwidth ? bandwidth + ' Mbps' : _('Automatic') ],
+				[ _('Local TX share'), number(leg.tx_share_percent).toFixed(1) + '%' ],
+				[ _('Scheduler weight'), String(number(leg.tx_weight)) ],
+				[ _('Queue backlog'), '%s / %s'.format(formatBytes(leg.backlog_bytes), formatBytes(queueCapacity)) ],
+				[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
+				[ _('Join count'), String(number(leg.join_count)) ],
+				[ _('Connection attempts'), String(number(leg.attempt_count)) ]
+			]),
+			E('div', { 'class': 'mp-meter', 'title': _('Queue utilization: %s').format(queueRatio.toFixed(1) + '%') },
+				E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' }))
 		]),
-		E('div', { 'class': 'mp-meter', 'title': _('Queue utilization: %s').format(queueRatio.toFixed(1) + '%') },
-			E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' })),
 		leg.last_error ? E('div', { 'class': 'mp-error' }, [
 			_('Last error: %s').format(leg.last_error),
 			leg.last_error_at ? ' · ' + formatTime(leg.last_error_at) : ''
 		]) : '',
-		E('div', { 'class': 'mp-section-title' }, [ _('Top 10 flows by current speed') ]),
-		renderFlows(leg.top_flows)
+		renderCollapsible('leg:' + leg.id + ':' + leg.tag + ':flows', _('Top 10 flows by current speed'), [
+			renderFlows(leg.top_flows)
+		])
 	]);
 }
 
