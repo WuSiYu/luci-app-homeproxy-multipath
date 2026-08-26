@@ -400,6 +400,59 @@ function generate_multipath_outbound(node) {
 	};
 }
 
+function get_outbound(cfg) {
+	if (isEmpty(cfg))
+		return null;
+
+	if (type(cfg) === 'array') {
+		if ('any-out' in cfg)
+			return 'any';
+
+		let outbounds = [];
+		for (let i in cfg)
+			push(outbounds, get_outbound(i));
+		return outbounds;
+	} else {
+		switch (cfg) {
+		case 'block-out':
+			return null;
+		case 'direct-out':
+			return cfg;
+		default:
+			const node = uci.get(uciconfig, cfg, 'node');
+			if (isEmpty(node))
+				die(sprintf("%s's node is missing, please check your configuration.", cfg));
+			else if (node === 'urltest')
+				return 'cfg-' + cfg + '-out';
+			else
+				return 'cfg-' + node + '-out';
+		}
+	}
+}
+
+function get_resolver(cfg) {
+	if (isEmpty(cfg))
+		return null;
+
+	switch (cfg) {
+	case 'default-dns':
+	case 'system-dns':
+		return cfg;
+	default:
+		return 'cfg-' + cfg + '-dns';
+	}
+}
+
+function get_ruleset(cfg) {
+	if (isEmpty(cfg))
+		return null;
+
+	let rules = [];
+	for (let i in cfg)
+		push(rules, isEmpty(i) ? null : 'cfg-' + i + '-rule');
+	return rules;
+}
+
 let generated_node_tags = {}, generating_nodes = {};
 
 function add_node(node_name, tag, dial_options) {
@@ -472,59 +525,6 @@ function add_urltest(tag, nodes, options) {
 
 	for (let node in nodes)
 		add_node(node);
-}
-
-function get_outbound(cfg) {
-	if (isEmpty(cfg))
-		return null;
-
-	if (type(cfg) === 'array') {
-		if ('any-out' in cfg)
-			return 'any';
-
-		let outbounds = [];
-		for (let i in cfg)
-			push(outbounds, get_outbound(i));
-		return outbounds;
-	} else {
-		switch (cfg) {
-		case 'block-out':
-			return null;
-		case 'direct-out':
-			return cfg;
-		default:
-			const node = uci.get(uciconfig, cfg, 'node');
-			if (isEmpty(node))
-				die(sprintf("%s's node is missing, please check your configuration.", cfg));
-			else if (node === 'urltest')
-				return 'cfg-' + cfg + '-out';
-			else
-				return 'cfg-' + node + '-out';
-		}
-	}
-}
-
-function get_resolver(cfg) {
-	if (isEmpty(cfg))
-		return null;
-
-	switch (cfg) {
-	case 'default-dns':
-	case 'system-dns':
-		return cfg;
-	default:
-		return 'cfg-' + cfg + '-dns';
-	}
-}
-
-function get_ruleset(cfg) {
-	if (isEmpty(cfg))
-		return null;
-
-	let rules = [];
-	for (let i in cfg)
-		push(rules, isEmpty(i) ? null : 'cfg-' + i + '-rule');
-	return rules;
 }
 /* Config helper end */
 
