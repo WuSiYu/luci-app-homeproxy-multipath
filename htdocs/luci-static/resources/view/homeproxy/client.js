@@ -1587,7 +1587,7 @@ return view.extend({
 
 		o = s.taboption('dashboard', form.Value, 'dashboard_url', _('Dashboard URL'),
 			_('URL to download dashboard files. Leave empty to use Zashboard by default.'));
-		o.placeholder = 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn.zip';
+		o.placeholder = 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip';
 		o.depends('dashboard_enabled', '1');
 
 		o = s.taboption('dashboard', form.ListValue, 'dashboard_detour', _('Download outbound'),

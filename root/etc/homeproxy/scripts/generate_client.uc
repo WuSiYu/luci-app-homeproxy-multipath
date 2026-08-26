@@ -1033,7 +1033,7 @@ if (dashboard_enabled === '1') {
 		secret: !isEmpty(dashboard_secret) ? dashboard_secret : null,
 		external_ui: RUN_DIR + '/ui',
 		external_ui_download_url: !isEmpty(dashboard_url) ? dashboard_url :
-			'https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn.zip',
+			'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip',
 		external_ui_download_detour: download_detour,
 	};
 }
