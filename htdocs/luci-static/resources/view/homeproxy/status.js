@@ -47,13 +47,14 @@ function getConnStat(o, site) {
 
 				connectionChecks++;
 				return callConnStat(site).then((ret) => {
-					const latency = Number.isInteger(ret.latency_ms) ? ' (%d ms)'.format(ret.latency_ms) : '';
+					const latency = Number.isInteger(ret.latency_ms) ? ' (%d ms)'.format(ret.latency_ms) : '',
+					      detail = ret.error ? ': ' + ret.error : '';
 					if (ret.result) {
 						ele.style.setProperty('color', 'green');
 						ele.textContent = _('passed') + latency;
 					} else {
 						ele.style.setProperty('color', 'red');
-						ele.textContent = _('failed') + latency;
+						ele.textContent = _('failed') + latency + detail;
 					}
 				}).catch((err) => {
 					ele.style.setProperty('color', 'red');

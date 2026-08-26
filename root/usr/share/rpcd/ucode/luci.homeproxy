@@ -138,14 +138,22 @@ const methods = {
 			}
 
 			const started = clock(true) || clock();
-			const result = (system(`/usr/bin/wget --spider -qT3 ${url} 2>"/dev/null"`, 3100) === 0);
+			const exit_code = system(
+				`/usr/bin/wget -4 --spider --quiet --timeout=5 ${shellquote(url)} 2>"/dev/null"`,
+				7000
+			);
 			const finished = clock(true) || clock();
 			let latency_ms = (finished[0] - started[0]) * 1000 +
 				int((finished[1] - started[1]) / 1000000);
 			if (latency_ms < 0)
 				latency_ms = 0;
 
-			return { result, latency_ms };
+			return {
+				result: exit_code === 0,
+				latency_ms,
+				error: exit_code === 0 ? null :
+					(exit_code === -9 ? 'probe timeout' : sprintf('wget exited with status %d', exit_code))
+			};
 		}
 	},
 
