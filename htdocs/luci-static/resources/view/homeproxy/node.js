@@ -390,6 +390,33 @@ function parseShareLink(uri, features) {
 
 function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	let s = section, o;
+	const loadMultipathNodes = function(section_id) {
+		delete this.keylist;
+		delete this.vallist;
+
+		uci.sections(data[0], 'node', (res) => {
+			if (res['.name'] !== section_id && res.type !== 'multipath')
+				this.value(res['.name'], res.label || res['.name']);
+		});
+
+		return this.super('load', section_id);
+	};
+	const validateMultipathLeg = function(section_id, value) {
+		if (!value)
+			return _('Expecting: %s').format(_('non-empty value'));
+
+		const other_option = (this.option === 'multipath_preferred') ? 'multipath_secondary' : 'multipath_preferred';
+		if (value === this.section.formvalue(section_id, other_option))
+			return _('The two multipath legs must use different nodes.');
+
+		return true;
+	};
+	const validateMemorySize = function(section_id, value) {
+		if (section_id && value && !/^\d+\s*(?:[kmgtpe]i?b|b)?$/i.test(value.trim()))
+			return _('Expecting: %s').format(_('valid memory size'));
+
+		return true;
+	};
 	s.rowcolors = true;
 	s.sortable = true;
 	s.nodescriptions = true;
@@ -426,6 +453,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 	o = s.option(form.ListValue, 'type', _('Type'));
 	o.value('direct', _('Direct'));
+	o.value('multipath', _('Multipath'));
 	o.value('anytls', _('AnyTLS'));
 	o.value('http', _('HTTP'));
 	if (features.with_quic) {
@@ -447,12 +475,12 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 	o = s.option(form.Value, 'address', _('Address'));
 	o.datatype = 'host';
-	o.depends({'type': 'direct', '!reverse': true});
+	o.depends({'type': /^(?!direct$|multipath$).+/});
 	o.rmempty = false;
 
 	o = s.option(form.Value, 'port', _('Port'));
 	o.datatype = 'port';
-	o.depends({'type': 'direct', '!reverse': true});
+	o.depends({'type': /^(?!direct$|multipath$).+/});
 	o.rmempty = false;
 
 	o = s.option(form.Value, 'username', _('Username'));
@@ -501,6 +529,110 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.value('2', _('v2'));
 	o.depends('type', 'direct');
 	o.modalonly = true;
+
+	/* Multipath config start */
+	o = s.option(form.ListValue, 'multipath_preferred', _('Preferred leg'),
+		_('Stable low-latency node used before aggregation is activated.'));
+	o.load = loadMultipathNodes;
+	o.validate = validateMultipathLeg;
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.ListValue, 'multipath_secondary', _('Secondary leg'),
+		_('Additional node activated when the flow reaches the configured threshold.'));
+	o.load = loadMultipathNodes;
+	o.validate = validateMultipathLeg;
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.ListValue, 'multipath_udp_outbound', _('UDP outbound'));
+	o.value('preferred', _('Preferred leg'));
+	o.value('secondary', _('Secondary leg'));
+	o.default = 'preferred';
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_server', _('Aggregation server'));
+	o.datatype = 'host';
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_server_port', _('Aggregation server port'));
+	o.datatype = 'port';
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_threshold_mbps', _('Activation threshold'),
+		_('Activate the secondary leg when the preferred leg reaches this rate, in Mbps.'));
+	o.datatype = 'uinteger';
+	o.default = '120';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Activation after bytes'),
+		_('Do not activate the secondary leg before this many bytes have been sent.'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_window', _('Activation window'),
+		_('Rate measurement window in seconds.'));
+	o.datatype = 'uinteger';
+	o.default = '1';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_chunk_size', _('Chunk size'), _('Bytes per multipath data frame.'));
+	o.datatype = 'uinteger';
+	o.default = '65536';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_queue_frames', _('Queue frames'));
+	o.datatype = 'uinteger';
+	o.default = '256';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_bandwidth_leg0_mbps', _('Preferred leg bandwidth'), _('Mbps.'));
+	o.datatype = 'uinteger';
+	o.default = '160';
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_bandwidth_leg1_mbps', _('Secondary leg bandwidth'), _('Mbps.'));
+	o.datatype = 'uinteger';
+	o.default = '700';
+	o.depends('type', 'multipath');
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_max_reorder_bytes', _('Maximum reorder bytes'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_leg1_replay_bytes', _('Secondary leg replay bytes'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_leg1_replay_timeout', _('Secondary leg replay timeout'), _('In seconds.'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_handshake_timeout', _('Handshake timeout'), _('In seconds.'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+	/* Multipath config end */
 
 	/* AnyTLS config start */
 	o = s.option(form.Value, 'anytls_idle_session_check_interval', _('Idle session check interval'),
@@ -605,6 +737,30 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o = s.option(form.Flag, 'hysteria_disable_mtu_discovery', _('Disable Path MTU discovery'),
 		_('Disables Path MTU Discovery (RFC 8899). Packets will then be at most 1252 (IPv4) / 1232 (IPv6) bytes in size.'));
 	o.depends('type', 'hysteria');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'quic_keep_alive_period', _('QUIC keep-alive interval'),
+		_('Interval between QUIC keep-alive probes, in seconds.'));
+	o.datatype = 'uinteger';
+	o.depends('type', 'hysteria');
+	o.depends('type', 'hysteria2');
+	o.depends('type', 'tuic');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'quic_stream_receive_window', _('QUIC stream receive window'),
+		_('Accepts a memory size such as <code>128 MB</code>.'));
+	o.validate = validateMemorySize;
+	o.depends('type', 'hysteria');
+	o.depends('type', 'hysteria2');
+	o.depends('type', 'tuic');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'quic_connection_receive_window', _('QUIC connection receive window'),
+		_('Accepts a memory size such as <code>128 MB</code>.'));
+	o.validate = validateMemorySize;
+	o.depends('type', 'hysteria');
+	o.depends('type', 'hysteria2');
+	o.depends('type', 'tuic');
 	o.modalonly = true;
 	/* Hysteria (2) config end */
 
@@ -1158,6 +1314,13 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	/* TLS config end */
 
 	/* Extra settings start */
+	o = s.option(widgets.DeviceSelect, 'bind_interface', _('Bind interface'),
+		_('The network interface used to dial this node.'));
+	o.multiple = false;
+	o.noaliases = true;
+	o.depends({'type': 'multipath', '!reverse': true});
+	o.modalonly = true;
+
 	o = s.option(form.Flag, 'tcp_fast_open', _('TCP fast open'));
 	o.modalonly = true;
 

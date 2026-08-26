@@ -223,6 +223,18 @@ uci.foreach(uciconfig, ucinode, (cfg) => {
 		uci.delete(uciconfig, cfg['.name'], 'wireguard_gso');
 });
 
+/* DNS cache options changed in sb 1.14 */
+if (!isEmpty(uci.get(uciconfig, ucidns, 'independent_cache')))
+	uci.delete(uciconfig, ucidns, 'independent_cache');
+
+const store_rdrc = uci.get(uciconfig, ucidns, 'cache_file_store_rdrc');
+if (!isEmpty(store_rdrc) && isEmpty(uci.get(uciconfig, ucidns, 'cache_file_store_dns')))
+	uci.set(uciconfig, ucidns, 'cache_file_store_dns', store_rdrc);
+if (!isEmpty(store_rdrc))
+	uci.delete(uciconfig, ucidns, 'cache_file_store_rdrc');
+if (!isEmpty(uci.get(uciconfig, ucidns, 'cache_file_rdrc_timeout')))
+	uci.delete(uciconfig, ucidns, 'cache_file_rdrc_timeout');
+
 /* routing rules options */
 uci.foreach(uciconfig, uciroutingrule, (cfg) => {
 	/* rule_set_ipcidr_match_source was renamed in sb 1.10 */

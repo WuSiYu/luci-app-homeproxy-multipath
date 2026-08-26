@@ -3119,3 +3119,126 @@ msgstr "有效端口值"
 #: htdocs/luci-static/resources/homeproxy.js:328
 msgid "valid uuid"
 msgstr "有效 uuid"
+
+msgid "Accepts a memory size such as <code>128 MB</code>."
+msgstr "接受内存大小格式，例如 <code>128 MB</code>。"
+
+msgid "Evaluate"
+msgstr "评估"
+
+msgid "Evaluate tag"
+msgstr "评估标签"
+
+msgid "Interval between QUIC keep-alive probes, in seconds."
+msgstr "QUIC 保活探测间隔，单位为秒。"
+
+msgid "Latest untagged response"
+msgstr "最近的未标记响应"
+
+msgid "Match response"
+msgstr "匹配响应"
+
+msgid "Optional tag used by later DNS rules to reference this evaluated response."
+msgstr "可选标签，供后续 DNS 规则引用此评估响应。"
+
+msgid "QUIC keep-alive interval"
+msgstr "QUIC 保活间隔"
+
+msgid "Respond"
+msgstr "响应"
+
+msgid "Use <code>true</code> for the latest untagged evaluate result, or enter an evaluate tag."
+msgstr "使用 <code>true</code> 引用最近的未标记评估结果，或填写评估标签。"
+
+msgid "valid memory size"
+msgstr "有效内存大小"
+
+msgid "Activate the secondary leg when the preferred leg reaches this rate, in Mbps."
+msgstr "首选链路速率达到此值时启用辅助链路，单位为 Mbps。"
+
+msgid "Activation after bytes"
+msgstr "启用前字节数"
+
+msgid "Activation threshold"
+msgstr "聚合启用阈值"
+
+msgid "Activation window"
+msgstr "启用检测窗口"
+
+msgid "Additional node activated when the flow reaches the configured threshold."
+msgstr "流量达到设定阈值时启用的附加节点。"
+
+msgid "Aggregation server"
+msgstr "聚合服务端"
+
+msgid "Aggregation server port"
+msgstr "聚合服务端端口"
+
+msgid "Bytes per multipath data frame."
+msgstr "每个多路径数据帧的字节数。"
+
+msgid "Chunk size"
+msgstr "分块大小"
+
+msgid "Do not activate the secondary leg before this many bytes have been sent."
+msgstr "发送数据量达到此值前不启用辅助链路。"
+
+msgid "Enable traffic sniffing"
+msgstr "启用流量嗅探"
+
+msgid "Handshake timeout"
+msgstr "握手超时"
+
+msgid "Maximum reorder bytes"
+msgstr "最大重排字节数"
+
+msgid "Mbps."
+msgstr "单位为 Mbps。"
+
+msgid "Multipath"
+msgstr "多路径"
+
+msgid "Persist the DNS cache in the cache file."
+msgstr "将 DNS 缓存持久化到缓存文件中。"
+
+msgid "Preferred leg"
+msgstr "首选链路"
+
+msgid "Preferred leg bandwidth"
+msgstr "首选链路带宽"
+
+msgid "Queue frames"
+msgstr "队列帧数"
+
+msgid "Rate measurement window in seconds."
+msgstr "速率测量窗口，单位为秒。"
+
+msgid "Secondary leg"
+msgstr "辅助链路"
+
+msgid "Secondary leg bandwidth"
+msgstr "辅助链路带宽"
+
+msgid "Secondary leg replay bytes"
+msgstr "辅助链路重放字节数"
+
+msgid "Secondary leg replay timeout"
+msgstr "辅助链路重放超时"
+
+msgid "Sniff the application protocol and domain for routing."
+msgstr "嗅探应用协议和域名以供路由匹配。"
+
+msgid "Stable low-latency node used before aggregation is activated."
+msgstr "启用聚合前使用的稳定低延迟节点。"
+
+msgid "Store DNS cache"
+msgstr "保存 DNS 缓存"
+
+msgid "The network interface used to dial this node."
+msgstr "拨号到此节点时使用的网络接口。"
+
+msgid "The two multipath legs must use different nodes."
+msgstr "两条多路径链路必须使用不同节点。"
+
+msgid "UDP outbound"
+msgstr "UDP 出站"

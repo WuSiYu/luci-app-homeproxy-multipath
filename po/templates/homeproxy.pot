@@ -3049,3 +3049,126 @@ msgstr ""
 #: htdocs/luci-static/resources/homeproxy.js:328
 msgid "valid uuid"
 msgstr ""
+
+msgid "Accepts a memory size such as <code>128 MB</code>."
+msgstr ""
+
+msgid "Evaluate"
+msgstr ""
+
+msgid "Evaluate tag"
+msgstr ""
+
+msgid "Interval between QUIC keep-alive probes, in seconds."
+msgstr ""
+
+msgid "Latest untagged response"
+msgstr ""
+
+msgid "Match response"
+msgstr ""
+
+msgid "Optional tag used by later DNS rules to reference this evaluated response."
+msgstr ""
+
+msgid "QUIC keep-alive interval"
+msgstr ""
+
+msgid "Respond"
+msgstr ""
+
+msgid "Use <code>true</code> for the latest untagged evaluate result, or enter an evaluate tag."
+msgstr ""
+
+msgid "valid memory size"
+msgstr ""
+
+msgid "Activate the secondary leg when the preferred leg reaches this rate, in Mbps."
+msgstr ""
+
+msgid "Activation after bytes"
+msgstr ""
+
+msgid "Activation threshold"
+msgstr ""
+
+msgid "Activation window"
+msgstr ""
+
+msgid "Additional node activated when the flow reaches the configured threshold."
+msgstr ""
+
+msgid "Aggregation server"
+msgstr ""
+
+msgid "Aggregation server port"
+msgstr ""
+
+msgid "Bytes per multipath data frame."
+msgstr ""
+
+msgid "Chunk size"
+msgstr ""
+
+msgid "Do not activate the secondary leg before this many bytes have been sent."
+msgstr ""
+
+msgid "Enable traffic sniffing"
+msgstr ""
+
+msgid "Handshake timeout"
+msgstr ""
+
+msgid "Maximum reorder bytes"
+msgstr ""
+
+msgid "Mbps."
+msgstr ""
+
+msgid "Multipath"
+msgstr ""
+
+msgid "Persist the DNS cache in the cache file."
+msgstr ""
+
+msgid "Preferred leg"
+msgstr ""
+
+msgid "Preferred leg bandwidth"
+msgstr ""
+
+msgid "Queue frames"
+msgstr ""
+
+msgid "Rate measurement window in seconds."
+msgstr ""
+
+msgid "Secondary leg"
+msgstr ""
+
+msgid "Secondary leg bandwidth"
+msgstr ""
+
+msgid "Secondary leg replay bytes"
+msgstr ""
+
+msgid "Secondary leg replay timeout"
+msgstr ""
+
+msgid "Sniff the application protocol and domain for routing."
+msgstr ""
+
+msgid "Stable low-latency node used before aggregation is activated."
+msgstr ""
+
+msgid "Store DNS cache"
+msgstr ""
+
+msgid "The network interface used to dial this node."
+msgstr ""
+
+msgid "The two multipath legs must use different nodes."
+msgstr ""
+
+msgid "UDP outbound"
+msgstr ""

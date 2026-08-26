@@ -90,8 +90,10 @@ return view.extend({
 		/* Cache all configured proxy nodes, they will be called multiple times */
 		let proxy_nodes = {};
 		uci.sections(data[0], 'node', (res) => {
-			let nodeaddr = ((res.type === 'direct') ? res.override_address : res.address) || '',
-			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
+			let nodeaddr = (res.type === 'multipath') ? res.multipath_server :
+					((res.type === 'direct') ? res.override_address : res.address) || '',
+			    nodeport = (res.type === 'multipath') ? res.multipath_server_port :
+					((res.type === 'direct') ? res.override_port : res.port) || '';
 
 			proxy_nodes[res['.name']] =
 				String.format('[%s] %s', res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
@@ -349,8 +351,8 @@ return view.extend({
 		for (let i in hp.dns_strategy)
 			so.value(i, hp.dns_strategy[i]);
 
-		so = ss.option(form.Flag, 'sniff_override', _('Override destination'),
-			_('Override the connection destination address with the sniffed domain.'));
+		so = ss.option(form.Flag, 'sniff_override', _('Enable traffic sniffing'),
+			_('Sniff the application protocol and domain for routing.'));
 		so.default = so.enabled;
 		so.rmempty = false;
 
@@ -901,23 +903,13 @@ return view.extend({
 		so = ss.option(form.Flag, 'disable_cache_expire', _('Disable cache expire'));
 		so.depends('disable_cache', '0');
 
-		so = ss.option(form.Flag, 'independent_cache', _('Independent cache per server'),
-			_('Make each DNS server\'s cache independent for special purposes. If enabled, will slightly degrade performance.'));
-		so.depends('disable_cache', '0');
-
 		so = ss.option(form.Value, 'client_subnet', _('EDNS Client subnet'),
 			_('Append a <code>edns0-subnet</code> OPT extra record with the specified IP prefix to every query by default.<br/>' +
 			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.'));
 		so.datatype = 'or(cidr, ipaddr)';
 
-		so = ss.option(form.Flag, 'cache_file_store_rdrc', _('Store RDRC'),
-			_('Store rejected DNS response cache.<br/>' +
-			'The check results of <code>Address filter DNS rule items</code> will be cached until expiration.'));
-
-		so = ss.option(form.Value, 'cache_file_rdrc_timeout', _('RDRC timeout'),
-			_('Timeout of rejected DNS response cache in seconds. <code>604800 (7d)</code> is used by default.'));
-		so.datatype = 'uinteger';
-		so.depends('cache_file_store_rdrc', '1');
+		so = ss.option(form.Flag, 'cache_file_store_dns', _('Store DNS cache'),
+			_('Persist the DNS cache in the cache file.'));
 		/* DNS settings end */
 
 		/* DNS servers start */
@@ -1139,18 +1131,35 @@ return view.extend({
 			_('Make IP CIDR in rule-sets accept empty query response.'));
 		so.modalonly = true;
 
+		so = ss.taboption('field_other', form.Value, 'match_response', _('Match response'),
+			_('Use <code>true</code> for the latest untagged evaluate result, or enter an evaluate tag.'));
+		so.value('true', _('Latest untagged response'));
+		uci.sections(data[0], 'dns_rule', (res) => {
+			if (res.enabled === '1' && res.action === 'evaluate' && res.evaluate_tag)
+				so.value(res.evaluate_tag);
+		});
+		so.placeholder = 'system-eval';
+		so.modalonly = true;
+
 		so = ss.taboption('field_other', form.Flag, 'invert', _('Invert'),
 			_('Invert match result.'));
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.ListValue, 'action', _('Action'));
 		so.value('route', _('Route'));
+		so.value('evaluate', _('Evaluate'));
+		so.value('respond', _('Respond'));
 		so.value('route-options', _('Route options'));
 		so.value('reject', _('Reject'));
 		so.value('predefined', _('Predefined'));
 		so.default = 'route';
 		so.rmempty = false;
 		so.editable = true;
+
+		so = ss.taboption('field_other', form.Value, 'evaluate_tag', _('Evaluate tag'),
+			_('Optional tag used by later DNS rules to reference this evaluated response.'));
+		so.depends('action', 'evaluate');
+		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.ListValue, 'server', _('Server'),
 			_('Tag of the target dns server.'));
@@ -1170,17 +1179,20 @@ return view.extend({
 		so.rmempty = false;
 		so.editable = true;
 		so.depends('action', 'route');
+		so.depends('action', 'evaluate');
 
 		so = ss.taboption('field_other', form.ListValue, 'domain_strategy', _('Domain strategy'),
 			_('Set domain strategy for this query.'));
 		for (let i in hp.dns_strategy)
 			so.value(i, hp.dns_strategy[i]);
 		so.depends('action', 'route');
+		so.depends('action', 'evaluate');
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.Flag, 'dns_disable_cache', _('Disable dns cache'),
 			_('Disable cache and save cache in this query.'));
 		so.depends('action', 'route');
+		so.depends('action', 'evaluate');
 		so.depends('action', 'route-options');
 		so.modalonly = true;
 
@@ -1188,6 +1200,7 @@ return view.extend({
 			_('Rewrite TTL in DNS responses.'));
 		so.datatype = 'uinteger';
 		so.depends('action', 'route');
+		so.depends('action', 'evaluate');
 		so.depends('action', 'route-options');
 		so.modalonly = true;
 
@@ -1196,6 +1209,7 @@ return view.extend({
 			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.'));
 		so.datatype = 'or(cidr, ipaddr)';
 		so.depends('action', 'route');
+		so.depends('action', 'evaluate');
 		so.depends('action', 'route-options');
 		so.modalonly = true;
 

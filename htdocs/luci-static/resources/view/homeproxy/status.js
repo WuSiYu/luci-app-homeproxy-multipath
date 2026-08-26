@@ -44,13 +44,14 @@ function getConnStat(o, site) {
 			'class': 'btn cbi-button cbi-button-action',
 			'click': ui.createHandlerFn(this, () => {
 				return L.resolveDefault(callConnStat(site), {}).then((ret) => {
-                                        let ele = o.default.firstElementChild.nextElementSibling;
+					let ele = o.default.firstElementChild.nextElementSibling,
+					    latency = Number.isInteger(ret.latency_ms) ? ' (%d ms)'.format(ret.latency_ms) : '';
 					if (ret.result) {
 						ele.style.setProperty('color', 'green');
-                                                ele.innerHTML = _('passed');
+						ele.textContent = _('passed') + latency;
 					} else {
 						ele.style.setProperty('color', 'red');
-                                                ele.innerHTML = _('failed');
+						ele.textContent = _('failed') + latency;
 					}
 				});
 			})
