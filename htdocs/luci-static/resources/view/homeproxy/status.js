@@ -7,7 +7,6 @@
 'use strict';
 'require dom';
 'require form';
-'require fs';
 'require poll';
 'require rpc';
 'require uci';
@@ -29,7 +28,7 @@ const css = '				\
 	background-color: #33ccff;	\
 }';
 
-const hp_dir = '/var/run/homeproxy';
+let connectionChecks = 0;
 
 function getConnStat(o, site) {
 	const callConnStat = rpc.declare({
@@ -41,11 +40,14 @@ function getConnStat(o, site) {
 
 	o.default = E('div', { 'style': 'cbi-value-field' }, [
 		E('button', {
+			'type': 'button',
 			'class': 'btn cbi-button cbi-button-action',
 			'click': ui.createHandlerFn(this, () => {
-				return L.resolveDefault(callConnStat(site), {}).then((ret) => {
-					let ele = o.default.firstElementChild.nextElementSibling,
-					    latency = Number.isInteger(ret.latency_ms) ? ' (%d ms)'.format(ret.latency_ms) : '';
+				const ele = o.default.firstElementChild.nextElementSibling;
+
+				connectionChecks++;
+				return callConnStat(site).then((ret) => {
+					const latency = Number.isInteger(ret.latency_ms) ? ' (%d ms)'.format(ret.latency_ms) : '';
 					if (ret.result) {
 						ele.style.setProperty('color', 'green');
 						ele.textContent = _('passed') + latency;
@@ -53,6 +55,11 @@ function getConnStat(o, site) {
 						ele.style.setProperty('color', 'red');
 						ele.textContent = _('failed') + latency;
 					}
+				}).catch((err) => {
+					ele.style.setProperty('color', 'red');
+					ele.textContent = _('Unknown error: %s').format(err);
+				}).finally(() => {
+					connectionChecks--;
 				});
 			})
 		}, [ _('Check') ]),
@@ -168,6 +175,12 @@ function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 		params: ['type'],
 		expect: { '': {} }
 	});
+	const callLogRead = rpc.declare({
+		object: 'luci.homeproxy',
+		method: 'log_read',
+		params: ['type'],
+		expect: { '': {} }
+	});
 
 	const log_textarea = E('div', { 'id': 'log_textarea' },
 		E('img', {
@@ -179,15 +192,24 @@ function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 
 	let log;
 	poll.add(L.bind(() => {
-		return fs.read_direct(String.format('%s/%s.log', hp_dir, filename), 'text')
+		if (connectionChecks)
+			return Promise.resolve();
+
+		return callLogRead(filename)
 		.then((res) => {
+			if (res.error)
+				throw new Error(res.error);
+
 			log = E('pre', { 'wrap': 'pre' }, [
-				res.trim() || _('Log is empty.')
+				(res.content || '').trim() || _('Log is empty.')
 			]);
 
 			dom.content(log_textarea, log);
 		}).catch((err) => {
-			if (err.toString().includes('NotFoundError'))
+			if (connectionChecks)
+				return;
+
+			if (err.toString().includes('not found'))
 				log = E('pre', { 'wrap': 'pre' }, [
 					_('Log file does not exist.')
 				]);

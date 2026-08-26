@@ -7,7 +7,7 @@
 
 'use strict';
 
-import { access, error, lstat, popen, readfile, writefile } from 'fs';
+import { access, error, lstat, open, popen, readfile, writefile } from 'fs';
 
 /* Kanged from ucode/luci */
 function shellquote(s) {
@@ -146,6 +146,36 @@ const methods = {
 				latency_ms = 0;
 
 			return { result, latency_ms };
+		}
+	},
+
+	log_read: {
+		args: { type: 'type' },
+		call: function(req) {
+			const type = req.args?.type;
+			if (index(['homeproxy', 'sing-box-c', 'sing-box-s'], type) === -1)
+				return { content: null, error: 'illegal type' };
+
+			const file = `${RUN_DIR}/${type}.log`;
+			const filestat = lstat(file);
+			if (!filestat || filestat.type !== 'file')
+				return { content: null, error: 'not found' };
+
+			const limit = 128 * 1024;
+			const offset = filestat.size > limit ? filestat.size - limit : 0;
+			const fd = open(file, 'r');
+			if (!fd)
+				return { content: null, error: 'read failed' };
+
+			if (offset)
+				fd.seek(offset);
+			let content = fd.read(limit) ?? '';
+			fd.close();
+
+			if (offset)
+				content = replace(content, /^[^\n]*\n/, '');
+
+			return { content };
 		}
 	},
 
