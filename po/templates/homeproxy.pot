@@ -31,6 +31,12 @@ msgstr ""
 msgid "<strong>Save your configuration before uploading files!</strong>"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:524
+msgid ""
+"A dial or handshake operation timed out. The booster will be retried while "
+"the preferred leg remains available."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1569
 msgid ""
 "API authentication secret. Required for security since the API is LAN-"
@@ -76,17 +82,17 @@ msgid ""
 "Activate the secondary leg when the preferred leg reaches this rate, in Mbps."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:492
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:672
 #: htdocs/luci-static/resources/view/homeproxy/node.js:577
 msgid "Activation after bytes"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:491
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:671
 #: htdocs/luci-static/resources/view/homeproxy/node.js:570
 msgid "Activation threshold"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:493
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:673
 #: htdocs/luci-static/resources/view/homeproxy/node.js:583
 msgid "Activation window"
 msgstr ""
@@ -141,15 +147,15 @@ msgstr ""
 msgid "Address strategy"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:529
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:711
 msgid "Age"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:396
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:562
 msgid "Aggregating"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:488
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:668
 #: htdocs/luci-static/resources/view/homeproxy/node.js:558
 msgid "Aggregation server"
 msgstr ""
@@ -158,7 +164,7 @@ msgstr ""
 msgid "Aggregation server port"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:479
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:658
 msgid "Aggregation state"
 msgstr ""
 
@@ -261,6 +267,10 @@ msgstr ""
 msgid "Are you sure to allow insecure?"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:539
+msgid "Attempt"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:363
 msgid "Auth timeout"
 msgstr ""
@@ -287,7 +297,7 @@ msgstr ""
 msgid "Auto update subscriptions and geodata."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:748
 msgid "Automatic"
 msgstr ""
 
@@ -337,12 +347,12 @@ msgstr ""
 msgid "Block"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:402
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:484
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:568
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:663
 msgid "Booster degraded"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:497
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:677
 msgid "Booster replay"
 msgstr ""
 
@@ -386,12 +396,16 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:559
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:741
 msgid "Carrying"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:397
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:563
 msgid "Carrying traffic"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:535
+msgid "Category"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1233
@@ -427,7 +441,7 @@ msgstr ""
 msgid "Chromium / Cronet"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:494
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:674
 #: htdocs/luci-static/resources/view/homeproxy/node.js:590
 msgid "Chunk size"
 msgstr ""
@@ -480,12 +494,12 @@ msgstr ""
 msgid "Congestion control algorithm"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:400
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:561
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:743
 msgid "Connecting"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:572
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:754
 msgid "Connection attempts"
 msgstr ""
 
@@ -493,20 +507,24 @@ msgstr ""
 msgid "Connection check"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:553
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:735
 msgid "Connections"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:505
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:686
 msgid "Connections since start"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:466
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:556
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:505
+msgid "Control write"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:644
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:738
 msgid "Cumulative traffic"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:470
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:648
 msgid "Current"
 msgstr ""
 
@@ -581,6 +599,14 @@ msgstr ""
 msgid "Dashboard secret must be at least 6 characters."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:503
+msgid "Data read"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:504
+msgid "Data write"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:145
 msgid "Debug"
 msgstr ""
@@ -636,7 +662,8 @@ msgstr ""
 msgid "Default server name"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:527
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:537
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:709
 msgid "Destination"
 msgstr ""
 
@@ -723,7 +750,7 @@ msgstr ""
 msgid "Disable dns cache"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "Disabled"
 msgstr ""
 
@@ -785,9 +812,9 @@ msgstr ""
 msgid "Don't drop requests"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:464
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:530
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:554
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:642
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:712
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:736
 msgid "Download"
 msgstr ""
 
@@ -877,7 +904,7 @@ msgstr ""
 msgid "Edit nodes"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:486
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:666
 msgid "Effective multipath parameters"
 msgstr ""
 
@@ -963,7 +990,7 @@ msgstr ""
 msgid "Enable traffic sniffing"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "Enabled"
 msgstr ""
 
@@ -1041,7 +1068,7 @@ msgstr ""
 msgid "Failed to generate %s, error: %s."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:671
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:852
 msgid "Failed to read multipath status: %s"
 msgstr ""
 
@@ -1051,6 +1078,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:149
 msgid "Fatal"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:548
+msgid "Fault"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1537
@@ -1095,7 +1126,7 @@ msgstr ""
 msgid "Fragment fallback delay"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:752
 msgid "Frames"
 msgstr ""
 
@@ -1205,7 +1236,7 @@ msgstr ""
 msgid "Handshake server port"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:498
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:678
 #: htdocs/luci-static/resources/view/homeproxy/node.js:631
 msgid "Handshake timeout"
 msgstr ""
@@ -1217,6 +1248,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:883
 #: htdocs/luci-static/resources/view/homeproxy/server.js:376
 msgid "Heartbeat interval"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:489
+msgid "Hello rejected"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:55
@@ -1311,7 +1346,7 @@ msgstr ""
 msgid "IPv6 support"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:404
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
 msgid "Idle"
 msgstr ""
 
@@ -1375,7 +1410,7 @@ msgstr ""
 msgid "Ignore client bandwidth"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:434
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:612
 msgid "Immediate"
 msgstr ""
 
@@ -1452,7 +1487,7 @@ msgstr ""
 msgid "Invert match result."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:571
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:753
 msgid "Join count"
 msgstr ""
 
@@ -1474,19 +1509,19 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:499
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:679
 msgid "Last activation"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:577
-msgid "Last error: %s"
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:547
+msgid "Last recorded leg event"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1136
 msgid "Latest untagged response"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:564
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:746
 msgid "Leg parameters and counters"
 msgstr ""
 
@@ -1545,7 +1580,7 @@ msgstr ""
 msgid "Listen port"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:501
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:682
 msgid "Live buffers"
 msgstr ""
 
@@ -1557,11 +1592,11 @@ msgstr ""
 msgid "Local"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:748
 msgid "Local TX bandwidth"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:567
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:749
 msgid "Local TX share"
 msgstr ""
 
@@ -1750,7 +1785,7 @@ msgid ""
 "<br/>Conflict with <code>%s</code> and <code>%s</code>."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:496
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:676
 msgid "Maximum reorder buffer"
 msgstr ""
 
@@ -1818,16 +1853,16 @@ msgstr ""
 msgid "Multipath"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:650
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:831
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json:46
 msgid "Multipath Status"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:656
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:837
 msgid "Multipath outbound"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:673
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:854
 msgid "Multipath status data is stale."
 msgstr ""
 
@@ -1878,7 +1913,7 @@ msgstr ""
 msgid "No TCP transport, plain HTTP is merged into the HTTP transport."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:524
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:706
 msgid "No active flows in the latest sample."
 msgstr ""
 
@@ -1887,7 +1922,7 @@ msgstr ""
 msgid "No additional encryption support: It's basically duplicate encryption."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:676
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:857
 msgid "No multipath status data is available."
 msgstr ""
 
@@ -1934,7 +1969,11 @@ msgstr ""
 msgid "Obfuscate type"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:403
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:540
+msgid "Occurrences"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:569
 msgid "Offline"
 msgstr ""
 
@@ -2023,6 +2062,10 @@ msgstr ""
 msgid "Path"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:488
+msgid "Peer closed"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1067
 msgid "Peer pubkic key"
 msgstr ""
@@ -2104,13 +2147,17 @@ msgstr ""
 msgid "Preferred leg bandwidth"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:398
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:481
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:564
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:660
 msgid "Preferred only"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:437
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:615
 msgid "Preferred queue"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:502
+msgid "Primary handshake response"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:834
@@ -2236,11 +2283,11 @@ msgstr ""
 msgid "Query type"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:495
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:675
 msgid "Queue"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:569
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:751
 msgid "Queue backlog"
 msgstr ""
 
@@ -2248,7 +2295,7 @@ msgstr ""
 msgid "Queue frames"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:574
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:756
 msgid "Queue utilization: %s"
 msgstr ""
 
@@ -2285,13 +2332,13 @@ msgstr ""
 msgid "RUNNING"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:471
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:476
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:595
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:649
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:654
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:776
 msgid "RX %s"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:483
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:662
 msgid "RX aggregation observed"
 msgstr ""
 
@@ -2301,6 +2348,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:584
 msgid "Rate measurement window in seconds."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:541
+msgid "Recorded at"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:490
@@ -2348,12 +2399,20 @@ msgstr ""
 msgid "Remove all nodes from subscriptions"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:504
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:685
 msgid "Reorder buffered"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:503
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:684
 msgid "Replay pending"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+msgid "Replay timeout"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:506
+msgid "Replay watchdog"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1217
@@ -2384,8 +2443,8 @@ msgstr ""
 msgid "Respond"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:401
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:562
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:567
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:744
 msgid "Retrying"
 msgstr ""
 
@@ -2505,8 +2564,20 @@ msgstr ""
 msgid "Save subscriptions settings"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:568
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:750
 msgid "Scheduler weight"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:501
+msgid "Secondary attach"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:499
+msgid "Secondary dial"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:500
+msgid "Secondary handshake"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:542
@@ -2549,7 +2620,8 @@ msgstr ""
 msgid "Service Status"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:528
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:538
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:710
 msgid "Session"
 msgstr ""
 
@@ -2570,7 +2642,7 @@ msgstr ""
 msgid "Shadowsocks"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:475
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:653
 msgid "Since process start"
 msgstr ""
 
@@ -2670,8 +2742,12 @@ msgstr ""
 msgid "Stable low-latency node used before aggregation is activated."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:399
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:560
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:536
+msgid "Stage"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:565
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:742
 msgid "Standby"
 msgstr ""
 
@@ -2736,11 +2812,11 @@ msgstr ""
 msgid "TCP"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "TCP Fast Open"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:463
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:641
 msgid "TCP connections"
 msgstr ""
 
@@ -2790,17 +2866,17 @@ msgstr ""
 msgid "TLS record fragment"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:752
 msgid "TX %d · RX %d"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:472
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:477
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:594
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:650
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:655
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:775
 msgid "TX %s"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:482
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:661
 msgid "TX aggregating"
 msgstr ""
 
@@ -2894,6 +2970,19 @@ msgid ""
 "forward 443 to this port for challenge to succeed."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:522
+msgid ""
+"The booster did not make replay progress before the watchdog expired. The "
+"connection continues on the preferred leg."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:516
+msgid ""
+"The booster reached the server after the control session had already closed. "
+"This is expected for some short connections because leg1 is established "
+"asynchronously."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:598
 msgid ""
 "The default rule uses the following matching logic:<br/><code>(domain || "
@@ -2948,6 +3037,12 @@ msgstr ""
 msgid "The idle timeout in seconds."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:525
+msgid ""
+"The leg failed during transport I/O. Use the stage and destination below to "
+"identify the affected operation."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1583
 msgid "The listen port for sing-box API and dashboard."
 msgstr ""
@@ -3000,6 +3095,13 @@ msgstr ""
 msgid "The path to the server certificate, in PEM format."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:514
+msgid ""
+"The peer closed this leg. This commonly appears when a short connection "
+"ends; investigate the underlying outbound only if the count rises while "
+"active traffic stalls."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:199
 msgid "The port must be unique."
 msgstr ""
@@ -3018,6 +3120,18 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:757
 msgid "The server public key, in PEM format."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:518
+msgid ""
+"The server rejected this leg but did not provide a reason. Upgrade the "
+"server binary to obtain a detailed rejection reason."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:520
+msgid ""
+"The server rejected this leg during the multipath handshake. The message "
+"above contains the server-provided reason when available."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:463
@@ -3068,8 +3182,12 @@ msgstr ""
 msgid "ThreatBook Public DNS (117.50.10.10)"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:436
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:614
 msgid "Throughput"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:491
+msgid "Timeout"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:725
@@ -3090,11 +3208,11 @@ msgid ""
 "<code>kmod-tun</code>"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:580
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:760
 msgid "Top 10 flows by current speed"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:532
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:714
 msgid "Total"
 msgstr ""
 
@@ -3102,17 +3220,25 @@ msgstr ""
 msgid "Trace"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:468
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:646
 msgid "Traffic"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:435
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:613
 msgid "Transferred bytes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:548
+msgid "Transient"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:929
 #: htdocs/luci-static/resources/view/homeproxy/server.js:399
 msgid "Transport"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:492
+msgid "Transport error"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:467
@@ -3153,7 +3279,7 @@ msgstr ""
 msgid "UDP NAT expiration time"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:489
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:669
 #: htdocs/luci-static/resources/view/homeproxy/node.js:550
 msgid "UDP outbound"
 msgstr ""
@@ -3200,7 +3326,9 @@ msgstr ""
 msgid "UUID"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:406
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:494
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:508
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:572
 msgid "Unknown"
 msgstr ""
 
@@ -3249,13 +3377,13 @@ msgstr ""
 msgid "Update via proxy"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:652
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:833
 msgid "Updated %s · process started %s"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:465
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:531
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:555
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:643
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:713
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:737
 msgid "Upload"
 msgstr ""
 
@@ -3343,7 +3471,7 @@ msgstr ""
 msgid "WAN IP Policy"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:652
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:833
 msgid "Waiting for sing-box status data."
 msgstr ""
 
@@ -3435,11 +3563,11 @@ msgstr ""
 msgid "gVisor"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:543
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:725
 msgid "leg0 · Preferred"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:543
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:725
 msgid "leg1 · Booster"
 msgstr ""
 

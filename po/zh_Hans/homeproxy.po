@@ -40,6 +40,12 @@ msgstr ""
 msgid "<strong>Save your configuration before uploading files!</strong>"
 msgstr "<strong>上传文件前请先保存配置！</strong>"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:524
+msgid ""
+"A dial or handshake operation timed out. The booster will be retried while "
+"the preferred leg remains available."
+msgstr "拨号或握手操作超时。只要优选链路仍然可用，就会继续重试加速链路。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1569
 msgid ""
 "API authentication secret. Required for security since the API is LAN-"
@@ -85,17 +91,17 @@ msgid ""
 "Activate the secondary leg when the preferred leg reaches this rate, in Mbps."
 msgstr "首选链路速率达到此值时启用辅助链路，单位为 Mbps。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:492
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:672
 #: htdocs/luci-static/resources/view/homeproxy/node.js:577
 msgid "Activation after bytes"
 msgstr "启用前字节数"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:491
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:671
 #: htdocs/luci-static/resources/view/homeproxy/node.js:570
 msgid "Activation threshold"
 msgstr "聚合启用阈值"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:493
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:673
 #: htdocs/luci-static/resources/view/homeproxy/node.js:583
 msgid "Activation window"
 msgstr "启用检测窗口"
@@ -150,15 +156,15 @@ msgstr "地址解析器"
 msgid "Address strategy"
 msgstr "地址解析策略"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:529
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:711
 msgid "Age"
 msgstr "时长"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:396
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:562
 msgid "Aggregating"
 msgstr "聚合中"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:488
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:668
 #: htdocs/luci-static/resources/view/homeproxy/node.js:558
 msgid "Aggregation server"
 msgstr "聚合服务端"
@@ -167,7 +173,7 @@ msgstr "聚合服务端"
 msgid "Aggregation server port"
 msgstr "聚合服务端端口"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:479
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:658
 msgid "Aggregation state"
 msgstr "聚合状态"
 
@@ -272,6 +278,10 @@ msgstr "应用"
 msgid "Are you sure to allow insecure?"
 msgstr "确定要允许不安全连接吗？"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:539
+msgid "Attempt"
+msgstr "尝试序号"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:363
 msgid "Auth timeout"
 msgstr "认证超时"
@@ -298,7 +308,7 @@ msgstr "自动更新"
 msgid "Auto update subscriptions and geodata."
 msgstr "自动更新订阅和地理数据。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:748
 msgid "Automatic"
 msgstr "自动"
 
@@ -348,12 +358,12 @@ msgstr "黑名单模式"
 msgid "Block"
 msgstr "封锁"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:402
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:484
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:568
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:663
 msgid "Booster degraded"
 msgstr "辅助链路降级"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:497
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:677
 msgid "Booster replay"
 msgstr "辅助链路重放"
 
@@ -397,13 +407,17 @@ msgstr "CUBIC"
 msgid "Cancel"
 msgstr "取消"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:559
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:741
 msgid "Carrying"
 msgstr "承载中"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:397
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:563
 msgid "Carrying traffic"
 msgstr "正在承载流量"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:535
+msgid "Category"
+msgstr "类别"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1233
 #: htdocs/luci-static/resources/view/homeproxy/server.js:756
@@ -438,7 +452,7 @@ msgstr "国内域名列表版本"
 msgid "Chromium / Cronet"
 msgstr "Chromium / Cronet"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:494
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:674
 #: htdocs/luci-static/resources/view/homeproxy/node.js:590
 msgid "Chunk size"
 msgstr "分块大小"
@@ -491,12 +505,12 @@ msgstr "仅常用端口（绕过 P2P 流量）"
 msgid "Congestion control algorithm"
 msgstr "拥塞控制算法"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:400
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:561
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:743
 msgid "Connecting"
 msgstr "连接中"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:572
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:754
 msgid "Connection attempts"
 msgstr "连接尝试次数"
 
@@ -504,20 +518,24 @@ msgstr "连接尝试次数"
 msgid "Connection check"
 msgstr "连接检查"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:553
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:735
 msgid "Connections"
 msgstr "连接数"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:505
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:686
 msgid "Connections since start"
 msgstr "进程启动后的连接数"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:466
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:556
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:505
+msgid "Control write"
+msgstr "控制帧写入"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:644
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:738
 msgid "Cumulative traffic"
 msgstr "累计流量"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:470
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:648
 msgid "Current"
 msgstr "当前"
 
@@ -592,6 +610,14 @@ msgstr "面板地址：%s"
 msgid "Dashboard secret must be at least 6 characters."
 msgstr "面板密钥长度不能少于 6 位。"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:503
+msgid "Data read"
+msgstr "数据读取"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:504
+msgid "Data write"
+msgstr "数据写入"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:145
 msgid "Debug"
 msgstr "调试"
@@ -647,7 +673,8 @@ msgstr "默认包封装格式"
 msgid "Default server name"
 msgstr "默认服务器名称"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:527
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:537
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:709
 msgid "Destination"
 msgstr "目标"
 
@@ -734,7 +761,7 @@ msgstr "缓存永不过期"
 msgid "Disable dns cache"
 msgstr "禁用 DNS 缓存"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "Disabled"
 msgstr "已禁用"
 
@@ -798,9 +825,9 @@ msgstr "不丢弃数据包"
 msgid "Don't drop requests"
 msgstr "不丢弃请求"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:464
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:530
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:554
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:642
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:712
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:736
 msgid "Download"
 msgstr "下载"
 
@@ -898,7 +925,7 @@ msgstr "前置数据默认发送在路径而不是标头中。"
 msgid "Edit nodes"
 msgstr "修改节点"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:486
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:666
 msgid "Effective multipath parameters"
 msgstr "生效的多路径参数"
 
@@ -988,7 +1015,7 @@ msgstr "启用 SUoT 协议，需要服务端支持。与多路复用冲突。"
 msgid "Enable traffic sniffing"
 msgstr "启用流量嗅探"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "Enabled"
 msgstr "已启用"
 
@@ -1066,7 +1093,7 @@ msgstr "附加记录"
 msgid "Failed to generate %s, error: %s."
 msgstr "生成 %s 失败，错误：%s。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:671
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:852
 msgid "Failed to read multipath status: %s"
 msgstr "读取多路径状态失败：%s"
 
@@ -1077,6 +1104,10 @@ msgstr "上传 %s 失败，错误：%s。"
 #: htdocs/luci-static/resources/view/homeproxy/status.js:149
 msgid "Fatal"
 msgstr "致命"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:548
+msgid "Fault"
+msgstr "故障"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1537
 msgid "Filter keywords"
@@ -1120,7 +1151,7 @@ msgstr "分片 TLS 握手。由于性能较差，请先尝试 <code>%s</code>。
 msgid "Fragment fallback delay"
 msgstr "分片回退延迟"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:752
 msgid "Frames"
 msgstr "帧数"
 
@@ -1230,7 +1261,7 @@ msgstr "握手服务器地址"
 msgid "Handshake server port"
 msgstr "握手服务器端口"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:498
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:678
 #: htdocs/luci-static/resources/view/homeproxy/node.js:631
 msgid "Handshake timeout"
 msgstr "握手超时"
@@ -1243,6 +1274,10 @@ msgstr "标头"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:376
 msgid "Heartbeat interval"
 msgstr "心跳间隔"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:489
+msgid "Hello rejected"
+msgstr "握手请求被拒绝"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:55
 #: htdocs/luci-static/resources/view/homeproxy/client.js:57
@@ -1336,7 +1371,7 @@ msgstr "仅 IPv6"
 msgid "IPv6 support"
 msgstr "IPv6 支持"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:404
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
 msgid "Idle"
 msgstr "空闲"
 
@@ -1406,7 +1441,7 @@ msgstr "如果你拥有根证书，使用此选项而不是允许不安全连接
 msgid "Ignore client bandwidth"
 msgstr "忽略客户端带宽"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:434
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:612
 msgid "Immediate"
 msgstr "立即"
 
@@ -1483,7 +1518,7 @@ msgstr "反转"
 msgid "Invert match result."
 msgstr "反转匹配结果"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:571
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:753
 msgid "Join count"
 msgstr "加入次数"
 
@@ -1505,19 +1540,19 @@ msgstr "LAN IP 策略"
 msgid "Label"
 msgstr "标签"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:499
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:679
 msgid "Last activation"
 msgstr "最近一次激活"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:577
-msgid "Last error: %s"
-msgstr "最近错误：%s"
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:547
+msgid "Last recorded leg event"
+msgstr "最近记录的链路事件"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1136
 msgid "Latest untagged response"
 msgstr "最近的未标记响应"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:564
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:746
 msgid "Leg parameters and counters"
 msgstr "链路参数与计数器"
 
@@ -1578,7 +1613,7 @@ msgstr "监听接口"
 msgid "Listen port"
 msgstr "监听端口"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:501
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:682
 msgid "Live buffers"
 msgstr "实时缓冲区"
 
@@ -1590,11 +1625,11 @@ msgstr "加载中"
 msgid "Local"
 msgstr "本地"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:566
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:748
 msgid "Local TX bandwidth"
 msgstr "本地发送带宽"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:567
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:749
 msgid "Local TX share"
 msgstr "本地发送占比"
 
@@ -1785,7 +1820,7 @@ msgstr ""
 "在打开新连接之前，连接中的最大多路复用流数量。与 <code>%s</code> 和 "
 "<code>%s</code> 冲突。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:496
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:676
 msgid "Maximum reorder buffer"
 msgstr "最大重排缓冲区"
 
@@ -1853,16 +1888,16 @@ msgstr "多路径 TCP（MPTCP）"
 msgid "Multipath"
 msgstr "多路径"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:650
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:831
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json:46
 msgid "Multipath Status"
 msgstr "多路径状态"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:656
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:837
 msgid "Multipath outbound"
 msgstr "多路径出站"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:673
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:854
 msgid "Multipath status data is stale."
 msgstr "多路径状态数据已过期。"
 
@@ -1913,7 +1948,7 @@ msgstr "New Reno"
 msgid "No TCP transport, plain HTTP is merged into the HTTP transport."
 msgstr "无 TCP 传输层, 纯 HTTP 已合并到 HTTP 传输层。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:524
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:706
 msgid "No active flows in the latest sample."
 msgstr "最近一次采样中没有活动流。"
 
@@ -1922,7 +1957,7 @@ msgstr "最近一次采样中没有活动流。"
 msgid "No additional encryption support: It's basically duplicate encryption."
 msgstr "无额外加密支持：它基本上是重复加密。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:676
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:857
 msgid "No multipath status data is available."
 msgstr "暂无可用的多路径状态数据。"
 
@@ -1969,7 +2004,11 @@ msgstr "混淆密码"
 msgid "Obfuscate type"
 msgstr "混淆类型"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:403
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:540
+msgid "Occurrences"
+msgstr "累计发生次数"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:569
 msgid "Offline"
 msgstr "离线"
 
@@ -2058,6 +2097,10 @@ msgstr "密码"
 msgid "Path"
 msgstr "路径"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:488
+msgid "Peer closed"
+msgstr "对端关闭"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1067
 msgid "Peer pubkic key"
 msgstr "对端公钥"
@@ -2139,14 +2182,18 @@ msgstr "首选链路"
 msgid "Preferred leg bandwidth"
 msgstr "首选链路带宽"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:398
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:481
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:564
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:660
 msgid "Preferred only"
 msgstr "仅首选链路"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:437
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:615
 msgid "Preferred queue"
 msgstr "首选链路队列"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:502
+msgid "Primary handshake response"
+msgstr "主链路握手响应"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:834
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1059
@@ -2271,11 +2318,11 @@ msgstr "QUIC 流接收窗口"
 msgid "Query type"
 msgstr "请求类型"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:495
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:675
 msgid "Queue"
 msgstr "队列"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:569
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:751
 msgid "Queue backlog"
 msgstr "队列积压"
 
@@ -2283,7 +2330,7 @@ msgstr "队列积压"
 msgid "Queue frames"
 msgstr "队列帧数"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:574
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:756
 msgid "Queue utilization: %s"
 msgstr "队列利用率：%s"
 
@@ -2320,13 +2367,13 @@ msgstr "REALITY 标识符"
 msgid "RUNNING"
 msgstr "运行中"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:471
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:476
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:595
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:649
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:654
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:776
 msgid "RX %s"
 msgstr "接收 %s"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:483
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:662
 msgid "RX aggregation observed"
 msgstr "检测到接收聚合"
 
@@ -2337,6 +2384,10 @@ msgstr "如留空，则使用随机版本。"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:584
 msgid "Rate measurement window in seconds."
 msgstr "速率测量窗口，单位为秒。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:541
+msgid "Recorded at"
+msgstr "记录时间"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:490
 msgid "Recursive outbound detected!"
@@ -2383,13 +2434,21 @@ msgstr "移除 %s 个节点"
 msgid "Remove all nodes from subscriptions"
 msgstr "移除所有订阅节点"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:504
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:685
 msgid "Reorder buffered"
 msgstr "重排缓冲"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:503
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:684
 msgid "Replay pending"
 msgstr "待重放"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+msgid "Replay timeout"
+msgstr "重放超时"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:506
+msgid "Replay watchdog"
+msgstr "重放看门狗"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1217
 msgid "Reply with REFUSED"
@@ -2419,8 +2478,8 @@ msgstr "资源管理"
 msgid "Respond"
 msgstr "响应"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:401
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:562
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:567
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:744
 msgid "Retrying"
 msgstr "重试中"
 
@@ -2540,9 +2599,21 @@ msgstr "保存当前设置"
 msgid "Save subscriptions settings"
 msgstr "保存订阅设置"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:568
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:750
 msgid "Scheduler weight"
 msgstr "调度权重"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:501
+msgid "Secondary attach"
+msgstr "加速链路接入"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:499
+msgid "Secondary dial"
+msgstr "加速链路拨号"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:500
+msgid "Secondary handshake"
+msgstr "加速链路握手"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:542
 #: htdocs/luci-static/resources/view/homeproxy/node.js:552
@@ -2584,7 +2655,8 @@ msgstr "服务器设置"
 msgid "Service Status"
 msgstr "服务状态"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:528
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:538
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:710
 msgid "Session"
 msgstr "会话"
 
@@ -2605,7 +2677,7 @@ msgstr "ShadowTLS 版本"
 msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:475
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:653
 msgid "Since process start"
 msgstr "进程启动以来"
 
@@ -2714,8 +2786,12 @@ msgstr "指定需要被代理的目标端口。多个端口必须用逗号隔开
 msgid "Stable low-latency node used before aggregation is activated."
 msgstr "启用聚合前使用的稳定低延迟节点。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:399
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:560
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:536
+msgid "Stage"
+msgstr "阶段"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:565
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:742
 msgid "Standby"
 msgstr "待命"
 
@@ -2782,11 +2858,11 @@ msgstr "系统 DNS"
 msgid "TCP"
 msgstr "TCP"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:490
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:670
 msgid "TCP Fast Open"
 msgstr "TCP Fast Open"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:463
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:641
 msgid "TCP connections"
 msgstr "TCP 连接数"
 
@@ -2836,17 +2912,17 @@ msgstr "不强制执行 TLS。如未配置 TLS，将使用纯 HTTP 1.1。"
 msgid "TLS record fragment"
 msgstr "TLS 记录分片"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:570
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:752
 msgid "TX %d · RX %d"
 msgstr "发送 %d · 接收 %d"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:472
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:477
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:594
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:650
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:655
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:775
 msgid "TX %s"
 msgstr "发送 %s"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:482
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:661
 msgid "TX aggregating"
 msgstr "发送聚合中"
 
@@ -2945,6 +3021,21 @@ msgid ""
 msgstr ""
 "用于 ACME TLS-ALPN 质询的备用端口； 系统必须将 443 转发到此端口以使质询成功。"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:522
+msgid ""
+"The booster did not make replay progress before the watchdog expired. The "
+"connection continues on the preferred leg."
+msgstr "加速链路在看门狗超时前没有取得重放进展。连接将继续使用优选链路。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:516
+msgid ""
+"The booster reached the server after the control session had already closed. "
+"This is expected for some short connections because leg1 is established "
+"asynchronously."
+msgstr ""
+"加速链路到达服务器时，控制会话已经关闭。由于 leg1 是异步建立的，部分短连接出"
+"现此事件属于正常现象。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:598
 msgid ""
 "The default rule uses the following matching logic:<br/><code>(domain || "
@@ -3010,6 +3101,12 @@ msgstr "当 TLS 分段无法自动确定等待时间时使用的回退值（单�
 msgid "The idle timeout in seconds."
 msgstr "空闲超时时间（单位：秒）。"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:525
+msgid ""
+"The leg failed during transport I/O. Use the stage and destination below to "
+"identify the affected operation."
+msgstr "链路在传输 I/O 过程中失败。可根据下方阶段和目标定位受影响的操作。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1583
 msgid "The listen port for sing-box API and dashboard."
 msgstr "sing-box API 和面板的监听端口。"
@@ -3062,6 +3159,15 @@ msgstr "PEM 格式的 ECH 配置路径。如果为空，将尝试从 DNS 加载�
 msgid "The path to the server certificate, in PEM format."
 msgstr "服务端证书路径，需要 PEM 格式。"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:514
+msgid ""
+"The peer closed this leg. This commonly appears when a short connection "
+"ends; investigate the underlying outbound only if the count rises while "
+"active traffic stalls."
+msgstr ""
+"对端关闭了此链路。短连接结束时经常会出现此事件；仅当活动流量停滞且计数持续上"
+"升时，才需要排查底层出站。"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:199
 msgid "The port must be unique."
 msgstr "必须是唯一端口。"
@@ -3081,6 +3187,20 @@ msgstr "服务端私钥，需要 PEM 格式。"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:757
 msgid "The server public key, in PEM format."
 msgstr "服务端公钥，需要 PEM 格式。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:518
+msgid ""
+"The server rejected this leg but did not provide a reason. Upgrade the "
+"server binary to obtain a detailed rejection reason."
+msgstr "服务器拒绝了此链路，但未提供原因。升级服务端二进制可获得详细拒绝原因。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:520
+msgid ""
+"The server rejected this leg during the multipath handshake. The message "
+"above contains the server-provided reason when available."
+msgstr ""
+"服务器在 multipath 握手期间拒绝了此链路。如果服务端提供了原因，会显示在上方"
+"消息中。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:463
 msgid ""
@@ -3135,9 +3255,13 @@ msgstr ""
 msgid "ThreatBook Public DNS (117.50.10.10)"
 msgstr "微步在线公共 DNS（117.50.10.10）"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:436
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:614
 msgid "Throughput"
 msgstr "吞吐率"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:491
+msgid "Timeout"
+msgstr "超时"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:725
 msgid ""
@@ -3159,11 +3283,11 @@ msgid ""
 msgstr ""
 "要启用 Tun 支持，您需要安装 <code>ip-full</code> 和 <code>kmod-tun</code>。"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:580
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:760
 msgid "Top 10 flows by current speed"
 msgstr "按当前速度排序的前 10 个流"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:532
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:714
 msgid "Total"
 msgstr "总计"
 
@@ -3171,18 +3295,26 @@ msgstr "总计"
 msgid "Trace"
 msgstr "跟踪"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:468
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:646
 msgid "Traffic"
 msgstr "流量"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:435
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:613
 msgid "Transferred bytes"
 msgstr "已传输字节数"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:548
+msgid "Transient"
+msgstr "瞬态事件"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:929
 #: htdocs/luci-static/resources/view/homeproxy/server.js:399
 msgid "Transport"
 msgstr "传输层"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:492
+msgid "Transport error"
+msgstr "传输错误"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:467
 #: htdocs/luci-static/resources/view/homeproxy/server.js:186
@@ -3222,7 +3354,7 @@ msgstr "UDP 分片"
 msgid "UDP NAT expiration time"
 msgstr "UDP NAT 过期时间"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:489
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:669
 #: htdocs/luci-static/resources/view/homeproxy/node.js:550
 msgid "UDP outbound"
 msgstr "UDP 出站"
@@ -3269,7 +3401,9 @@ msgstr "URLTest 节点"
 msgid "UUID"
 msgstr "UUID"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:406
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:494
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:508
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:572
 msgid "Unknown"
 msgstr "未知"
 
@@ -3318,13 +3452,13 @@ msgstr "更新时间"
 msgid "Update via proxy"
 msgstr "使用代理更新"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:652
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:833
 msgid "Updated %s · process started %s"
 msgstr "更新于 %s · 进程启动于 %s"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:465
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:531
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:555
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:643
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:713
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:737
 msgid "Upload"
 msgstr "上传"
 
@@ -3412,7 +3546,7 @@ msgstr "WAN DNS（从接口获取）"
 msgid "WAN IP Policy"
 msgstr "WAN IP 策略"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:652
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:833
 msgid "Waiting for sing-box status data."
 msgstr "正在等待 sing-box 状态数据。"
 
@@ -3504,11 +3638,11 @@ msgstr "gRPC 服务名称"
 msgid "gVisor"
 msgstr "gVisor"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:543
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:725
 msgid "leg0 · Preferred"
 msgstr "leg0 · 首选链路"
 
-#: htdocs/luci-static/resources/view/homeproxy/multipath.js:543
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js:725
 msgid "leg1 · Booster"
 msgstr "leg1 · 辅助链路"
 
@@ -3636,6 +3770,9 @@ msgstr "有效端口值"
 #: htdocs/luci-static/resources/homeproxy.js:328
 msgid "valid uuid"
 msgstr "有效 uuid"
+
+#~ msgid "Last error: %s"
+#~ msgstr "最近错误：%s"
 
 #~ msgid "Independent cache per server"
 #~ msgstr "独立缓存"

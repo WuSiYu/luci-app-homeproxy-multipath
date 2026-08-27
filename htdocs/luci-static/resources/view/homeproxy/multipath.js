@@ -245,12 +245,57 @@ const css = `
 	background: var(--mp-tx);
 	transition: width .2s ease;
 }
-.mp-error {
-	color: var(--mp-bad);
-	font-size: .76rem;
-	line-height: 1.4;
+.mp-leg-event {
+	border-left: 3px solid var(--mp-bad);
+	background: #fff6f5;
 	margin-top: 10px;
+	padding: 9px 10px;
+	font-size: .76rem;
+	line-height: 1.45;
 	word-break: break-word;
+}
+.mp-leg-event-transient {
+	border-left-color: var(--mp-warn);
+	background: #fff9ed;
+}
+.mp-event-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	font-weight: 650;
+}
+.mp-event-badge {
+	flex: none;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+	padding: 1px 5px;
+	font-size: .68rem;
+	font-weight: 600;
+}
+.mp-leg-event-transient .mp-event-badge { color: var(--mp-warn); }
+.mp-leg-event-fault .mp-event-badge { color: var(--mp-bad); }
+.mp-event-message {
+	font-family: monospace;
+	margin: 7px 0;
+}
+.mp-event-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 3px 14px;
+	color: var(--mp-muted);
+}
+.mp-event-grid span {
+	min-width: 0;
+	word-break: break-word;
+}
+.mp-event-grid strong {
+	color: #363d45;
+	font-weight: 600;
+}
+.mp-event-hint {
+	margin-top: 7px;
+	color: #4d5864;
 }
 .mp-connector {
 	display: flex;
@@ -272,7 +317,8 @@ const css = `
 }
 .mp-link-lane {
 	position: relative;
-	width: 100%;
+	width: calc(100% - 16px);
+	margin: 0 8px;
 	height: var(--lane-size, 2px);
 	min-height: 2px;
 	background: currentColor;
@@ -287,18 +333,17 @@ const css = `
 	position: absolute;
 	top: 50%;
 	transform: translateY(-50%);
-	width: 0;
-	height: 0;
-	border-top: 5px solid transparent;
-	border-bottom: 5px solid transparent;
+	width: 8px;
+	height: 12px;
+	background: currentColor;
 }
 .mp-link-tx::after {
-	right: -1px;
-	border-left: 8px solid currentColor;
+	right: -8px;
+	clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
 .mp-link-rx::before {
-	left: -1px;
-	border-right: 8px solid currentColor;
+	left: -8px;
+	clip-path: polygon(100% 0, 0 50%, 100% 100%);
 }
 .mp-table-wrap {
 	overflow-x: auto;
@@ -359,6 +404,7 @@ const css = `
 	.mp-flow-table th:first-child, .mp-flow-table td:first-child { width: 42%; }
 	.mp-flow-table th:nth-child(4), .mp-flow-table td:nth-child(4),
 	.mp-flow-table th:nth-child(5), .mp-flow-table td:nth-child(5) { width: 29%; }
+	.mp-event-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-color-scheme: dark) {
 	.mp-page {
@@ -376,6 +422,9 @@ const css = `
 	.mp-state-warn, .mp-notice { background: #3b2d15; }
 	.mp-state-bad { background: #3c2020; }
 	.mp-meter { background: #404851; }
+	.mp-leg-event-transient { background: #3b2d15; }
+	.mp-leg-event-fault { background: #3c2020; }
+	.mp-event-grid strong, .mp-event-hint { color: #e0e5ea; }
 }`;
 
 function number(value) {
@@ -417,6 +466,91 @@ function formatDuration(milliseconds) {
 function formatTime(value) {
 	const date = new Date(value);
 	return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
+}
+
+function legEventCategory(category, message) {
+	if (category)
+		return category;
+	message = String(message || '').toLowerCase();
+	if (message === 'eof' || message.indexOf('closed') >= 0)
+		return 'peer_closed';
+	if (message.indexOf('multipath hello rejected') >= 0)
+		return 'hello_rejected';
+	if (message.indexOf('replay') >= 0 && message.indexOf('timeout') >= 0)
+		return 'replay_timeout';
+	if (message.indexOf('timeout') >= 0)
+		return 'timeout';
+	return 'transport_error';
+}
+
+function legEventCategoryLabel(category) {
+	const categories = {
+		peer_closed: _('Peer closed'),
+		hello_rejected: _('Hello rejected'),
+		replay_timeout: _('Replay timeout'),
+		timeout: _('Timeout'),
+		transport_error: _('Transport error')
+	};
+	return categories[category] || category || _('Unknown');
+}
+
+function legEventStageLabel(stage) {
+	const stages = {
+		secondary_dial: _('Secondary dial'),
+		secondary_handshake: _('Secondary handshake'),
+		secondary_attach: _('Secondary attach'),
+		handshake_response: _('Primary handshake response'),
+		read_data: _('Data read'),
+		write_data: _('Data write'),
+		write_control: _('Control write'),
+		replay_timeout: _('Replay watchdog')
+	};
+	return stages[stage] || stage || _('Unknown');
+}
+
+function legEventHint(category, message) {
+	message = String(message || '').toLowerCase();
+	if (category === 'peer_closed')
+		return _('The peer closed this leg. This commonly appears when a short connection ends; investigate the underlying outbound only if the count rises while active traffic stalls.');
+	if (category === 'hello_rejected' && message.indexOf('session no longer exists') >= 0)
+		return _('The booster reached the server after the control session had already closed. This is expected for some short connections because leg1 is established asynchronously.');
+	if (category === 'hello_rejected' && message.indexOf('unspecified by server') >= 0)
+		return _('The server rejected this leg but did not provide a reason. Upgrade the server binary to obtain a detailed rejection reason.');
+	if (category === 'hello_rejected')
+		return _('The server rejected this leg during the multipath handshake. The message above contains the server-provided reason when available.');
+	if (category === 'replay_timeout')
+		return _('The booster did not make replay progress before the watchdog expired. The connection continues on the preferred leg.');
+	if (category === 'timeout')
+		return _('A dial or handshake operation timed out. The booster will be retried while the preferred leg remains available.');
+	return _('The leg failed during transport I/O. Use the stage and destination below to identify the affected operation.');
+}
+
+function renderLegEvent(leg) {
+	if (!leg.last_error)
+		return '';
+	const category = legEventCategory(leg.last_error_category, leg.last_error),
+	      hasTransientFlag = Object.prototype.hasOwnProperty.call(leg, 'last_error_transient'),
+	      transient = hasTransientFlag ? !!leg.last_error_transient : category !== 'transport_error',
+	      details = [
+			[ _('Category'), legEventCategoryLabel(category) ],
+			[ _('Stage'), legEventStageLabel(leg.last_error_stage) ],
+			[ _('Destination'), leg.last_error_destination || '-' ],
+			[ _('Session'), leg.last_error_session_id ? '#' + leg.last_error_session_id : '-' ],
+			[ _('Attempt'), number(leg.last_error_attempt) ? String(number(leg.last_error_attempt)) : '-' ],
+			[ _('Occurrences'), number(leg.error_count) ? String(number(leg.error_count)) : '-' ],
+			[ _('Recorded at'), leg.last_error_at ? formatTime(leg.last_error_at) : '-' ]
+	      ],
+	      grid = [];
+	details.forEach((detail) => grid.push(E('span', {}, [ detail[0] + ': ', E('strong', {}, [ detail[1] ]) ])));
+	return E('div', { 'class': 'mp-leg-event mp-leg-event-' + (transient ? 'transient' : 'fault') }, [
+		E('div', { 'class': 'mp-event-header' }, [
+			E('span', {}, [ _('Last recorded leg event') ]),
+			E('span', { 'class': 'mp-event-badge' }, [ transient ? _('Transient') : _('Fault') ])
+		]),
+		E('div', { 'class': 'mp-event-message' }, [ leg.last_error ]),
+		E('div', { 'class': 'mp-event-grid' }, grid),
+		E('div', { 'class': 'mp-event-hint' }, [ legEventHint(category, leg.last_error) ])
+	]);
 }
 
 function displayTag(tag) {
@@ -620,12 +754,9 @@ function renderLeg(leg, stale) {
 				[ _('Connection attempts'), String(number(leg.attempt_count)) ]
 			]),
 			E('div', { 'class': 'mp-meter', 'title': _('Queue utilization: %s').format(queueRatio.toFixed(1) + '%') },
-				E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' }))
+				E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' })),
+			renderLegEvent(leg)
 		]),
-		leg.last_error ? E('div', { 'class': 'mp-error' }, [
-			_('Last error: %s').format(leg.last_error),
-			leg.last_error_at ? ' · ' + formatTime(leg.last_error_at) : ''
-		]) : '',
 		renderCollapsible('leg:' + leg.id + ':' + leg.tag + ':flows', _('Top 10 flows by current speed'), [
 			renderFlows(leg.top_flows)
 		])
