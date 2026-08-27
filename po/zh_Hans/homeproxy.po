@@ -1287,6 +1287,10 @@ msgstr "握手请求被拒绝"
 msgid "HomeProxy"
 msgstr "HomeProxy"
 
+#: root/usr/share/luci/menu.d/luci-app-homeproxy.json:3
+msgid "HomeProxy Multipath"
+msgstr "HomeProxy Multipath"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:58
 #: htdocs/luci-static/resources/view/homeproxy/server.js:60
 #: htdocs/luci-static/resources/view/homeproxy/server.js:129

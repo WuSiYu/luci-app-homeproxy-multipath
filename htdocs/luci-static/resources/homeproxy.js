@@ -185,6 +185,20 @@ return baseclass.extend({
 		return L.resolveDefault(callGetSingBoxFeatures(), {});
 	},
 
+	renderBrandTitle(suffix) {
+		let content = [
+			_('HomeProxy'),
+			E('span', {
+				'style': 'color:inherit; font-weight:600; margin-left:.4em; opacity:.62;'
+			}, [ 'Multipath' ])
+		];
+
+		if (suffix)
+			content.push(' ', suffix);
+
+		return E('span', { 'class': 'homeproxy-brand' }, content);
+	},
+
 	generateRand(type, length) {
 		let byteArr;
 		if (['base64', 'hex'].includes(type))

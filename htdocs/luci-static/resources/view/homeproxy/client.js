@@ -5,6 +5,7 @@
  */
 
 'use strict';
+'require dom';
 'require form';
 'require network';
 'require poll';
@@ -49,14 +50,14 @@ function getServiceStatus() {
 }
 
 function renderStatus(isRunning, version) {
-	let spanTemp = '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>';
-	let renderHTML;
-	if (isRunning)
-		renderHTML = spanTemp.format('green', _('HomeProxy'), version, _('RUNNING'));
-	else
-		renderHTML = spanTemp.format('red', _('HomeProxy'), version, _('NOT RUNNING'));
-
-	return renderHTML;
+	return E('em', {}, [
+		E('span', { 'style': 'color:%s'.format(isRunning ? 'green' : 'red') }, [
+			E('strong', {}, [
+				hp.renderBrandTitle(),
+				' (sing-box v%s) %s'.format(version, isRunning ? _('RUNNING') : _('NOT RUNNING'))
+			])
+		])
+	]);
 }
 
 let stubValidator = {
@@ -100,7 +101,7 @@ return view.extend({
 					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
 		});
 
-		m = new form.Map('homeproxy', _('HomeProxy'),
+		m = new form.Map('homeproxy', hp.renderBrandTitle(),
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
 
 		s = m.section(form.TypedSection);
@@ -108,7 +109,7 @@ return view.extend({
 			poll.add(function () {
 				return L.resolveDefault(getServiceStatus()).then((res) => {
 					let view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, features.version);
+					dom.content(view, renderStatus(res, features.version));
 				});
 			});
 

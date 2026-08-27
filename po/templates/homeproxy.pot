@@ -1262,6 +1262,10 @@ msgstr ""
 msgid "HomeProxy"
 msgstr ""
 
+#: root/usr/share/luci/menu.d/luci-app-homeproxy.json:3
+msgid "HomeProxy Multipath"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:58
 #: htdocs/luci-static/resources/view/homeproxy/server.js:60
 #: htdocs/luci-static/resources/view/homeproxy/server.js:129

@@ -5,6 +5,7 @@
  */
 
 'use strict';
+'require dom';
 'require form';
 'require poll';
 'require rpc';
@@ -52,14 +53,14 @@ function getServiceStatus() {
 }
 
 function renderStatus(isRunning, version) {
-	let spanTemp = '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>';
-	let renderHTML;
-	if (isRunning)
-		renderHTML = spanTemp.format('green', _('HomeProxy Server'), version, _('RUNNING'));
-	else
-		renderHTML = spanTemp.format('red', _('HomeProxy Server'), version, _('NOT RUNNING'));
-
-	return renderHTML;
+	return E('em', {}, [
+		E('span', { 'style': 'color:%s'.format(isRunning ? 'green' : 'red') }, [
+			E('strong', {}, [
+				hp.renderBrandTitle(_('Server')),
+				' (sing-box v%s) %s'.format(version, isRunning ? _('RUNNING') : _('NOT RUNNING'))
+			])
+		])
+	]);
 }
 
 function handleGenKey(option) {
@@ -126,7 +127,7 @@ return view.extend({
 		let m, s, o;
 		let features = data[1];
 
-		m = new form.Map('homeproxy', _('HomeProxy Server'),
+		m = new form.Map('homeproxy', hp.renderBrandTitle(_('Server')),
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
 
 		s = m.section(form.TypedSection);
@@ -134,7 +135,7 @@ return view.extend({
 			poll.add(() => {
 				return L.resolveDefault(getServiceStatus()).then((res) => {
 					let view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, features.version);
+					dom.content(view, renderStatus(res, features.version));
 				});
 			});
 
