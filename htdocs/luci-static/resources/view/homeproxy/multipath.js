@@ -525,12 +525,23 @@ function legEventHint(category, message) {
 	return _('The leg failed during transport I/O. Use the stage and destination below to identify the affected operation.');
 }
 
+function legEventIsHarmless(leg, category) {
+	if (Object.prototype.hasOwnProperty.call(leg, 'last_error_harmless'))
+		return !!leg.last_error_harmless;
+	const message = String(leg.last_error || '').toLowerCase();
+	return message === 'eof' || (category === 'hello_rejected' &&
+		(message.indexOf('session no longer exists') >= 0 || message.indexOf('leg already attached') >= 0));
+}
+
 function renderLegEvent(leg) {
 	if (!leg.last_error)
 		return '';
-	const category = legEventCategory(leg.last_error_category, leg.last_error),
-	      hasTransientFlag = Object.prototype.hasOwnProperty.call(leg, 'last_error_transient'),
-	      transient = hasTransientFlag ? !!leg.last_error_transient : category !== 'transport_error',
+	const category = legEventCategory(leg.last_error_category, leg.last_error);
+	if (legEventIsHarmless(leg, category))
+		return '';
+	const hasTransientFlag = Object.prototype.hasOwnProperty.call(leg, 'last_error_transient'),
+	      transient = hasTransientFlag ? !!leg.last_error_transient :
+		      (category === 'peer_closed' || category === 'replay_timeout' || category === 'timeout'),
 	      details = [
 			[ _('Category'), legEventCategoryLabel(category) ],
 			[ _('Stage'), legEventStageLabel(leg.last_error_stage) ],
@@ -719,10 +730,30 @@ function renderFlows(flows) {
 
 function renderLeg(leg, stale) {
 	const current = leg.current || {}, cumulative = leg.cumulative || {}, frames = leg.frames || {},
+	      udpCurrent = leg.udp_current || {}, udpCumulative = leg.udp_cumulative || {},
 	      queueCapacity = number(leg.connections) * number(leg.queue_bytes_per_connection),
 	      queueRatio = queueCapacity ? Math.min(100, number(leg.backlog_bytes) * 100 / queueCapacity) : 0,
 	      bandwidth = number(leg.configured_bandwidth_mbps),
-	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster');
+	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster'),
+	      parameterEntries = [
+			[ _('Local TX bandwidth'), bandwidth ? bandwidth + ' Mbps' : _('Automatic') ],
+			[ _('Local TX share'), number(leg.tx_share_percent).toFixed(1) + '%' ],
+			[ _('Scheduler weight'), String(number(leg.tx_weight)) ],
+			[ _('Queue backlog'), '%s / %s'.format(formatBytes(leg.backlog_bytes), formatBytes(queueCapacity)) ],
+			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
+			[ _('Join count'), String(number(leg.join_count)) ],
+			[ _('Connection attempts'), String(number(leg.attempt_count)) ]
+	      ];
+	if (leg.udp_selected) {
+		parameterEntries.push(
+			[ _('UDP current speed'), '%s · %s'.format(
+				_('RX %s').format(formatRate(udpCurrent.rx_bytes_per_second)),
+				_('TX %s').format(formatRate(udpCurrent.tx_bytes_per_second))) ],
+			[ _('UDP cumulative traffic'), '%s · %s'.format(
+				_('RX %s').format(formatBytes(udpCumulative.rx_bytes)),
+				_('TX %s').format(formatBytes(udpCumulative.tx_bytes))) ]
+		);
+	}
 	return E('section', { 'class': 'mp-panel mp-leg' + leg.id }, [
 		E('div', { 'class': 'mp-panel-header' }, [
 			E('div', {}, [
@@ -744,15 +775,7 @@ function renderLeg(leg, stale) {
 			E('span', {}, [ _('Retrying'), E('strong', {}, [ String(number(leg.retrying_connections)) ]) ])
 		]),
 		renderCollapsible('leg:' + leg.id + ':' + leg.tag + ':parameters', _('Leg parameters and counters'), [
-			renderParameters([
-				[ _('Local TX bandwidth'), bandwidth ? bandwidth + ' Mbps' : _('Automatic') ],
-				[ _('Local TX share'), number(leg.tx_share_percent).toFixed(1) + '%' ],
-				[ _('Scheduler weight'), String(number(leg.tx_weight)) ],
-				[ _('Queue backlog'), '%s / %s'.format(formatBytes(leg.backlog_bytes), formatBytes(queueCapacity)) ],
-				[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
-				[ _('Join count'), String(number(leg.join_count)) ],
-				[ _('Connection attempts'), String(number(leg.attempt_count)) ]
-			]),
+			renderParameters(parameterEntries),
 			E('div', { 'class': 'mp-meter', 'title': _('Queue utilization: %s').format(queueRatio.toFixed(1) + '%') },
 				E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' })),
 			renderLegEvent(leg)
