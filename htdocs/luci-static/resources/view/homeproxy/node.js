@@ -1327,8 +1327,12 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o = s.option(form.Flag, 'tcp_multi_path', _('MultiPath TCP'));
 	o.modalonly = true;
 
-	o = s.option(form.Flag, 'udp_fragment', _('UDP Fragment'),
-		_('Enable UDP fragmentation.'));
+	o = s.option(form.ListValue, 'udp_fragment', _('UDP Fragment'),
+		_('Use the protocol default unless explicitly enabled or disabled.'));
+	o.value('', _('Protocol default'));
+	o.value('1', _('Enabled'));
+	o.value('0', _('Disabled'));
+	o.depends({'type': 'multipath', '!reverse': true});
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'udp_over_tcp', _('UDP over TCP'),

@@ -11,7 +11,7 @@ import { writefile } from 'fs';
 import { cursor } from 'uci';
 
 import {
-	isEmpty, strToBool, strToInt, strToTime,
+	isEmpty, strToBool, strToInt, strToNullableBool, strToTime,
 	removeBlankAttrs, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -52,7 +52,7 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 		reuse_addr: strToBool(cfg.reuse_addr),
 		tcp_fast_open: strToBool(cfg.tcp_fast_open),
 		tcp_multi_path: strToBool(cfg.tcp_multi_path),
-		udp_fragment: strToBool(cfg.udp_fragment),
+		udp_fragment: strToNullableBool(cfg.udp_fragment),
 		udp_timeout: strToTime(cfg.udp_timeout),
 		network: cfg.network,
 

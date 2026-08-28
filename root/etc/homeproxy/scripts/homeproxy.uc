@@ -87,6 +87,14 @@ export function strToBool(str) {
 	return (str === '1') || null;
 };
 
+export function strToNullableBool(str) {
+	if (str === '1')
+		return true;
+	if (str === '0')
+		return false;
+	return null;
+};
+
 export function strToInt(str) {
 	return !isEmpty(str) ? (int(str) || null) : null;
 };

@@ -13,7 +13,7 @@ import { connect } from 'ubus';
 import { cursor } from 'uci';
 
 import {
-	isEmpty, parseURL, strToBool, strToInt, strToTime,
+	isEmpty, parseURL, strToBool, strToInt, strToNullableBool, strToTime,
 	removeBlankAttrs, validation, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -220,7 +220,7 @@ function generate_endpoint(node) {
 		system: (node.type === 'wireguard') ? false : null,
 		tcp_fast_open: strToBool(node.tcp_fast_open),
 		tcp_multi_path: strToBool(node.tcp_multi_path),
-		udp_fragment: strToBool(node.udp_fragment)
+		udp_fragment: strToNullableBool(node.udp_fragment)
 	};
 
 	return endpoint;
@@ -352,7 +352,7 @@ function generate_outbound(node) {
 		} : null,
 		tcp_fast_open: strToBool(node.tcp_fast_open),
 		tcp_multi_path: strToBool(node.tcp_multi_path),
-		udp_fragment: strToBool(node.udp_fragment)
+		udp_fragment: strToNullableBool(node.udp_fragment)
 	};
 
 	return outbound;

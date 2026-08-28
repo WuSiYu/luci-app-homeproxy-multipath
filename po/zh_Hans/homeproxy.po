@@ -985,6 +985,9 @@ msgstr "启用 TCP Brutal 拥塞控制算法。"
 msgid "Enable UDP fragmentation."
 msgstr "启用 UDP 分片。"
 
+msgid "Use the protocol default unless explicitly enabled or disabled."
+msgstr "除非明确启用或禁用，否则使用协议默认值。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:330
 msgid "Enable endpoint-independent NAT"
 msgstr "启用端点独立 NAT"
@@ -3356,6 +3359,9 @@ msgstr "UDP"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:854
 msgid "UDP Fragment"
 msgstr "UDP 分片"
+
+msgid "Protocol default"
+msgstr "协议默认值"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:337
 #: htdocs/luci-static/resources/view/homeproxy/server.js:859
