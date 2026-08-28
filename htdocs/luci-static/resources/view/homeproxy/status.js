@@ -192,7 +192,7 @@ function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 	);
 
 	let log;
-	poll.add(L.bind(() => {
+	const refreshLog = L.bind(() => {
 		if (connectionChecks)
 			return Promise.resolve();
 
@@ -221,7 +221,10 @@ function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 
 			dom.content(log_textarea, log);
 		});
-	}));
+	});
+
+	refreshLog();
+	poll.add(refreshLog);
 
 	return E([
 		E('style', [ css ]),
