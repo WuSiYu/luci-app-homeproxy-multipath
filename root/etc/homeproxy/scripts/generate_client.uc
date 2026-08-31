@@ -589,8 +589,14 @@ if (!isEmpty(main_node)) {
 			server: (routing_mode === 'bypass_mainland_china') ? 'china-dns' : 'default-dns'
 		});
 
-	/* Filter out SVCB/HTTPS queries for "exquisite" Apple devices */
-	if (routing_mode === 'gfwlist' || length(proxy_domain_list))
+	/*
+	 * sing-box 1.14 rejects modern DNS rule fields such as query_type when
+	 * the same DNS configuration also contains legacy rule-action strategy.
+	 * bypass_mainland_china uses strategy below to preserve prefer_ipv6 for
+	 * China domains, so skip this optional SVCB/HTTPS filter in that mode.
+	 */
+	if ((routing_mode === 'gfwlist' || length(proxy_domain_list)) &&
+		routing_mode !== 'bypass_mainland_china')
 		push(config.dns.rules, {
 			rule_set: (routing_mode !== 'gfwlist') ? 'proxy-domain' : null,
 			query_type: [64, 65],
@@ -668,6 +674,25 @@ if (!isEmpty(main_node)) {
 	});
 
 	/* DNS rules */
+	let dns_rule_has_strategy = false,
+	    dns_rule_has_modern_fields = false;
+	uci.foreach(uciconfig, ucidnsrule, (cfg) => {
+		if (cfg.enabled !== '1')
+			return;
+
+		if (!isEmpty(cfg.domain_strategy))
+			dns_rule_has_strategy = true;
+
+		if (!isEmpty(cfg.ip_version) ||
+			!isEmpty(cfg.query_type) ||
+			!isEmpty(parse_dns_match_response(cfg.match_response)) ||
+			cfg.action in ['evaluate', 'respond'])
+			dns_rule_has_modern_fields = true;
+	});
+
+	if (dns_rule_has_strategy && dns_rule_has_modern_fields)
+		die('Custom DNS rules cannot combine domain_strategy with ip_version, query_type, response matching, or evaluate/respond actions in sing-box 1.14.');
+
 	uci.foreach(uciconfig, ucidnsrule, (cfg) => {
 		if (cfg.enabled !== '1')
 			return;

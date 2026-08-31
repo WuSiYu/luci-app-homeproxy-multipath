@@ -88,6 +88,51 @@ return view.extend({
 		let features = data[1],
 		    hosts = data[2]?.hosts;
 
+		const hasDNSRuleValue = (value) => {
+			return value !== null && value !== undefined && value !== '' && value !== 'nil' &&
+				value !== false && value !== 0 && (!Array.isArray(value) || value.length > 0);
+		};
+
+		const validateDNSRuleCompatibility = (field) => function(section_id, value) {
+			if (!section_id)
+				return true;
+
+			let has_strategy = false,
+			    has_modern_fields = false;
+			uci.sections(data[0], 'dns_rule', (res) => {
+				let get = (name) => {
+					if (res['.name'] !== section_id)
+						return res[name];
+					if (name === field)
+						return value;
+					return this.section.formvalue(section_id, name);
+				};
+
+				let enabled = (res['.name'] === section_id) ?
+					this.section.formvalue(section_id, 'enabled') : res.enabled;
+				if (enabled !== '1')
+					return;
+
+				if (hasDNSRuleValue(get('domain_strategy')))
+					has_strategy = true;
+
+				let match_response = get('match_response');
+				if (match_response === '0' || match_response === 'false')
+					match_response = null;
+
+				if (hasDNSRuleValue(get('ip_version')) ||
+					hasDNSRuleValue(get('query_type')) ||
+					hasDNSRuleValue(match_response) ||
+					['evaluate', 'respond'].includes(get('action')))
+					has_modern_fields = true;
+			});
+
+			if (has_strategy && has_modern_fields)
+				return _('DNS rule domain strategy cannot be combined with IP version, query type, response matching, or evaluate/respond actions in sing-box 1.14.');
+
+			return true;
+		};
+
 		/* Cache all configured proxy nodes, they will be called multiple times */
 		let proxy_nodes = {};
 		uci.sections(data[0], 'node', (res) => {
@@ -1083,10 +1128,12 @@ return view.extend({
 		so.value('4', _('IPv4'));
 		so.value('6', _('IPv6'));
 		so.value('', _('Both'));
+		so.validate = validateDNSRuleCompatibility('ip_version');
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.DynamicList, 'query_type', _('Query type'),
 			_('Match query type.'));
+		so.validate = validateDNSRuleCompatibility('query_type');
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.ListValue, 'network', _('Network'));
@@ -1140,6 +1187,7 @@ return view.extend({
 				so.value(res.evaluate_tag);
 		});
 		so.placeholder = 'system-eval';
+		so.validate = validateDNSRuleCompatibility('match_response');
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.Flag, 'invert', _('Invert'),
@@ -1156,6 +1204,7 @@ return view.extend({
 		so.default = 'route';
 		so.rmempty = false;
 		so.editable = true;
+		so.validate = validateDNSRuleCompatibility('action');
 
 		so = ss.taboption('field_other', form.Value, 'evaluate_tag', _('Evaluate tag'),
 			_('Optional tag used by later DNS rules to reference this evaluated response.'));
@@ -1186,6 +1235,7 @@ return view.extend({
 			_('Set domain strategy for this query.'));
 		for (let i in hp.dns_strategy)
 			so.value(i, hp.dns_strategy[i]);
+		so.validate = validateDNSRuleCompatibility('domain_strategy');
 		so.depends('action', 'route');
 		so.depends('action', 'evaluate');
 		so.modalonly = true;

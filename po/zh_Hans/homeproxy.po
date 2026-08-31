@@ -567,6 +567,10 @@ msgstr "DNS 提供商"
 msgid "DNS rule"
 msgstr "DNS 规则"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js:131
+msgid "DNS rule domain strategy cannot be combined with IP version, query type, response matching, or evaluate/respond actions in sing-box 1.14."
+msgstr "在 sing-box 1.14 中，DNS 规则的域名策略不能与 IP 版本、查询类型、响应匹配或 evaluate/respond 操作同时使用。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:181
 #: htdocs/luci-static/resources/view/homeproxy/client.js:751
 #: htdocs/luci-static/resources/view/homeproxy/client.js:925
