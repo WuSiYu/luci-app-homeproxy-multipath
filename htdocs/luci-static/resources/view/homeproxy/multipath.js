@@ -234,6 +234,13 @@ const css = `
 	font-variant-numeric: tabular-nums;
 	word-break: break-word;
 }
+.mp-params-segment {
+	white-space: nowrap;
+	word-break: normal;
+}
+.mp-params-separator {
+	white-space: normal;
+}
 .mp-meter {
 	height: 6px;
 	background: #e8ebef;
@@ -670,11 +677,26 @@ function renderMetric(label, value, className) {
 	]);
 }
 
+function renderParameterValue(value) {
+	const text = String(value);
+	const segments = text.split(' · ');
+	if (segments.length === 1)
+		return text;
+
+	const children = [];
+	segments.forEach((segment, index) => {
+		if (index)
+			children.push(E('span', { 'class': 'mp-params-separator' }, [ ' · ' ]));
+		children.push(E('span', { 'class': 'mp-params-segment' }, [ segment ]));
+	});
+	return E('span', {}, children);
+}
+
 function renderParameters(entries) {
 	const children = [];
 	entries.forEach((entry) => {
 		children.push(E('dt', {}, [ entry[0] ]));
-		children.push(E('dd', {}, [ String(entry[1]) ]));
+		children.push(E('dd', {}, [ renderParameterValue(entry[1]) ]));
 	});
 	return E('dl', { 'class': 'mp-params' }, children);
 }
