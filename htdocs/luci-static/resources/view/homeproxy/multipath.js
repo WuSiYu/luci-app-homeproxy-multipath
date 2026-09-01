@@ -765,6 +765,7 @@ function renderAggregate(node, stale) {
 				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled') ],
 				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : '-' ],
 				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : '-' ],
+				[ _('Minimum rate after bytes'), parameters.activation_after_bytes_min_mbps ? parameters.activation_after_bytes_min_mbps + ' Mbps' : '-' ],
 				[ _('Activation window'), formatDuration(parameters.activation_window_ms) ],
 				[ _('Chunk size'), formatBytes(parameters.chunk_size) ],
 				[ _('Queue'), '%d frames · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)) ],

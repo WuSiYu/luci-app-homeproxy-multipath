@@ -87,6 +87,10 @@ msgstr ""
 msgid "Activation after bytes"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js:584
+msgid "Minimum rate after bytes"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/multipath.js:682
 #: htdocs/luci-static/resources/view/homeproxy/node.js:570
 msgid "Activation threshold"
@@ -767,7 +771,20 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:578
 msgid ""
-"Do not activate the secondary leg before this many bytes have been sent."
+"Do not activate the secondary leg before this many bytes have been sent. Accepts "
+"a memory size such as <code>2MB</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js:585
+msgid "When set, activation_after_bytes also requires this recent rate, in Mbps."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js:638
+msgid "Memory limit"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js:639
+msgid "Shared multipath memory budget. Accepts a memory size such as <code>256MB</code>."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:816

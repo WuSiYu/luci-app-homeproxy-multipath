@@ -575,7 +575,13 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Activation after bytes'),
-		_('Do not activate the secondary leg before this many bytes have been sent.'));
+		_('Do not activate the secondary leg before this many bytes have been sent. Accepts a memory size such as <code>2MB</code>.'));
+	o.validate = validateMemorySize;
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_after_bytes_min_mbps', _('Minimum rate after bytes'),
+		_('When set, activation_after_bytes also requires this recent rate, in Mbps.'));
 	o.datatype = 'uinteger';
 	o.depends('type', 'multipath');
 	o.modalonly = true;
@@ -625,6 +631,12 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 	o = s.option(form.Value, 'multipath_leg1_replay_timeout', _('Secondary leg replay timeout'), _('In seconds.'));
 	o.datatype = 'uinteger';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_memory_limit', _('Memory limit'),
+		_('Shared multipath memory budget. Accepts a memory size such as <code>256MB</code>.'));
+	o.validate = validateMemorySize;
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 

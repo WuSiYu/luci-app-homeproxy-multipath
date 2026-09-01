@@ -388,7 +388,8 @@ function generate_multipath_outbound(node) {
 		server_port: strToInt(node.multipath_server_port),
 		tcp_fast_open: strToBool(node.tcp_fast_open),
 		activation_threshold_mbps: strToInt(node.multipath_activation_threshold_mbps),
-		activation_after_bytes: strToInt(node.multipath_activation_after_bytes),
+		activation_after_bytes: isEmpty(node.multipath_activation_after_bytes) ? null : node.multipath_activation_after_bytes,
+		activation_after_bytes_min_mbps: strToInt(node.multipath_activation_after_bytes_min_mbps),
 		activation_window: strToTime(node.multipath_activation_window),
 		chunk_size: strToInt(node.multipath_chunk_size),
 		queue_frames: strToInt(node.multipath_queue_frames),
@@ -396,6 +397,7 @@ function generate_multipath_outbound(node) {
 		max_reorder_bytes: strToInt(node.multipath_max_reorder_bytes),
 		leg1_replay_bytes: strToInt(node.multipath_leg1_replay_bytes),
 		leg1_replay_timeout: strToTime(node.multipath_leg1_replay_timeout),
+		memory_limit: isEmpty(node.multipath_memory_limit) ? null : node.multipath_memory_limit,
 		handshake_timeout: strToTime(node.multipath_handshake_timeout),
 		status_file: RUN_DIR + '/multipath-status/' + node['.name'] + '.json'
 	};
