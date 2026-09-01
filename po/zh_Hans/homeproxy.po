@@ -3797,6 +3797,142 @@ msgstr "有效端口值"
 msgid "valid uuid"
 msgstr "有效 uuid"
 
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Active"
+msgstr "活跃"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Dismiss until a new event occurs"
+msgstr "关闭，直到出现新事件"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Effective RTT"
+msgstr "有效 RTT"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "EWMA"
+msgstr "EWMA"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fallback recovery"
+msgstr "回注恢复"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fresh"
+msgstr "最新"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Last remote failure stage"
+msgstr "最近远端失败阶段"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Leg lifecycle"
+msgstr "链路生命周期"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local TX policy"
+msgstr "本地发送策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Memory pressure"
+msgstr "内存压力"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Memory usage"
+msgstr "内存占用"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Normal"
+msgstr "正常"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Peak 1-second average"
+msgstr "1 秒平均峰值"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Peak 1-second speed"
+msgstr "1 秒速率峰值"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Probe health"
+msgstr "探测状态"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote sender status"
+msgstr "远端发送侧状态"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Reorder buffer"
+msgstr "重排缓冲区"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender backpressure"
+msgstr "发送侧反压"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender replay"
+msgstr "发送侧重放"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Stale"
+msgstr "已过期"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "UDP traffic"
+msgstr "UDP 流量"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unavailable"
+msgstr "不可用"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Writer state"
+msgstr "写入状态"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "attempts"
+msgstr "尝试"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "average"
+msgstr "平均"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "jitter"
+msgstr "抖动"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "joins"
+msgstr "加入"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "latest"
+msgstr "最新"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "peak"
+msgstr "峰值"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "range"
+msgstr "范围"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "remote failures"
+msgstr "远端失败"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "sent"
+msgstr "已发送"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "timeouts"
+msgstr "超时"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "weight"
+msgstr "权重"
+
 #~ msgid "Last error: %s"
 #~ msgstr "最近错误：%s"
 

@@ -3714,3 +3714,147 @@ msgstr ""
 #: htdocs/luci-static/resources/homeproxy.js:328
 msgid "valid uuid"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Active"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Dismiss until a new event occurs"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Effective RTT"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "EWMA"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fallback recovery"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fresh"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Last remote failure stage"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Leg lifecycle"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local TX policy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Memory pressure"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Memory usage"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Normal"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Peak 1-second average"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Peak 1-second speed"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Probe health"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Protocol default"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote sender status"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Reorder buffer"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender backpressure"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender replay"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Stale"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "UDP traffic"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unavailable"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Use the protocol default unless explicitly enabled or disabled."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Writer state"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "attempts"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "average"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "jitter"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "joins"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "latest"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "peak"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "range"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "remote failures"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "sent"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "timeouts"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "weight"
+msgstr ""

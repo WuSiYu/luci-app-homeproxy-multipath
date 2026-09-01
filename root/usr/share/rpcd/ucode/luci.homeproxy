@@ -201,7 +201,7 @@ const methods = {
 				} catch (e) {
 					continue;
 				}
-				if (type(document) !== 'object' || document.schema_version !== 1 || type(document.node) !== 'object')
+				if (type(document) !== 'object' || document.schema_version !== 2 || type(document.node) !== 'object')
 					continue;
 
 				push(nodes, document);

@@ -17,6 +17,7 @@ const callMultipathStatus = rpc.declare({
 });
 
 const sectionState = new Map();
+const dismissedEventPrefix = 'homeproxy.multipath.dismissed-event.';
 
 const css = `
 .mp-page {
@@ -273,6 +274,27 @@ const css = `
 	font-size: .68rem;
 	font-weight: 600;
 }
+.mp-event-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.mp-event-close {
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--mp-muted);
+	font-size: 1.1rem;
+	line-height: 1;
+	cursor: pointer;
+}
+.mp-event-close:hover,
+.mp-event-close:focus-visible {
+	color: #20252b;
+	background: rgba(0, 0, 0, .06);
+}
 .mp-leg-event-transient .mp-event-badge { color: var(--mp-warn); }
 .mp-leg-event-fault .mp-event-badge { color: var(--mp-bad); }
 .mp-event-message {
@@ -463,6 +485,19 @@ function formatDuration(milliseconds) {
 	return milliseconds + ' ms';
 }
 
+function formatLatency(milliseconds) {
+	milliseconds = number(milliseconds);
+	if (milliseconds <= 0)
+		return '-';
+	return (milliseconds < 10 ? milliseconds.toFixed(1) : milliseconds.toFixed(0)) + ' ms';
+}
+
+function formatPercent(numerator, denominator) {
+	numerator = number(numerator);
+	denominator = number(denominator);
+	return denominator > 0 ? (numerator * 100 / denominator).toFixed(1) + '%' : '-';
+}
+
 function formatTime(value) {
 	const date = new Date(value);
 	return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
@@ -533,11 +568,37 @@ function legEventIsHarmless(leg, category) {
 		(message.indexOf('session no longer exists') >= 0 || message.indexOf('leg already attached') >= 0));
 }
 
-function renderLegEvent(leg) {
+function legEventSignature(leg) {
+	return [ leg.last_error_at || '', number(leg.error_count), leg.last_error_stage || '', leg.last_error || '' ].join('|');
+}
+
+function legEventStorageKey(nodeTag, leg) {
+	return dismissedEventPrefix + encodeURIComponent(String(nodeTag || '-') + ':' + String(leg.id) + ':' + String(leg.tag || '-'));
+}
+
+function dismissedLegEvent(nodeTag, leg) {
+	try {
+		return window.localStorage.getItem(legEventStorageKey(nodeTag, leg));
+	} catch (error) {
+		return null;
+	}
+}
+
+function dismissLegEvent(nodeTag, leg) {
+	try {
+		window.localStorage.setItem(legEventStorageKey(nodeTag, leg), legEventSignature(leg));
+	} catch (error) {
+		/* Storage can be unavailable in private browsing; the current element is still removed. */
+	}
+}
+
+function renderLegEvent(nodeTag, leg) {
 	if (!leg.last_error)
 		return '';
 	const category = legEventCategory(leg.last_error_category, leg.last_error);
 	if (legEventIsHarmless(leg, category))
+		return '';
+	if (dismissedLegEvent(nodeTag, leg) === legEventSignature(leg))
 		return '';
 	const hasTransientFlag = Object.prototype.hasOwnProperty.call(leg, 'last_error_transient'),
 	      transient = hasTransientFlag ? !!leg.last_error_transient :
@@ -556,7 +617,21 @@ function renderLegEvent(leg) {
 	return E('div', { 'class': 'mp-leg-event mp-leg-event-' + (transient ? 'transient' : 'fault') }, [
 		E('div', { 'class': 'mp-event-header' }, [
 			E('span', {}, [ _('Last recorded leg event') ]),
-			E('span', { 'class': 'mp-event-badge' }, [ transient ? _('Transient') : _('Fault') ])
+			E('div', { 'class': 'mp-event-actions' }, [
+				E('span', { 'class': 'mp-event-badge' }, [ transient ? _('Transient') : _('Fault') ]),
+				E('button', {
+					'class': 'mp-event-close',
+					'type': 'button',
+					'title': _('Dismiss until a new event occurs'),
+					'aria-label': _('Dismiss until a new event occurs'),
+					'click': (event) => {
+						dismissLegEvent(nodeTag, leg);
+						const element = event.currentTarget.closest('.mp-leg-event');
+						if (element)
+							element.remove();
+					}
+				}, [ '×' ])
+			])
 		]),
 		E('div', { 'class': 'mp-event-message' }, [ leg.last_error ]),
 		E('div', { 'class': 'mp-event-grid' }, grid),
@@ -638,8 +713,12 @@ function activationDescription(activation) {
 function renderAggregate(node, stale) {
 	const logical = node.logical || {},
 	      current = logical.current || {},
+	      peak = logical.peak || {},
 	      cumulative = logical.cumulative || {},
-	      parameters = node.parameters || {};
+	      parameters = node.parameters || {},
+	      memory = node.memory || {},
+	      localSender = logical.local_sender || {},
+	      remoteSender = logical.remote_sender || {};
 	return E('section', { 'class': 'mp-panel mp-aggregate' }, [
 		E('div', { 'class': 'mp-panel-header' }, [
 			E('div', {}, [
@@ -664,6 +743,11 @@ function renderAggregate(node, stale) {
 				E('span', {}, [ _('Since process start') ]),
 				E('strong', { 'class': 'mp-rx' }, [ _('RX %s').format(formatBytes(cumulative.rx_bytes)) ]),
 				E('strong', { 'class': 'mp-tx' }, [ _('TX %s').format(formatBytes(cumulative.tx_bytes)) ])
+			]),
+			E('div', { 'class': 'mp-traffic-row' }, [
+				E('span', {}, [ _('Peak 1-second average') ]),
+				E('strong', { 'class': 'mp-rx', 'title': peak.rx_at ? formatTime(peak.rx_at) : '-' }, [ _('RX %s').format(formatRate(peak.rx_bytes_per_second)) ]),
+				E('strong', { 'class': 'mp-tx', 'title': peak.tx_at ? formatTime(peak.tx_at) : '-' }, [ _('TX %s').format(formatRate(peak.tx_bytes_per_second)) ])
 			])
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':state', _('Aggregation state'), [
@@ -692,8 +776,25 @@ function renderAggregate(node, stale) {
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':buffers', _('Live buffers'), [
 			renderParameters([
-				[ _('Replay pending'), formatBytes(logical.replay_bytes) ],
-				[ _('Reorder buffered'), '%s · %d frames'.format(formatBytes(logical.reorder_bytes), number(logical.reorder_frames)) ],
+				[ _('Sender replay'), '%s %s (%s %s) · %s %s (%s %s)'.format(
+					_('Upload'), formatBytes(localSender.replay_bytes), _('peak'), formatBytes(localSender.replay_peak_bytes),
+					_('Download'), remoteSender.available ? formatBytes(remoteSender.replay_bytes) : '-', _('peak'), remoteSender.available ? formatBytes(remoteSender.replay_peak_bytes) : '-') ],
+				[ _('Fallback recovery'), '%s %s / %s / %d / %d · %s %s / %s / %d / %d'.format(
+					_('Upload'), formatBytes(localSender.fallback_bytes), formatPercent(localSender.fallback_bytes, localSender.leg1_tx_bytes), number(localSender.fallback_frames), number(localSender.replay_timeouts),
+					_('Download'), remoteSender.available ? formatBytes(remoteSender.fallback_bytes) : '-', formatPercent(remoteSender.fallback_bytes, remoteSender.leg1_tx_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)) ],
+				[ _('Sender backpressure'), '%s %d / %s · %s %d / %s'.format(
+					_('Upload'), number(localSender.backpressure_events), formatDuration(localSender.backpressure_duration_ms),
+					_('Download'), number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)) ],
+				[ _('Reorder buffer'), '%s / %d (%s %s / %d)'.format(
+					formatBytes(logical.reorder_bytes), number(logical.reorder_frames), _('peak'), formatBytes(logical.reorder_peak_bytes), number(logical.reorder_peak_frames)) ],
+				[ _('Memory usage'), '%s %s / %s / %s · %s %s / %s'.format(
+					_('Local'), formatBytes(memory.used_bytes), formatBytes(memory.peak_used_bytes), formatBytes(memory.limit_bytes),
+					_('Remote'), remoteSender.available ? formatBytes(remoteSender.memory_used_bytes) : '-', remoteSender.available ? formatBytes(remoteSender.memory_peak_used_bytes) : '-') ],
+				[ _('Memory pressure'), '%s %s / %d / %d · %s %s / %d / %d'.format(
+					_('Local'), memory.pressure ? _('Active') : _('Normal'), number(memory.pressure_events), number(memory.backpressure_events),
+					_('Remote'), remoteSender.memory_pressure ? _('Active') : _('Normal'), number(remoteSender.memory_pressure_events), number(remoteSender.memory_backpressure_events)) ],
+				[ _('Remote sender status'), !remoteSender.available ? _('Unavailable') :
+					(remoteSender.stale ? _('Stale') : _('Fresh')) + (remoteSender.updated_at ? ' · ' + formatTime(remoteSender.updated_at) : '') ],
 				[ _('Connections since start'), String(number(logical.connections_total)) ]
 			])
 		])
@@ -728,28 +829,41 @@ function renderFlows(flows) {
 	]));
 }
 
-function renderLeg(leg, stale) {
+function renderLeg(nodeTag, leg, stale) {
 	const current = leg.current || {}, cumulative = leg.cumulative || {}, frames = leg.frames || {},
+	      peak = leg.peak || {},
 	      udpCurrent = leg.udp_current || {}, udpCumulative = leg.udp_cumulative || {},
 	      queueCapacity = number(leg.connections) * number(leg.queue_bytes_per_connection),
 	      queueRatio = queueCapacity ? Math.min(100, number(leg.backlog_bytes) * 100 / queueCapacity) : 0,
 	      bandwidth = number(leg.configured_bandwidth_mbps),
 	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster'),
 	      parameterEntries = [
-			[ _('Local TX bandwidth'), bandwidth ? bandwidth + ' Mbps' : _('Automatic') ],
-			[ _('Local TX share'), number(leg.tx_share_percent).toFixed(1) + '%' ],
-			[ _('Scheduler weight'), String(number(leg.tx_weight)) ],
-			[ _('Queue backlog'), '%s / %s'.format(formatBytes(leg.backlog_bytes), formatBytes(queueCapacity)) ],
+			[ _('Local TX policy'), '%s · %s · %s %d'.format(
+				bandwidth ? bandwidth + ' Mbps' : _('Automatic'), number(leg.tx_share_percent).toFixed(1) + '%', _('weight'), number(leg.tx_weight)) ],
+			[ _('Queue backlog'), '%s %s / %s (%s %s) · %s %s (%s %s)'.format(
+				_('Upload'), formatBytes(leg.backlog_bytes), formatBytes(queueCapacity), _('peak'), formatBytes(leg.peak_backlog_bytes),
+				_('Download'), formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)) ],
+			[ _('Writer state'), '%s %s / %s · %s %s / %s'.format(
+				_('Upload'), formatBytes(leg.writing_bytes), formatDuration(leg.write_blocked_ms),
+				_('Download'), formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)) ],
 			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
-			[ _('Join count'), String(number(leg.join_count)) ],
-			[ _('Connection attempts'), String(number(leg.attempt_count)) ]
+			[ _('Leg lifecycle'), '%s %d · %s %d · %s %d'.format(
+				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), number(leg.remote_failure_count)) ],
+			[ _('Peak 1-second speed'), '%s · %s'.format(
+				_('RX %s').format(formatRate(peak.rx_bytes_per_second)), _('TX %s').format(formatRate(peak.tx_bytes_per_second))) ],
+			[ _('Effective RTT'), '%s %s · %s %s · %s %s · %s %s–%s · %s %s'.format(
+				_('latest'), formatLatency(leg.rtt_latest_ms), _('average'), formatLatency(leg.rtt_average_ms), _('EWMA'), formatLatency(leg.rtt_ewma_ms),
+				_('range'), formatLatency(leg.rtt_min_ms), formatLatency(leg.rtt_max_ms), _('jitter'), formatLatency(leg.rtt_jitter_ms)) ],
+			[ _('Probe health'), '%s %d · %s %d · %s'.format(
+				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)) ]
 	      ];
+	if (leg.remote_last_failure_stage)
+		parameterEntries.push([ _('Last remote failure stage'), legEventStageLabel(leg.remote_last_failure_stage) ]);
 	if (leg.udp_selected) {
 		parameterEntries.push(
-			[ _('UDP current speed'), '%s · %s'.format(
+			[ _('UDP traffic'), '%s · %s · %s · %s'.format(
 				_('RX %s').format(formatRate(udpCurrent.rx_bytes_per_second)),
-				_('TX %s').format(formatRate(udpCurrent.tx_bytes_per_second))) ],
-			[ _('UDP cumulative traffic'), '%s · %s'.format(
+				_('TX %s').format(formatRate(udpCurrent.tx_bytes_per_second)),
 				_('RX %s').format(formatBytes(udpCumulative.rx_bytes)),
 				_('TX %s').format(formatBytes(udpCumulative.tx_bytes))) ]
 		);
@@ -778,7 +892,7 @@ function renderLeg(leg, stale) {
 			renderParameters(parameterEntries),
 			E('div', { 'class': 'mp-meter', 'title': _('Queue utilization: %s').format(queueRatio.toFixed(1) + '%') },
 				E('span', { 'style': 'width:' + queueRatio.toFixed(1) + '%' })),
-			renderLegEvent(leg)
+			renderLegEvent(nodeTag, leg)
 		]),
 		renderCollapsible('leg:' + leg.id + ':' + leg.tag + ':flows', _('Top 10 flows by current speed'), [
 			renderFlows(leg.top_flows)
@@ -811,7 +925,7 @@ function renderConnector(leg) {
 
 function normalizeDocuments(result) {
 	const documents = Array.isArray(result?.nodes) ? result.nodes : [];
-	return documents.filter((document) => document?.schema_version === 1 && document?.node)
+	return documents.filter((document) => document?.schema_version === 2 && document?.node)
 		.sort((left, right) => String(left.node.tag).localeCompare(String(right.node.tag)));
 }
 
@@ -886,9 +1000,9 @@ return view.extend({
 			content.push(E('div', { 'class': 'mp-topology' }, [
 				renderAggregate(node, stale),
 				renderConnector(leg0),
-				renderLeg(leg0, stale),
+				renderLeg(node.tag, leg0, stale),
 				renderConnector(leg1),
-				renderLeg(leg1, stale)
+				renderLeg(node.tag, leg1, stale)
 			]));
 		}
 
