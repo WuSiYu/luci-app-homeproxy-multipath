@@ -24,7 +24,7 @@ function strToMemoryBytes(value) {
 		return null;
 
 	value = trim(value);
-	return match(value, /^\d+$/) ? strToInt(value) : value;
+	return match(value, /^\d+$/) ? int(value) : value;
 }
 
 /* const features = ubus.call('luci.homeproxy', 'singbox_get_features') || {}; */
@@ -395,9 +395,11 @@ function generate_multipath_outbound(node) {
 		server: node.multipath_server,
 		server_port: strToInt(node.multipath_server_port),
 		tcp_fast_open: strToBool(node.tcp_fast_open),
-		activation_threshold_mbps: strToInt(node.multipath_activation_threshold_mbps),
+		aggregation_enabled: strToNullableBool(node.multipath_aggregation_enabled),
+		activation_on_queue: strToNullableBool(node.multipath_activation_on_queue),
+		activation_threshold_mbps: isEmpty(node.multipath_activation_threshold_mbps) ? null : int(node.multipath_activation_threshold_mbps),
 		activation_after_bytes: strToMemoryBytes(node.multipath_activation_after_bytes),
-		activation_after_bytes_min_mbps: strToInt(node.multipath_activation_after_bytes_min_mbps),
+		activation_after_bytes_min_mbps: isEmpty(node.multipath_activation_after_bytes_min_mbps) ? null : int(node.multipath_activation_after_bytes_min_mbps),
 		activation_window: strToTime(node.multipath_activation_window),
 		chunk_size: strToInt(node.multipath_chunk_size),
 		queue_frames: strToInt(node.multipath_queue_frames),

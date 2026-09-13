@@ -695,7 +695,7 @@ function renderParameterValue(value) {
 function renderParameters(entries) {
 	const children = [];
 	entries.forEach((entry) => {
-		children.push(E('dt', {}, [ entry[0] ]));
+		children.push(E('dt', entry[2] ? { 'title': entry[2] } : {}, [ entry[0] ]));
 		children.push(E('dd', {}, [ renderParameterValue(entry[1]) ]));
 	});
 	return E('dl', { 'class': 'mp-params' }, children);
@@ -717,7 +717,6 @@ function activationDescription(activation) {
 	if (!activation)
 		return '-';
 	const reasons = {
-		immediate: _('Immediate'),
 		bytes: _('Transferred bytes'),
 		throughput: _('Throughput'),
 		leg0_queue: _('Preferred queue')
@@ -782,43 +781,45 @@ function renderAggregate(node, stale) {
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':parameters', _('Effective multipath parameters'), [
 			renderParameters([
-				[ _('Aggregation server'), node.aggregation_server || '-' ],
-				[ _('UDP outbound'), displayTag(node.udp_outbound) ],
-				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled') ],
-				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : '-' ],
-				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : '-' ],
-				[ _('Minimum rate after bytes'), parameters.activation_after_bytes_min_mbps ? parameters.activation_after_bytes_min_mbps + ' Mbps' : '-' ],
-				[ _('Activation window'), formatDuration(parameters.activation_window_ms) ],
-				[ _('Chunk size'), formatBytes(parameters.chunk_size) ],
-				[ _('Queue'), '%d frames · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)) ],
-				[ _('Maximum reorder buffer'), '%d frames · %s'.format(number(parameters.max_reorder_frames), formatBytes(parameters.max_reorder_bytes)) ],
-				[ _('Booster replay'), '%s · %s'.format(formatBytes(parameters.leg1_replay_bytes), formatDuration(parameters.leg1_replay_timeout_ms)) ],
-				[ _('Handshake timeout'), formatDuration(parameters.handshake_timeout_ms) ],
-				[ _('Last activation'), activationDescription(logical.last_activation) ]
+				[ _('Aggregation server'), node.aggregation_server || '-', 'Remote multipath inbound used to join both child legs.' ],
+				[ _('UDP outbound'), displayTag(node.udp_outbound), 'Child outbound selected for UDP. UDP uses this one child and is not aggregated.' ],
+				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled'), 'Whether multipath connection setup can send early data. The child path must also support TCP Fast Open.' ],
+				[ _('Local TX aggregation'), parameters.aggregation_enabled !== false ? _('Enabled') : _('Disabled'), _('Controls client upload only. When enabled, any enabled queue, rate, or byte-count trigger activates aggregation (OR). When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged.') ],
+				[ _('Activate on preferred queue'), parameters.activation_on_queue !== false ? _('Enabled') : _('Disabled'), _('Independent OR trigger: activate when the preferred send queue stays at least 80% full for the activation window. All triggers disabled means preferred-only TX.') ],
+				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : _('Disabled'), _('Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured.') ],
+				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : _('Disabled'), _('Independent OR trigger: cumulative locally sent bytes per connection. 0 disables this trigger.') ],
+				[ _('Minimum rate after bytes'), parameters.activation_after_bytes_min_mbps ? parameters.activation_after_bytes_min_mbps + ' Mbps' : _('Disabled'), _('Only the byte-count trigger requires this minimum average rate over a complete activation window, in Mbps. 0 or empty removes the rate gate; queue and rate triggers remain independent.') ],
+				[ _('Activation window'), formatDuration(parameters.activation_window_ms), 'Sampling window used by rate and sustained leg 0 queue activation checks.' ],
+				[ _('Chunk size'), formatBytes(parameters.chunk_size), 'Maximum payload carried by one multipath data frame.' ],
+				[ _('Queue'), '%d frames · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)), 'Per-leg send queue capacity: frame slots · bytes. It absorbs bursts but uses memory and may add queueing delay.' ],
+				[ _('Maximum reorder buffer'), '%d frames · %s'.format(number(parameters.max_reorder_frames), formatBytes(parameters.max_reorder_bytes)), 'Out-of-order receive buffer limit: frame slots · bytes. It bounds memory while waiting for an earlier frame.' ],
+				[ _('Booster replay'), '%s · %s'.format(formatBytes(parameters.leg1_replay_bytes), formatDuration(parameters.leg1_replay_timeout_ms)), 'Leg 1 replay retention: bytes · timeout. Unacknowledged leg 1 data is retained for fallback to leg 0.' ],
+				[ _('Handshake timeout'), formatDuration(parameters.handshake_timeout_ms), 'Maximum time allowed for a multipath leg handshake.' ],
+				[ _('Last activation'), activationDescription(logical.last_activation), 'Most recent reason leg 1 was activated, with the observed trigger value when available.' ]
 			])
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':buffers', _('Live buffers'), [
 			renderParameters([
 				[ _('Sender replay'), '%s %s (%s %s) · %s %s (%s %s)'.format(
 					_('Upload'), formatBytes(localSender.replay_bytes), _('peak'), formatBytes(localSender.replay_peak_bytes),
-					_('Download'), remoteSender.available ? formatBytes(remoteSender.replay_bytes) : '-', _('peak'), remoteSender.available ? formatBytes(remoteSender.replay_peak_bytes) : '-') ],
+					_('Download'), remoteSender.available ? formatBytes(remoteSender.replay_bytes) : '-', _('peak'), remoteSender.available ? formatBytes(remoteSender.replay_peak_bytes) : '-'), 'Each direction: current replay bytes (peak replay bytes). Download is reported by the remote sender.' ],
 				[ _('Fallback recovery'), '%s %s / %s / %d / %d · %s %s / %s / %d / %d'.format(
 					_('Upload'), formatBytes(localSender.fallback_bytes), formatPercent(localSender.fallback_bytes, localSender.leg1_tx_bytes), number(localSender.fallback_frames), number(localSender.replay_timeouts),
-					_('Download'), remoteSender.available ? formatBytes(remoteSender.fallback_bytes) : '-', formatPercent(remoteSender.fallback_bytes, remoteSender.leg1_tx_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)) ],
+					_('Download'), remoteSender.available ? formatBytes(remoteSender.fallback_bytes) : '-', formatPercent(remoteSender.fallback_bytes, remoteSender.leg1_tx_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)), 'Each direction: fallback bytes / share of leg 1 traffic / recovered frames / replay timeouts. Fallback bytes were reassigned from leg 1 to leg 0.' ],
 				[ _('Sender backpressure'), '%s %d / %s · %s %d / %s'.format(
 					_('Upload'), number(localSender.backpressure_events), formatDuration(localSender.backpressure_duration_ms),
-					_('Download'), number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)) ],
+					_('Download'), number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)), 'Each direction: backpressure event count / total blocked time. It indicates throttling by bounded queues or the memory budget.' ],
 				[ _('Reorder buffer'), '%s / %d (%s %s / %d)'.format(
-					formatBytes(logical.reorder_bytes), number(logical.reorder_frames), _('peak'), formatBytes(logical.reorder_peak_bytes), number(logical.reorder_peak_frames)) ],
+					formatBytes(logical.reorder_bytes), number(logical.reorder_frames), _('peak'), formatBytes(logical.reorder_peak_bytes), number(logical.reorder_peak_frames)), 'Current logical receive reorder buffer: bytes / frames (peak bytes / frames).' ],
 				[ _('Memory usage'), '%s %s / %s / %s · %s %s / %s'.format(
 					_('Local'), formatBytes(memory.used_bytes), formatBytes(memory.peak_used_bytes), formatBytes(memory.limit_bytes),
-					_('Remote'), remoteSender.available ? formatBytes(remoteSender.memory_used_bytes) : '-', remoteSender.available ? formatBytes(remoteSender.memory_peak_used_bytes) : '-') ],
+					_('Remote'), remoteSender.available ? formatBytes(remoteSender.memory_used_bytes) : '-', remoteSender.available ? formatBytes(remoteSender.memory_peak_used_bytes) : '-'), 'Local current / peak / limit memory, followed by remote current / peak memory. Remote values come from server telemetry.' ],
 				[ _('Memory pressure'), '%s %s / %d / %d · %s %s / %d / %d'.format(
 					_('Local'), memory.pressure ? _('Active') : _('Normal'), number(memory.pressure_events), number(memory.backpressure_events),
-					_('Remote'), remoteSender.memory_pressure ? _('Active') : _('Normal'), number(remoteSender.memory_pressure_events), number(remoteSender.memory_backpressure_events)) ],
+					_('Remote'), remoteSender.memory_pressure ? _('Active') : _('Normal'), number(remoteSender.memory_pressure_events), number(remoteSender.memory_backpressure_events)), 'Each side: pressure state / pressure event count / memory backpressure event count.' ],
 				[ _('Remote sender status'), !remoteSender.available ? _('Unavailable') :
-					(remoteSender.stale ? _('Stale') : _('Fresh')) + (remoteSender.updated_at ? ' · ' + formatTime(remoteSender.updated_at) : '') ],
-				[ _('Connections since start'), String(number(logical.connections_total)) ]
+					(remoteSender.stale ? _('Stale') : _('Fresh')) + (remoteSender.updated_at ? ' · ' + formatTime(remoteSender.updated_at) : ''), 'Remote sender telemetry state: unavailable, stale, or fresh. The timestamp is the last received update.' ],
+				[ _('Connections since start'), String(number(logical.connections_total)), 'Total logical TCP connections created since this sing-box process started.' ]
 			])
 		])
 	]);
@@ -862,33 +863,33 @@ function renderLeg(nodeTag, leg, stale) {
 	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster'),
 	      parameterEntries = [
 			[ _('Local TX policy'), '%s · %s · %s %d'.format(
-				bandwidth ? bandwidth + ' Mbps' : _('Automatic'), number(leg.tx_share_percent).toFixed(1) + '%', _('weight'), number(leg.tx_weight)) ],
+				bandwidth ? bandwidth + ' Mbps' : _('Automatic'), number(leg.tx_share_percent).toFixed(1) + '%', _('weight'), number(leg.tx_weight)), _('Configured bandwidth hint · normalized weight share · scheduler weight. These guide local TX scheduling; the percentage is not measured traffic share and none of these values imposes a rate limit.') ],
 			[ _('Queue backlog'), '%s %s / %s (%s %s) · %s %s (%s %s)'.format(
 				_('Upload'), formatBytes(leg.backlog_bytes), formatBytes(queueCapacity), _('peak'), formatBytes(leg.peak_backlog_bytes),
-				_('Download'), formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)) ],
+				_('Download'), formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), _('Upload: current backlog / queue capacity (peak backlog). Download: remote current backlog (peak backlog); remote capacity is not shown.') ],
 			[ _('Writer state'), '%s %s / %s · %s %s / %s'.format(
 				_('Upload'), formatBytes(leg.writing_bytes), formatDuration(leg.write_blocked_ms),
-				_('Download'), formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)) ],
-			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)) ],
+				_('Download'), formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)), 'Each direction: bytes currently held by the writer / time blocked on writing. Download is reported by the remote sender.' ],
+			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)), 'Frames sent on this leg · frames received on this leg.' ],
 			[ _('Leg lifecycle'), '%s %d · %s %d · %s %d'.format(
-				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), number(leg.remote_failure_count)) ],
+				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), number(leg.remote_failure_count)), 'Successful leg joins · connection attempts · failures reported by the remote side.' ],
 			[ _('Peak 1-second speed'), '%s · %s'.format(
-				_('RX %s').format(formatRate(peak.rx_bytes_per_second)), _('TX %s').format(formatRate(peak.tx_bytes_per_second))) ],
+				_('RX %s').format(formatRate(peak.rx_bytes_per_second)), _('TX %s').format(formatRate(peak.tx_bytes_per_second))), 'Peak one-second average speed since process start: received rate · transmitted rate.' ],
 			[ _('Effective RTT'), '%s %s · %s %s · %s %s · %s %s–%s · %s %s'.format(
 				_('latest'), formatLatency(leg.rtt_latest_ms), _('average'), formatLatency(leg.rtt_average_ms), _('EWMA'), formatLatency(leg.rtt_ewma_ms),
-				_('range'), formatLatency(leg.rtt_min_ms), formatLatency(leg.rtt_max_ms), _('jitter'), formatLatency(leg.rtt_jitter_ms)) ],
+				_('range'), formatLatency(leg.rtt_min_ms), formatLatency(leg.rtt_max_ms), _('jitter'), formatLatency(leg.rtt_jitter_ms)), 'Multipath probe RTT in milliseconds: latest · average · EWMA · minimum-maximum range · jitter. It includes transport and proxy queueing.' ],
 			[ _('Probe health'), '%s %d · %s %d · %s'.format(
-				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)) ]
+				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)), 'Probe packets sent · probe timeouts · timeout ratio. This is multipath probe health, not raw IP packet loss.' ]
 	      ];
 	if (leg.remote_last_failure_stage)
-		parameterEntries.push([ _('Last remote failure stage'), legEventStageLabel(leg.remote_last_failure_stage) ]);
+		parameterEntries.push([ _('Last remote failure stage'), legEventStageLabel(leg.remote_last_failure_stage), 'Most recent stage at which the remote side reported a failure for this leg.' ]);
 	if (leg.udp_selected) {
 		parameterEntries.push(
 			[ _('UDP traffic'), '%s · %s · %s · %s'.format(
 				_('RX %s').format(formatRate(udpCurrent.rx_bytes_per_second)),
 				_('TX %s').format(formatRate(udpCurrent.tx_bytes_per_second)),
 				_('RX %s').format(formatBytes(udpCumulative.rx_bytes)),
-				_('TX %s').format(formatBytes(udpCumulative.tx_bytes))) ]
+				_('TX %s').format(formatBytes(udpCumulative.tx_bytes))), 'UDP current RX rate · current TX rate · cumulative RX bytes · cumulative TX bytes. UDP uses the selected child only.' ]
 		);
 	}
 	return E('section', { 'class': 'mp-panel mp-leg' + leg.id }, [
@@ -904,6 +905,11 @@ function renderLeg(nodeTag, leg, stale) {
 			renderMetric(_('Download'), formatRate(current.rx_bytes_per_second), 'mp-rx'),
 			renderMetric(_('Upload'), formatRate(current.tx_bytes_per_second), 'mp-tx'),
 			renderMetric(_('Cumulative traffic'), formatBytes(number(cumulative.rx_bytes) + number(cumulative.tx_bytes)))
+		]),
+		E('div', { 'class': 'mp-traffic-row' }, [
+			E('span', { 'title': _('Traffic on this leg since process start, including TCP payload and UDP when this child is selected for UDP. Download is RX; upload is TX. Protocol overhead is excluded.') }, [ _('Cumulative traffic') ]),
+			E('strong', { 'class': 'mp-rx' }, [ _('Download') + ' ' + formatBytes(cumulative.rx_bytes) ]),
+			E('strong', { 'class': 'mp-tx' }, [ _('Upload') + ' ' + formatBytes(cumulative.tx_bytes) ])
 		]),
 		E('div', { 'class': 'mp-mode-row' }, [
 			E('span', {}, [ _('Carrying'), E('strong', {}, [ String(number(leg.carrying_connections)) ]) ]),

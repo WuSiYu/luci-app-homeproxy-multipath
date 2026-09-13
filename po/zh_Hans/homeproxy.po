@@ -3950,6 +3950,120 @@ msgstr "超时"
 msgid "weight"
 msgstr "权重"
 
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Enable local TX aggregation (upload)"
+msgstr "启用本地发送聚合（上传）"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local TX aggregation"
+msgstr "本地发送聚合"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Controls client upload only. When enabled, any enabled queue, rate, or byte-count trigger activates aggregation (OR). When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged."
+msgstr "仅控制客户端上传。开启时，队列、速率、累计字节三个独立条件之间为“或”关系，任一已启用条件满足即可触发聚合。关闭时，上传数据始终使用优选路径；服务端下行和 UDP 不受影响。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Activate on preferred queue"
+msgstr "优选路径队列触发"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Independent OR trigger: activate when the preferred send queue stays at least 80% full for the activation window. All triggers disabled means preferred-only TX."
+msgstr "独立的“或”触发条件：优选路径发送队列占用持续达到 80%，且持续时间达到激活窗口时触发。关闭全部触发条件后，发送数据仅使用优选路径。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured."
+msgstr "独立的“或”触发条件：每连接的本地平均发送速率，单位 Mbps。0 关闭此条件。留空时，未启用累计字节触发则默认为 150，已启用则默认为 0。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Independent OR trigger: cumulative locally sent bytes per connection. 0 or empty disables this trigger. Accepts bytes or a memory size such as <code>2MB</code>."
+msgstr "独立的“或”触发条件：每连接本地累计发送字节数。0 或留空关闭此条件。支持字节数或 <code>2MB</code> 等大小写法。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Independent OR trigger: cumulative locally sent bytes per connection. 0 disables this trigger."
+msgstr "独立的“或”触发条件：每连接本地累计发送字节数。0 关闭此条件。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Only the byte-count trigger requires this minimum average rate over a complete activation window, in Mbps. 0 or empty removes the rate gate; queue and rate triggers remain independent."
+msgstr "仅累计字节触发需要额外满足完整激活窗口内的最低平均速率，单位 Mbps。0 或留空取消此速率门槛；队列和速率触发仍独立生效。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Rate measurement window and sustained high-queue duration, in seconds. Applies independently to each connection and local sending direction."
+msgstr "速率测量窗口及高队列占用持续时间，单位秒。对每个连接和本地发送方向独立生效。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Additional node for aggregation. It remains available for server downlink when local TX aggregation is disabled."
+msgstr "用于聚合的附加节点。即使关闭本地发送聚合，服务端下行仍可使用该节点。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Preferred leg bandwidth weight"
+msgstr "优选路径带宽权重"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Secondary leg bandwidth weight"
+msgstr "辅助路径带宽权重"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Expected local TX capacity in Mbps, used only as a relative scheduling weight. This does not limit bandwidth."
+msgstr "预计的本地发送容量，单位 Mbps，仅用作相对调度权重，不会限制带宽。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Configured bandwidth hint · normalized weight share · scheduler weight. These guide local TX scheduling; the percentage is not measured traffic share and none of these values imposes a rate limit."
+msgstr "配置的带宽参考值 · 归一化权重占比 · 调度权重。仅用于本地发送调度；百分比不是实测速率占比，这些数值均不限制带宽。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Upload: current backlog / queue capacity (peak backlog). Download: remote current backlog (peak backlog); remote capacity is not shown."
+msgstr "上传：当前积压 / 队列容量（积压峰值）。下载：远端当前积压（积压峰值）；未显示远端队列容量。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Traffic on this leg since process start, including TCP payload and UDP when this child is selected for UDP. Download is RX; upload is TX. Protocol overhead is excluded."
+msgstr "本路径自进程启动以来的累计流量，包含 TCP 载荷及该节点被选为 UDP 出口时的 UDP 流量。下载为 RX，上传为 TX，不含协议封装开销。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Controls client upload only. When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged. Saved trigger settings are retained while hidden."
+msgstr "仅控制客户端上传。关闭时，上传数据始终使用优选路径；服务端下行和 UDP 不受影响。隐藏触发条件时会保留已保存的设置。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg."
+msgstr "触发逻辑：条件 1 或 条件 2 或 条件 3。任意一个已启用的条件满足即可触发聚合；三个条件全部关闭时，上传仅使用优选路径。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 1: preferred queue"
+msgstr "条件 1：优选路径队列"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 2: average TX rate"
+msgstr "条件 2：平均发送速率"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 3: cumulative TX bytes"
+msgstr "条件 3：累计发送字节"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Additional minimum rate for condition 3"
+msgstr "条件 3 的附加最低速率"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Extra requirement for condition 3 only: the byte count and this minimum average rate over a complete activation window must both be satisfied. In Mbps; 0 or empty removes the rate gate. Conditions 1 and 2 remain independent."
+msgstr "仅为条件 3 的附加要求：累计字节数与完整激活窗口内的最低平均速率必须同时满足。单位 Mbps；0 或留空取消此速率门槛。条件 1 和条件 2 仍独立生效。"
+
 #~ msgid "Last error: %s"
 #~ msgstr "最近错误：%s"
 

@@ -540,7 +540,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.ListValue, 'multipath_secondary', _('Secondary leg'),
-		_('Additional node activated when the flow reaches the configured threshold.'));
+		_('Additional node for aggregation. It remains available for server downlink when local TX aggregation is disabled.'));
 	o.load = loadMultipathNodes;
 	o.validate = validateMultipathLeg;
 	o.depends('type', 'multipath');
@@ -567,30 +567,50 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.rmempty = false;
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_activation_threshold_mbps', _('Activation threshold'),
-		_('Activate the secondary leg when the preferred leg reaches this rate, in Mbps.'));
-	o.datatype = 'uinteger';
-	o.default = '120';
+	o = s.option(form.Flag, 'multipath_aggregation_enabled', _('Enable local TX aggregation (upload)'),
+		_('Controls client upload only. When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
+		_('Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg.') + '</strong>');
+	o.default = o.enabled;
+	o.rmempty = false;
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Activation after bytes'),
-		_('Do not activate the secondary leg before this many bytes have been sent. Accepts a memory size such as <code>2MB</code>.'));
+	o = s.option(form.Flag, 'multipath_activation_on_queue', _('Condition 1: preferred queue'),
+		_('Independent OR trigger: activate when the preferred send queue stays at least 80% full for the activation window. All triggers disabled means preferred-only TX.'));
+	o.default = o.enabled;
+	o.rmempty = false;
+	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
+	o.retain = true;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_threshold_mbps', _('Condition 2: average TX rate'),
+		_('Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured.'));
+	o.datatype = 'uinteger';
+	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
+	o.retain = true;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Condition 3: cumulative TX bytes'),
+		_('Independent OR trigger: cumulative locally sent bytes per connection. 0 or empty disables this trigger. Accepts bytes or a memory size such as <code>2MB</code>.'));
 	o.validate = validateMemorySize;
-	o.depends('type', 'multipath');
+	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
+	o.retain = true;
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_activation_after_bytes_min_mbps', _('Minimum rate after bytes'),
-		_('When set, activation_after_bytes also requires this recent rate, in Mbps.'));
+	o = s.option(form.Value, 'multipath_activation_after_bytes_min_mbps', _('Additional minimum rate for condition 3'),
+		_('Extra requirement for condition 3 only: the byte count and this minimum average rate over a complete activation window must both be satisfied. In Mbps; 0 or empty removes the rate gate. Conditions 1 and 2 remain independent.'));
 	o.datatype = 'uinteger';
-	o.depends('type', 'multipath');
+	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1',
+		'multipath_activation_after_bytes': /^\s*0*[1-9]\d*\s*(?:[kmgtpe]i?b|b)?\s*$/i});
+	o.retain = true;
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_activation_window', _('Activation window'),
-		_('Rate measurement window in seconds.'));
+		_('Rate measurement window and sustained high-queue duration, in seconds. Applies independently to each connection and local sending direction.'));
 	o.datatype = 'uinteger';
 	o.default = '1';
-	o.depends('type', 'multipath');
+	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
+	o.retain = true;
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_chunk_size', _('Chunk size'), _('Bytes per multipath data frame.'));
@@ -605,14 +625,16 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_bandwidth_leg0_mbps', _('Preferred leg bandwidth'), _('Mbps.'));
+	o = s.option(form.Value, 'multipath_bandwidth_leg0_mbps', _('Preferred leg bandwidth weight'),
+		_('Expected local TX capacity in Mbps, used only as a relative scheduling weight. This does not limit bandwidth.'));
 	o.datatype = 'uinteger';
 	o.default = '160';
 	o.depends('type', 'multipath');
 	o.rmempty = false;
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_bandwidth_leg1_mbps', _('Secondary leg bandwidth'), _('Mbps.'));
+	o = s.option(form.Value, 'multipath_bandwidth_leg1_mbps', _('Secondary leg bandwidth weight'),
+		_('Expected local TX capacity in Mbps, used only as a relative scheduling weight. This does not limit bandwidth.'));
 	o.datatype = 'uinteger';
 	o.default = '700';
 	o.depends('type', 'multipath');
