@@ -4202,8 +4202,26 @@ msgid "Unsupported status schema: %s. This page requires singbox-multipath beta5
 msgstr "不支持的状态格式：%s。此页面需要 singbox-multipath beta5 的状态格式 3；请升级 sing-box 并重启 HomeProxy。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
-msgid "Requires singbox-multipath beta5 (protocol v8) on both endpoints. Legacy bandwidth settings are ignored."
-msgstr "两端均需要 singbox-multipath beta5（协议 v8）。旧带宽设置会被忽略。"
+msgid "Requires the updated singbox-multipath beta5 (protocol v9) on both endpoints. Legacy bandwidth settings are ignored."
+msgstr "两端均需要更新后的 singbox-multipath beta5（协议 v9）。旧带宽设置会被忽略。"
+
+msgid "Multipath transport"
+msgstr "Multipath 传输"
+
+msgid "Service shutdown"
+msgstr "服务关闭"
+
+msgid "Local application endpoint"
+msgstr "本端业务连接"
+
+msgid "Remote application endpoint"
+msgstr "对端业务连接"
+
+msgid "Unattributed"
+msgstr "来源未确认"
+
+msgid "Confirmed application-endpoint closures are hidden. Unattributed events remain visible; the destination identifies the affected flow, not the cause. Occurrences includes hidden events."
+msgstr "已确认由业务端引起的关闭不会显示。来源未确认的事件仍保留；目标地址表示受影响的流，不代表故障来源。事件次数包含已隐藏事件。"
 
 #: htdocs/luci-static/resources/view/homeproxy/multipath.js
 msgid "Remote scheduler estimate"

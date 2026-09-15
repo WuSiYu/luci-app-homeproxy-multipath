@@ -110,6 +110,27 @@ leg.last_error_harmless = true;
 render();
 assert.ok(!flatten(page.root).includes('test failure'));
 
+// Identical errors must be filtered by explicit provenance, not wording.
+for (const message of ['unexpected EOF', 'connection reset by peer', 'stream 8576 canceled by remote with error code 0']) {
+  Object.assign(leg, { last_error: message, last_error_harmless: false, last_error_stage: 'read_data' });
+  for (const source of ['local_endpoint', 'remote_endpoint']) {
+    leg.last_error_source = source;
+    render();
+    assert.ok(!flatten(page.root).includes(message), source + ': ' + message);
+  }
+  for (const source of ['unknown', 'transport', undefined]) {
+    leg.last_error_source = source;
+    render();
+    assert.ok(flatten(page.root).includes(message), String(source) + ': ' + message);
+    assert.ok(flatten(page.root).includes(source === 'transport' ? 'Multipath transport' : 'Unattributed'));
+  }
+}
+for (const message of ['i/o timeout', 'multipath hello rejected: invalid leg id', 'invalid multipath data mapping']) {
+  Object.assign(leg, { last_error: message, last_error_source: 'unknown', last_error_harmless: false });
+  render();
+  assert.ok(flatten(page.root).includes(message));
+}
+
 const section = findNodes(page.root, node => node.tag === 'details')[0];
 section.attrs.toggle({ currentTarget: { open: false } });
 render();

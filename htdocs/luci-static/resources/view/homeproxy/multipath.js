@@ -576,6 +576,9 @@ function legEventHint(category, message) {
 }
 
 function legEventIsHarmless(leg, category) {
+	// Use explicit provenance, never infer an endpoint failure from EOF/reset.
+	if (leg.last_error_source === 'local_endpoint' || leg.last_error_source === 'remote_endpoint')
+		return true;
 	if (Object.prototype.hasOwnProperty.call(leg, 'last_error_harmless'))
 		return !!leg.last_error_harmless;
 	const message = String(leg.last_error || '').toLowerCase();
@@ -584,7 +587,17 @@ function legEventIsHarmless(leg, category) {
 }
 
 function legEventSignature(leg) {
-	return [ leg.last_error_at || '', number(leg.error_count), leg.last_error_stage || '', leg.last_error || '' ].join('|');
+	return [ leg.last_error_at || '', number(leg.error_count), leg.last_error_stage || '', leg.last_error_source || '', leg.last_error || '' ].join('|');
+}
+
+function legEventSourceLabel(source) {
+	const sources = {
+		transport: _('Multipath transport'),
+		shutdown: _('Service shutdown'),
+		local_endpoint: _('Local application endpoint'),
+		remote_endpoint: _('Remote application endpoint')
+	};
+	return sources[source] || _('Unattributed');
 }
 
 function legEventStorageKey(nodeTag, leg) {
@@ -620,6 +633,7 @@ function renderLegEvent(nodeTag, leg) {
 		      (category === 'peer_closed' || category === 'replay_timeout' || category === 'timeout'),
 	      details = [
 			[ _('Category'), legEventCategoryLabel(category) ],
+			[ _('Source'), legEventSourceLabel(leg.last_error_source) ],
 			[ _('Stage'), legEventStageLabel(leg.last_error_stage) ],
 			[ _('Destination'), leg.last_error_destination || '-' ],
 			[ _('Session'), leg.last_error_session_id ? '#' + leg.last_error_session_id : '-' ],
@@ -650,7 +664,8 @@ function renderLegEvent(nodeTag, leg) {
 		]),
 		E('div', { 'class': 'mp-event-message' }, [ leg.last_error ]),
 		E('div', { 'class': 'mp-event-grid' }, grid),
-		E('div', { 'class': 'mp-event-hint' }, [ legEventHint(category, leg.last_error) ])
+		E('div', { 'class': 'mp-event-hint' }, [ legEventHint(category, leg.last_error) ]),
+		E('div', { 'class': 'mp-event-hint' }, [ _('Confirmed application-endpoint closures are hidden. Unattributed events remain visible; the destination identifies the affected flow, not the cause. Occurrences includes hidden events.') ])
 	]);
 }
 

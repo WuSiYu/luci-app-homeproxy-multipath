@@ -568,7 +568,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'multipath_aggregation_enabled', _('Enable local TX aggregation (upload)'),
-		_('Requires singbox-multipath beta5 (protocol v8) on both endpoints. Legacy bandwidth settings are ignored.') + '<br/>' +
+		_('Requires the updated singbox-multipath beta5 (protocol v9) on both endpoints. Legacy bandwidth settings are ignored.') + '<br/>' +
 		_('Controls client upload only. When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
 		_('Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg.') + '</strong>');
 	o.default = o.enabled;

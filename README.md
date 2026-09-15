@@ -27,7 +27,7 @@ disabled, otherwise zero. Explicit zero and disabled switches are preserved in
 the generated configuration. These options require a singbox-multipath build
 with the corresponding activation controls.
 
-This beta5 branch requires multipath protocol v8 and status schema 3 on the
+This beta5 branch requires multipath protocol v9 and status schema 3 on the
 matching sing-box build. Both multipath endpoints must be upgraded together.
 Manual bandwidth weights have been removed; the scheduler observes delivery
 through each complete child path. Old bandwidth UCI fields are no longer emitted.
@@ -57,7 +57,13 @@ shared memory budget. Download sender counters and delivery estimates come from
 server telemetry. Unavailable and stale samples are explicitly marked; delivery
 RTT and probe timeout ratios are not physical ping latency or raw IP loss rates.
 Hover over a row label for definitions and units. Non-harmless leg events can be
-dismissed until a new event arrives.
+dismissed until a new event arrives. Confirmed local or remote application-endpoint
+closures are filtered using sing-box's `last_error_source`, not error-message
+matching. Unattributed EOF, reset and cancellation events remain visible. The
+destination identifies the affected flow, not a proven fault location. The updated
+sing-box excludes confirmed endpoint closures from event/failure counts; other
+hidden harmless events may still be counted. Error provenance requires
+the updated beta5 on both endpoints; protocol v8 is not compatible.
 
 Reorder counts are 16 KiB storage pages, not wire frames. Their peaks are the
 largest per-connection peaks among currently active connections, and can drop
