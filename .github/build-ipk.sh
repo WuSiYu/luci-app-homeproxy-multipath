@@ -94,7 +94,8 @@ export root="${IPKG_INSTROOT}"
 export pkgname="'"$PKG_NAME"'"
 default_prerm' > "$TEMP_DIR/pre-deinstall"
 
-	apk mkpkg \
+	# Host filesystem labels (e.g. SELinux) do not belong in OpenWrt packages.
+	apk mkpkg --no-xattrs \
 		--info "name:$PKG_NAME" \
 		--info "version:$PKG_VERSION" \
 		--info "description:The modern ImmortalWrt proxy platform for ARM64/AMD64" \

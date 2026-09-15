@@ -190,6 +190,7 @@ const methods = {
 	multipath_status: {
 		call: function() {
 			let nodes = [];
+			let incompatible_schemas = [];
 			for (let file in (glob(`${RUN_DIR}/multipath-status/*.json`) || [])) {
 				const filestat = lstat(file);
 				if (!filestat || filestat.type !== 'file' || filestat.size <= 0 || filestat.size > 1024 * 1024)
@@ -201,13 +202,18 @@ const methods = {
 				} catch (e) {
 					continue;
 				}
-				if (type(document) !== 'object' || document.schema_version !== 2 || type(document.node) !== 'object')
+				if (type(document) !== 'object' || type(document.node) !== 'object')
 					continue;
+				if (document.schema_version !== 3) {
+					if (type(document.schema_version) === 'int' && index(incompatible_schemas, document.schema_version) === -1)
+						push(incompatible_schemas, document.schema_version);
+					continue;
+				}
 
 				push(nodes, document);
 			}
 
-			return { nodes };
+			return { nodes, incompatible_schemas };
 		}
 	},
 

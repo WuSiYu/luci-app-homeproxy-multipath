@@ -567,6 +567,12 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.rmempty = false;
 	o.modalonly = true;
 
+	o = s.option(form.DummyValue, '_multipath_scheduler', _('Multipath scheduling'),
+		_('Requires singbox-multipath beta5 (protocol v8). Scheduling uses end-to-end delivery feedback, not configured bandwidth weights. Old bandwidth settings are ignored and are no longer generated. Both endpoints must use the same protocol version.'));
+	o.default = _('Automatic delivery-based scheduling');
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
 	o = s.option(form.Flag, 'multipath_aggregation_enabled', _('Enable local TX aggregation (upload)'),
 		_('Controls client upload only. When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
 		_('Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg.') + '</strong>');
@@ -576,7 +582,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'multipath_activation_on_queue', _('Condition 1: preferred queue'),
-		_('Independent OR trigger: activate when the preferred send queue stays at least 80% full for the activation window. All triggers disabled means preferred-only TX.'));
+		_('Independent OR trigger: activate when preferred-path in-flight plus local unsent bytes remain at least 80% of the pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX.'));
 	o.default = o.enabled;
 	o.rmempty = false;
 	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
@@ -591,7 +597,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Condition 3: cumulative TX bytes'),
-		_('Independent OR trigger: cumulative locally sent bytes per connection. 0 or empty disables this trigger. Accepts bytes or a memory size such as <code>2MB</code>.'));
+		_('Independent OR trigger: cumulative application bytes accepted for local TX per connection. 0 or empty disables this trigger. Accepts bytes or a memory size such as <code>2MB</code>.'));
 	o.validate = validateMemorySize;
 	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
 	o.retain = true;
@@ -619,39 +625,33 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_queue_frames', _('Queue frames'));
+	o = s.option(form.Value, 'multipath_queue_frames', _('Pending send capacity'),
+		_('Local unsent byte capacity per connection, in chunk-size units. It does not cap whole-path in-flight data. Path scheduling uses measured delivery, with no bandwidth weights.'));
 	o.datatype = 'uinteger';
 	o.default = '256';
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_bandwidth_leg0_mbps', _('Preferred leg bandwidth weight'),
-		_('Expected local TX capacity in Mbps, used only as a relative scheduling weight. This does not limit bandwidth.'));
-	o.datatype = 'uinteger';
-	o.default = '160';
-	o.depends('type', 'multipath');
-	o.rmempty = false;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_bandwidth_leg1_mbps', _('Secondary leg bandwidth weight'),
-		_('Expected local TX capacity in Mbps, used only as a relative scheduling weight. This does not limit bandwidth.'));
-	o.datatype = 'uinteger';
-	o.default = '700';
-	o.depends('type', 'multipath');
-	o.rmempty = false;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_max_reorder_bytes', _('Maximum reorder bytes'));
+	o = s.option(form.Value, 'multipath_max_reorder_bytes', _('Maximum receive window'),
+		_('Local RX byte window, including in-order data awaiting application reads. Empty or 0 derives the ceiling from the shared memory budget: 224 MiB with a 512 MiB budget. Receive storage is allocated only for arriving data. This ceiling and the optional chunk-count ceiling both apply.'));
 	o.datatype = 'uinteger';
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_leg1_replay_bytes', _('Secondary leg replay bytes'));
+	o = s.option(form.Value, 'multipath_max_reorder_frames', _('Additional receive window cap (chunks)'),
+		_('Optional local RX ceiling in negotiated chunk-size units, not a count of received wire frames. Empty or 0 adds no extra ceiling. Otherwise use 64–65536; the smaller of this byte capacity and the receive-window byte limit applies.'));
+	o.datatype = 'or(0,and(uinteger,range(64,65536)))';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_leg1_replay_bytes', _('Connection send buffer bytes'),
+		_('Retained local TX bytes for both legs, released only by the peer cumulative Data ACK. Empty or 0 derives the ceiling from the shared memory budget. This is not a per-path bandwidth limit.'));
 	o.datatype = 'uinteger';
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_leg1_replay_timeout', _('Secondary leg replay timeout'), _('In seconds.'));
+	o = s.option(form.Value, 'multipath_leg1_replay_timeout', _('Minimum reinjection timeout'),
+		_('In seconds. Empty or 0 uses adaptive delivery timing. A stalled path is paused, not automatically disconnected.'));
 	o.datatype = 'uinteger';
 	o.depends('type', 'multipath');
 	o.modalonly = true;

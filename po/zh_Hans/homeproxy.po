@@ -4064,6 +4064,143 @@ msgstr "条件 3 的附加最低速率"
 msgid "Extra requirement for condition 3 only: the byte count and this minimum average rate over a complete activation window must both be satisfied. In Mbps; 0 or empty removes the rate gate. Conditions 1 and 2 remain independent."
 msgstr "仅为条件 3 的附加要求：累计字节数与完整激活窗口内的最低平均速率必须同时满足。单位 Mbps；0 或留空取消此速率门槛。条件 1 和条件 2 仍独立生效。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Multipath scheduling"
+msgstr "Multipath 调度"
+
+msgid "Automatic delivery-based scheduling"
+msgstr "基于交付反馈自动调度"
+
+msgid "Requires singbox-multipath beta5 (protocol v8). Scheduling uses end-to-end delivery feedback, not configured bandwidth weights. Old bandwidth settings are ignored and are no longer generated. Both endpoints must use the same protocol version."
+msgstr "需要 singbox-multipath beta5（协议 v8）。调度依据端到端交付反馈，不再使用手动带宽权重。旧带宽设置会被忽略，不再写入生成配置。两端必须使用相同协议版本。"
+
+msgid "Independent OR trigger: activate when preferred-path in-flight plus local unsent bytes remain at least 80% of the pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX."
+msgstr "独立的“或”触发条件：优选路径在途字节与本地待发送字节之和，在激活窗口内持续达到待发送容量的 80%。所有条件均关闭时，仅通过优选路径发送。"
+
+msgid "Independent OR trigger: activate when the preferred path in-flight plus local unsent bytes remain at least 80% of the configured pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX."
+msgstr "独立的“或”触发条件：优选路径在途字节与本地待发送字节之和，在激活窗口内持续达到待发送容量的 80%。所有条件均关闭时，仅通过优选路径发送。"
+
+msgid "Pending send capacity"
+msgstr "待发送容量"
+
+msgid "Local unsent byte capacity per connection, in chunk-size units. It does not cap whole-path in-flight data. Path scheduling uses measured delivery, with no bandwidth weights."
+msgstr "每条连接的本地待发送容量，以 chunk_size 为单位。不限制整条路径的在途数据。调度依据实际交付反馈，不使用带宽权重。"
+
+msgid "Maximum receive window"
+msgstr "最大接收窗口"
+
+msgid "Local RX byte window, including in-order data awaiting application reads. Empty or 0 derives the ceiling from the shared memory budget: 224 MiB with a 512 MiB budget. Receive storage is allocated only for arriving data. This ceiling and the optional chunk-count ceiling both apply."
+msgstr "本地接收字节窗口，包含等待应用读取的连续数据。留空或 0 时由共享内存预算推导上限：预算为 512 MiB 时上限为 224 MiB。仅为实际到达的数据分配存储。此上限与可选的块数上限同时生效。"
+
+msgid "Additional receive window cap (chunks)"
+msgstr "附加接收窗口上限（块）"
+
+msgid "Optional local RX ceiling in negotiated chunk-size units, not a count of received wire frames. Empty or 0 adds no extra ceiling. Otherwise use 64–65536; the smaller of this byte capacity and the receive-window byte limit applies."
+msgstr "可选的本地接收上限，以协商后的 chunk_size 为单位，不是收到的协议帧数量。留空或 0 表示不附加此上限；否则范围为 64–65536。换算后的字节容量与接收窗口字节上限取较小值。"
+
+msgid "Connection send buffer bytes"
+msgstr "连接发送缓冲区字节数"
+
+msgid "Retained local TX bytes for both legs, released only by the peer cumulative Data ACK. Empty or 0 derives the ceiling from the shared memory budget. This is not a per-path bandwidth limit."
+msgstr "为两条路径保留的本地发送数据，仅在收到对端累计 Data ACK 后释放。留空或 0 时由共享内存预算推导上限。这不是路径带宽限制。"
+
+msgid "Minimum reinjection timeout"
+msgstr "最小重注入超时"
+
+msgid "In seconds. Empty or 0 uses adaptive delivery timing. A stalled path is paused, not automatically disconnected."
+msgstr "单位为秒。留空或 0 时根据交付时延自适应计算。停滞的路径会暂停调度，不会因此自动断开。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Scheduling"
+msgstr "调度方式"
+
+msgid "Both paths share a byte stream, cumulative Data ACK and receive window. Path delivery feedback drives scheduling; manual bandwidth weights are not used."
+msgstr "两条路径共享字节流、累计 Data ACK 和接收窗口。调度依据路径交付反馈，不使用手动带宽权重。"
+
+msgid "Upload preferred only"
+msgstr "上传仅用优选路径"
+
+msgid "Upload aggregation active"
+msgstr "上传聚合已激活"
+
+msgid "Download on leg1"
+msgstr "当前经 leg1 下载"
+
+msgid "Connections using preferred-only local TX. This does not disable server downlink aggregation."
+msgstr "本地发送仅使用优选路径的连接数，不代表服务端下行聚合被关闭。"
+
+msgid "Connections with local TX aggregation activated, even if currently idle."
+msgstr "已激活本地发送聚合的连接数，包含当前空闲的连接。"
+
+msgid "Connections with leg1 receive traffic in the current sample, not a persistent activation count."
+msgstr "当前采样中有 leg1 接收流量的连接数，不是持续记录的激活连接数。"
+
+msgid "No extra chunk cap"
+msgstr "无附加块数上限"
+
+msgid "%d chunks"
+msgstr "%d 块"
+
+msgid "Send history / Recovery floor"
+msgstr "发送历史 / 恢复时延下限"
+
+msgid "Adaptive"
+msgstr "自适应"
+
+msgid "Connection send history"
+msgstr "连接发送历史"
+
+msgid "Reinjection"
+msgstr "重注入"
+
+msgid "peak flow"
+msgstr "单连接峰值"
+
+msgid "Path in-flight data"
+msgstr "路径在途数据"
+
+msgid "Remote delivery estimate"
+msgstr "远端交付估计"
+
+msgid "No delivery sample"
+msgstr "暂无交付样本"
+
+msgid "Historical totals only"
+msgstr "仅保留历史统计"
+
+msgid "%s (stale)"
+msgstr "%s（已过期）"
+
+msgid "Each direction: logical bytes accepted but not yet Data-ACKed, including both paths and unsent data. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start; it is not an exact continuous aggregate high-water mark. Download is remote telemetry."
+msgstr "各方向：已接受但尚未收到 Data ACK 的逻辑字节，包含两条路径及待发送数据。当前值为活跃连接之和；峰值取进程启动以来节点采样总量与各连接已观测峰值的最大值，并非连续精确测得的聚合峰值。下行数据来自远端遥测。"
+
+msgid "Each direction: reinjected bytes / reinjected mappings / path stall detections. Recovery can use either available path; these are not packet loss counters."
+msgstr "各方向：重注入字节数 / 重注入映射数 / 检测到路径停滞的次数。恢复可使用任一可用路径；这些不是网络丢包计数。"
+
+msgid "Out-of-order receive storage: bytes / 16 KiB pages. Current is summed across active connections. Each peak is the largest per-connection peak among currently active connections; it may disappear when a connection closes. Byte and page peaks may occur at different times. Pages are not wire frames."
+msgstr "乱序接收存储：字节数 / 16 KiB 页数。当前值为活跃连接之和；峰值是当前活跃连接各自峰值中的最大值，连接关闭后可能下降。字节峰值与页数峰值可能不在同一时刻出现。页数不是协议帧数。"
+
+msgid "Remote telemetry availability and freshness. With no active sample, historical totals may remain. Stale values are retained and marked, not treated as live measurements. Timestamp: last received update."
+msgstr "远端遥测的可用性和新鲜度。没有活跃样本时仍可能保留历史统计。过期值会保留并标记，不作为实时测量。时间戳表示最近收到更新的时间。"
+
+msgid "Scheduling uses bytes outstanding through the whole child path and peer-observed delivery rate. No configured bandwidth ratio or rate limit is applied."
+msgstr "调度依据整条子路径的在途字节以及对端观测的交付速率，不使用手动配置的带宽比例或速率上限。"
+
+msgid "Remote sender estimate: sum of path delivery rates across active connections · largest smoothed DATA delivery RTT · smallest recorded DATA delivery RTT. These are scheduler observations, not configured bandwidth, physical ping latency, or packet-loss measurements."
+msgstr "远端发送侧估计：活跃连接的路径交付速率之和 · 最大平滑 DATA 交付 RTT · 最小已记录 DATA 交付 RTT。这些是调度器观测值，不是配置带宽、物理 ping 延迟或丢包率。"
+
+msgid "Each direction: bytes assigned to this path but not yet covered by a whole-path receipt, including child transport buffers. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start. This is not local queue utilization. Download is remote telemetry."
+msgstr "各方向：已分配到此路径但尚未获整条路径收讫确认的字节，包括子传输缓冲区。当前值为活跃连接之和；峰值取进程启动以来节点采样总量与各连接已观测峰值的最大值。这不是本地队列利用率。下行数据来自远端遥测。"
+
+msgid "Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender."
+msgstr "各方向：各连接写入器当前持有的总字节数 / 活跃连接中当前最长的写入阻塞时间。下行数据由远端发送侧报告。"
+
+msgid "Path delivery stalled. The sender can reinject missing byte ranges on another available path; a timing stall alone does not close the leg."
+msgstr "路径交付停滞。发送侧可在另一条可用路径上重注入缺失的字节范围；仅时延停滞不会关闭路径。"
+
+msgid "Unsupported status schema: %s. This page requires singbox-multipath beta5 status schema 3; upgrade sing-box and restart HomeProxy."
+msgstr "不支持的状态格式：%s。此页面需要 singbox-multipath beta5 的状态格式 3；请升级 sing-box 并重启 HomeProxy。"
+
 #~ msgid "Last error: %s"
 #~ msgstr "最近错误：%s"
 

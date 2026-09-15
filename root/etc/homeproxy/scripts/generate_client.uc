@@ -379,12 +379,7 @@ function generate_multipath_outbound(node) {
 		die(sprintf("%s has no multipath aggregation server, please check your configuration.", node['.name']));
 
 	const preferred_tag = 'cfg-' + preferred + '-out',
-	      secondary_tag = 'cfg-' + secondary + '-out',
-	      bandwidth_leg0 = strToInt(node.multipath_bandwidth_leg0_mbps),
-	      bandwidth_leg1 = strToInt(node.multipath_bandwidth_leg1_mbps);
-
-	if (!!bandwidth_leg0 !== !!bandwidth_leg1)
-		die(sprintf("%s must configure bandwidth for both multipath legs.", node['.name']));
+	      secondary_tag = 'cfg-' + secondary + '-out';
 
 	return {
 		type: 'multipath',
@@ -403,7 +398,7 @@ function generate_multipath_outbound(node) {
 		activation_window: strToTime(node.multipath_activation_window),
 		chunk_size: strToInt(node.multipath_chunk_size),
 		queue_frames: strToInt(node.multipath_queue_frames),
-		bandwidth_mbps: bandwidth_leg0 ? [ bandwidth_leg0, bandwidth_leg1 ] : null,
+		max_reorder_frames: isEmpty(node.multipath_max_reorder_frames) ? null : int(node.multipath_max_reorder_frames),
 		max_reorder_bytes: strToInt(node.multipath_max_reorder_bytes),
 		leg1_replay_bytes: strToInt(node.multipath_leg1_replay_bytes),
 		leg1_replay_timeout: strToTime(node.multipath_leg1_replay_timeout),
