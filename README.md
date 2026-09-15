@@ -66,3 +66,11 @@ process start and take the maximum of sampled node totals and observed
 per-connection peaks; they are not exact continuous aggregate high-water marks.
 An older status schema is rejected with an upgrade notice rather than displayed
 with beta5 labels.
+
+Leg joins count locally attached transports independently of upload activation.
+Joins, attempts and reported remote failure counts include closed connections.
+Probe RTT and probe-health values, in contrast, summarize currently active
+connections only. Remote scheduler estimates are not one-second throughput or
+physical capacity; their DATA-feedback RTT follows the selected data leg outward
+and leg0 for the feedback. Stall detections do not necessarily cause reinjection,
+and accumulated sender wait time is not a single continuous pause.

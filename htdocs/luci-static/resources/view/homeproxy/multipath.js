@@ -790,7 +790,6 @@ function renderAggregate(node, stale) {
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':parameters', _('Effective multipath parameters'), [
 			renderParameters([
-				[ _('Scheduling'), _('Automatic delivery-based scheduling'), _('Both paths share a byte stream, cumulative Data ACK and receive window. Path delivery feedback drives scheduling; manual bandwidth weights are not used.') ],
 				[ _('Aggregation server'), node.aggregation_server || '-', 'Remote multipath inbound used to join both child legs.' ],
 				[ _('UDP outbound'), displayTag(node.udp_outbound), 'Child outbound selected for UDP. UDP uses this one child and is not aggregated.' ],
 				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled'), 'Whether multipath connection setup can send early data. The child path must also support TCP Fast Open.' ],
@@ -815,10 +814,10 @@ function renderAggregate(node, stale) {
 					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(remoteSender.replay_bytes), _('peak'), formatBytes(remoteSender.replay_peak_bytes)), stale)), _('Each direction: logical bytes accepted but not yet Data-ACKed, including both paths and unsent data. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start; it is not an exact continuous aggregate high-water mark. Download is remote telemetry.') ],
 				[ _('Reinjection'), '%s %s / %d / %d · %s %s'.format(
 					_('Upload'), formatBytes(localSender.fallback_bytes), number(localSender.fallback_frames), number(localSender.replay_timeouts),
-					_('Download'), formatRemote(remoteSender, '%s / %d / %d'.format(formatBytes(remoteSender.fallback_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)), stale)), _('Each direction: reinjected bytes / reinjected mappings / path stall detections. Recovery can use either available path; these are not packet loss counters.') ],
+					_('Download'), formatRemote(remoteSender, '%s / %d / %d'.format(formatBytes(remoteSender.fallback_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)), stale)), _('Each direction, cumulative since process start: reinjected bytes / reinjected mappings / path stall detections. A stall can recover before reinjection, so detections may be nonzero with zero reinjected bytes. These are not TCP/QUIC retransmissions or IP packet loss counters.') ],
 				[ _('Sender backpressure'), '%s %d / %s · %s %s'.format(
 					_('Upload'), number(localSender.backpressure_events), formatDuration(localSender.backpressure_duration_ms),
-					_('Download'), formatRemote(remoteSender, '%d / %s'.format(number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)), stale)), 'Each direction: backpressure event count / total blocked time. It indicates throttling by bounded queues or the memory budget.' ],
+					_('Download'), formatRemote(remoteSender, '%d / %s'.format(number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)), stale)), _('Each direction, summed across connections since process start: wait count / accumulated wait time for pending-send or retained-history capacity. This is not the longest stall or network queueing delay. Shared-memory pressure has separate counters.') ],
 				[ _('Reorder buffer'), '%s / %d (%s %s / %d)'.format(
 					formatBytes(logical.reorder_bytes), number(logical.reorder_pages), _('peak flow'), formatBytes(logical.reorder_peak_bytes), number(logical.reorder_peak_pages)), _('Out-of-order receive storage: bytes / 16 KiB pages. Current is summed across active connections. Each peak is the largest per-connection peak among currently active connections; it may disappear when a connection closes. Byte and page peaks may occur at different times. Pages are not wire frames.') ],
 				[ _('Memory usage'), '%s %s / %s / %s · %s %s'.format(
@@ -865,35 +864,34 @@ function renderFlows(flows) {
 
 function renderLeg(nodeTag, leg, stale, remoteSender) {
 	// Closed-session totals do not imply a current remote path or memory sample.
-	remoteSender = remoteSender?.updated_at ? remoteSender : null;
+	const remoteSnapshot = remoteSender?.updated_at ? remoteSender : null;
 	const current = leg.current || {}, cumulative = leg.cumulative || {}, frames = leg.frames || {},
 	      peak = leg.peak || {},
 	      udpCurrent = leg.udp_current || {}, udpCumulative = leg.udp_cumulative || {},
 	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster'),
 	      parameterEntries = [
-			[ _('Local TX policy'), _('Automatic delivery-based scheduling'), _('Scheduling uses bytes outstanding through the whole child path and peer-observed delivery rate. No configured bandwidth ratio or rate limit is applied.') ],
-			[ _('Remote delivery estimate'), formatRemote(remoteSender, number(leg.remote_delivery_bytes_per_second) > 0 ? '%s · %s %s · %s %s'.format(
-				formatRate(leg.remote_delivery_bytes_per_second), _('RTT'), formatLatency(leg.remote_delivery_rtt_max_ms),
-				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Remote sender estimate: sum of path delivery rates across active connections · largest smoothed DATA delivery RTT · smallest recorded DATA delivery RTT. These are scheduler observations, not configured bandwidth, physical ping latency, or packet-loss measurements.') ],
+			[ _('Remote scheduler estimate'), formatRemote(remoteSnapshot, number(leg.remote_delivery_bytes_per_second) > 0 ? '%s · %s %s · %s %s'.format(
+				formatRate(leg.remote_delivery_bytes_per_second), _('Feedback RTT'), formatLatency(leg.remote_delivery_rtt_max_ms),
+				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Sum of the remote scheduler delivery-rate estimates for active connections; idle connections may retain their last estimate. This is neither current one-second throughput nor physical link capacity. Feedback RTT is DATA via this leg plus feedback via leg0, including queueing: largest smoothed RTT / smallest recorded RTT across active connections.') ],
 			[ _('Path in-flight data'), '%s %s (%s %s) · %s %s'.format(
 					_('Upload'), formatBytes(leg.backlog_bytes), _('peak'), formatBytes(leg.peak_backlog_bytes),
-					_('Download'), formatRemote(remoteSender, '%s (%s %s)'.format(formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), stale)), _('Each direction: bytes assigned to this path but not yet covered by a whole-path receipt, including child transport buffers. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start. This is not local queue utilization. Download is remote telemetry.') ],
+					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), stale)), _('Each direction: bytes assigned to this path but not yet covered by a whole-path receipt, including child transport buffers. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start. This is not local queue utilization. Download is remote telemetry.') ],
 			[ _('Writer state'), '%s %s / %s · %s %s'.format(
 					_('Upload'), formatBytes(leg.writing_bytes), formatDuration(leg.write_blocked_ms),
-					_('Download'), formatRemote(remoteSender, '%s / %s'.format(formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)), stale)), _('Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender.') ],
+					_('Download'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)), stale)), _('Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender.') ],
 			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)), 'Frames sent on this leg · frames received on this leg.' ],
 			[ _('Leg lifecycle'), '%s %d · %s %d · %s %s'.format(
-				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), formatRemote(remoteSender, String(number(leg.remote_failure_count)), stale)), 'Successful leg joins · connection attempts · failures reported by the remote side.' ],
+				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), formatRemote(remoteSender, String(number(leg.remote_failure_count)), stale)), _('Since process start: locally attached leg transports, independent of TX activation · secondary dial attempts (leg0: logical connections created) · last-reported remote failures, including closed connections. An attached lazy leg0 may still be completing its handshake. Unreported remote events cannot be counted.') ],
 			[ _('Peak 1-second speed'), '%s · %s'.format(
 				_('RX %s').format(formatRate(peak.rx_bytes_per_second)), _('TX %s').format(formatRate(peak.tx_bytes_per_second))), 'Peak one-second average speed since process start: received rate · transmitted rate.' ],
-			[ _('Effective RTT'), '%s %s · %s %s · %s %s · %s %s–%s · %s %s'.format(
+			[ _('Probe RTT (active flows)'), '%s %s · %s %s · %s %s · %s %s–%s · %s %s'.format(
 				_('latest'), formatLatency(leg.rtt_latest_ms), _('average'), formatLatency(leg.rtt_average_ms), _('EWMA'), formatLatency(leg.rtt_ewma_ms),
-				_('range'), formatLatency(leg.rtt_min_ms), formatLatency(leg.rtt_max_ms), _('jitter'), formatLatency(leg.rtt_jitter_ms)), 'Multipath probe RTT in milliseconds: latest · average · EWMA · minimum-maximum range · jitter. It includes transport and proxy queueing.' ],
-			[ _('Probe health'), '%s %d · %s %d · %s'.format(
-				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)), 'Probe packets sent · probe timeouts · timeout ratio. This is multipath probe health, not raw IP packet loss.' ]
+				_('range'), formatLatency(leg.rtt_min_ms), formatLatency(leg.rtt_max_ms), _('jitter'), formatLatency(leg.rtt_jitter_ms)), _('Same-leg multipath ping/pong RTT, including child transport queueing. Active connections only: sample-weighted latest value · mean across samples · sample-weighted EWMA · minimum-maximum · sample-weighted jitter. Closed connections are excluded; one sample cannot characterize variability.') ],
+			[ _('Probe health (active flows)'), '%s %d · %s %d · %s'.format(
+				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)), _('Active connections only: probes sent · probe timeouts · timeout/sent ratio. These counters can decrease when connections close. A pending probe is not yet a success or timeout; zero timeouts with few samples does not establish link quality. This is not raw IP packet loss.') ]
 	      ];
 	if (leg.remote_last_failure_stage)
-		parameterEntries.push([ _('Last remote failure stage'), formatRemote(remoteSender, legEventStageLabel(leg.remote_last_failure_stage), stale), 'Most recent stage at which the remote side reported a failure for this leg.' ]);
+		parameterEntries.push([ _('Last remote failure stage'), formatRemote(remoteSnapshot, legEventStageLabel(leg.remote_last_failure_stage), stale), _('Last remote failure stage reported by an active connection. Unlike the cumulative failure counter, this detail is not retained after that connection closes.') ]);
 	if (leg.udp_selected) {
 		parameterEntries.push(
 			[ _('UDP traffic'), '%s · %s · %s · %s'.format(

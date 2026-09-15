@@ -4201,6 +4201,44 @@ msgstr "路径交付停滞。发送侧可在另一条可用路径上重注入缺
 msgid "Unsupported status schema: %s. This page requires singbox-multipath beta5 status schema 3; upgrade sing-box and restart HomeProxy."
 msgstr "不支持的状态格式：%s。此页面需要 singbox-multipath beta5 的状态格式 3；请升级 sing-box 并重启 HomeProxy。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Requires singbox-multipath beta5 (protocol v8) on both endpoints. Legacy bandwidth settings are ignored."
+msgstr "两端均需要 singbox-multipath beta5（协议 v8）。旧带宽设置会被忽略。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote scheduler estimate"
+msgstr "远端调度器估计"
+
+msgid "Feedback RTT"
+msgstr "交付反馈 RTT"
+
+msgid "Probe RTT (active flows)"
+msgstr "探测 RTT（活跃连接）"
+
+msgid "Probe health (active flows)"
+msgstr "探测状态（活跃连接）"
+
+msgid "Each direction, cumulative since process start: reinjected bytes / reinjected mappings / path stall detections. A stall can recover before reinjection, so detections may be nonzero with zero reinjected bytes. These are not TCP/QUIC retransmissions or IP packet loss counters."
+msgstr "各方向，自进程启动累计：重注入字节 / 重注入映射数 / 路径停滞检测次数。停滞可能在重注入前恢复，因此检测次数非零时重注入字节仍可能为零。这些不是 TCP/QUIC 重传或 IP 丢包计数。"
+
+msgid "Each direction, summed across connections since process start: wait count / accumulated wait time for pending-send or retained-history capacity. This is not the longest stall or network queueing delay. Shared-memory pressure has separate counters."
+msgstr "各方向，自进程启动跨连接累计：等待次数 / 因待发送容量或发送历史容量不足而等待的总时间。这不是最长单次停顿或网络排队延迟。共享内存压力使用独立计数。"
+
+msgid "Sum of the remote scheduler delivery-rate estimates for active connections; idle connections may retain their last estimate. This is neither current one-second throughput nor physical link capacity. Feedback RTT is DATA via this leg plus feedback via leg0, including queueing: largest smoothed RTT / smallest recorded RTT across active connections."
+msgstr "远端调度器对活跃连接的交付速率估计之和，空闲连接可能保留上次估计。它既不是当前一秒吞吐，也不是物理链路容量。交付反馈 RTT 为数据经此路径发出、反馈经 leg0 返回的总时延，包含排队；显示活跃连接中的最大平滑 RTT / 最小已记录 RTT。"
+
+msgid "Since process start: locally attached leg transports, independent of TX activation · secondary dial attempts (leg0: logical connections created) · last-reported remote failures, including closed connections. An attached lazy leg0 may still be completing its handshake. Unreported remote events cannot be counted."
+msgstr "自进程启动累计：本地成功挂接的路径传输实例，与发送聚合是否激活无关 · 次路径拨号尝试次数（leg0 为创建的逻辑连接数）· 已报告的远端失败次数，包含已关闭连接。延迟建连的 leg0 挂接时握手可能尚未完成。未报告的远端事件无法计入。"
+
+msgid "Same-leg multipath ping/pong RTT, including child transport queueing. Active connections only: sample-weighted latest value · mean across samples · sample-weighted EWMA · minimum-maximum · sample-weighted jitter. Closed connections are excluded; one sample cannot characterize variability."
+msgstr "同一路径的 multipath ping/pong 往返时延，包含子传输排队。仅统计活跃连接：按样本数加权的最新值 · 全部样本均值 · 加权 EWMA · 最小-最大值 · 加权抖动。已关闭连接不计入；单个样本无法反映波动。"
+
+msgid "Active connections only: probes sent · probe timeouts · timeout/sent ratio. These counters can decrease when connections close. A pending probe is not yet a success or timeout; zero timeouts with few samples does not establish link quality. This is not raw IP packet loss."
+msgstr "仅统计活跃连接：已发送探测数 · 超时数 · 超时/发送比例。连接关闭时这些计数可能下降。等待响应的探测尚不能算成功或超时；样本很少时零超时不能证明链路质量。这不是原始 IP 丢包率。"
+
+msgid "Last remote failure stage reported by an active connection. Unlike the cumulative failure counter, this detail is not retained after that connection closes."
+msgstr "活跃连接报告的最近远端失败阶段。与累计失败次数不同，此详情不会在对应连接关闭后保留。"
+
 #~ msgid "Last error: %s"
 #~ msgstr "最近错误：%s"
 

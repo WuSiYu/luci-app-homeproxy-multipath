@@ -57,7 +57,9 @@ if (process.argv[3]) {
 }
 render();
 const rendered = JSON.stringify(page.root);
-for (const text of ['Automatic delivery-based scheduling', 'Connection send history', 'Path in-flight data', 'Reinjection', '16 KiB pages', 'Remote delivery estimate', 'Upload preferred only', 'Download on leg1']) assert.ok(rendered.includes(text), text);
+for (const text of ['Connection send history', 'Path in-flight data', 'Reinjection', '16 KiB pages', 'Remote scheduler estimate', 'Upload preferred only', 'Download on leg1', 'Feedback RTT', 'Probe RTT (active flows)', 'Probe health (active flows)']) assert.ok(rendered.includes(text), text);
+assert.ok(!rendered.includes('Automatic delivery-based scheduling'));
+assert.ok(!rendered.includes('Local TX policy'));
 assert.ok(!rendered.includes('Queue utilization:'));
 assert.ok(!rendered.includes('Sender replay'));
 assert.ok(!rendered.includes('NaN'));
@@ -70,19 +72,21 @@ document.node.logical.remote_sender = { available: false };
 render();
 for (const label of ['Reinjection', 'Memory pressure', 'Connection send history', 'Writer state', 'Path in-flight data'])
   assert.ok(rows(label).every(value => /(?:Download|Remote) Unavailable/.test(value)), label);
-assert.ok(rows('Remote delivery estimate').every(value => value === 'Unavailable'));
+assert.ok(rows('Remote scheduler estimate').every(value => value === 'Unavailable'));
 
 document.node.logical.remote_sender = { available: true, stale: true, updated_at: new Date().toISOString() };
 render();
-for (const label of ['Reinjection', 'Memory pressure', 'Connection send history', 'Remote delivery estimate'])
+for (const label of ['Reinjection', 'Memory pressure', 'Connection send history', 'Remote scheduler estimate'])
   assert.ok(rows(label).every(value => value.includes('(stale)')), label);
 document.node.logical.remote_sender.stale = false;
 document.node.legs.forEach(leg => { leg.remote_delivery_bytes_per_second = 0; });
 render();
-assert.ok(rows('Remote delivery estimate').every(value => value === 'No delivery sample'));
+assert.ok(rows('Remote scheduler estimate').every(value => value === 'No delivery sample'));
 delete document.node.logical.remote_sender.updated_at;
+document.node.legs.forEach(leg => { leg.remote_failure_count = 7; });
 render();
 assert.deepEqual(rows('Remote sender status'), ['Historical totals only']);
+assert.ok(rows('Leg lifecycle').every(value => value.includes('remote failures 7')));
 assert.ok(rows('Memory pressure')[0].includes('Remote Unavailable'));
 assert.ok(rows('Path in-flight data').every(value => value.includes('Download Unavailable')));
 document.node.logical.remote_sender.updated_at = new Date().toISOString();

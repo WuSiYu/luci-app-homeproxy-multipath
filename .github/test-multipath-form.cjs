@@ -22,7 +22,8 @@ render({ option(kind, key, title, description) {
   return field;
 } }, ['homeproxy'], { with_quic: true }, null, 'custom');
 assert.ok(![...fields.keys()].some(key => key.startsWith('multipath_bandwidth')));
-assert.match(fields.get('_multipath_scheduler').description, /protocol v8/);
+assert.ok(!fields.has('_multipath_scheduler'));
+assert.match(fields.get('multipath_aggregation_enabled').description, /protocol v8/);
 assert.match(fields.get('multipath_aggregation_enabled').description, /condition 1 OR condition 2 OR condition 3/);
 for (const key of ['activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window']) {
   const field = fields.get('multipath_' + key);
