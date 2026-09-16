@@ -9,7 +9,7 @@ set -o pipefail
 PKG_MGR="${1:-apk}"
 RELEASE_TYPE="${2:-snapshot}"
 
-export PKG_SOURCE_DATE_EPOCH="$(date "+%s")"
+export PKG_SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date "+%s")}"
 export SOURCE_DATE_EPOCH="$PKG_SOURCE_DATE_EPOCH"
 
 BASE_DIR="$(cd "$(dirname $0)"; pwd)"
@@ -20,7 +20,9 @@ function get_mk_value() {
 }
 
 PKG_NAME="$(get_mk_value "PKG_NAME")"
-if [ "$RELEASE_TYPE" == "release" ]; then
+if [ -n "$PKG_VERSION_OVERRIDE" ]; then
+	PKG_VERSION="$PKG_VERSION_OVERRIDE"
+elif [ "$RELEASE_TYPE" == "release" ]; then
 	PKG_VERSION="$(get_mk_value "PKG_VERSION")"
 else
 	PKG_VERSION="$PKG_SOURCE_DATE_EPOCH~$(git rev-parse --short HEAD)"

@@ -547,7 +547,8 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.rmempty = false;
 	o.modalonly = true;
 
-	o = s.option(form.ListValue, 'multipath_udp_outbound', _('UDP outbound'));
+	o = s.option(form.ListValue, 'multipath_udp_outbound', _('UDP outbound'),
+		_('Without failover, UDP uses this child directly. With failover, this is the preferred UDP leg; both legs relay through the multipath server to preserve its UDP source port. Choosing leg1 does not make UDP follow TCP failback to leg0.'));
 	o.value('preferred', _('Preferred leg'));
 	o.value('secondary', _('Secondary leg'));
 	o.default = 'preferred';
@@ -568,8 +569,8 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'multipath_aggregation_enabled', _('Enable local TX aggregation (upload)'),
-		_('Requires the updated singbox-multipath beta5 (protocol v9) on both endpoints. Legacy bandwidth settings are ignored.') + '<br/>' +
-		_('Controls client upload only. When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
+		_('Requires singbox-multipath beta6 on both endpoints. Legacy bandwidth settings are ignored.') + '<br/>' +
+		_('Controls client upload aggregation only. When disabled, upload uses leg0 unless optional failover is active. Server downlink is independent. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
 		_('Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg.') + '</strong>');
 	o.default = o.enabled;
 	o.rmempty = false;
@@ -660,6 +661,28 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o = s.option(form.Value, 'multipath_handshake_timeout', _('Handshake timeout'), _('In seconds.'));
 	o.datatype = 'uinteger';
 	o.depends('type', 'multipath');
+	o.modalonly = true;
+	o = s.option(form.Flag, 'multipath_failover_enabled', _('Enable TCP and UDP failover'),
+		_('Disabled by default, with no additional recovery probes. Enable failover_enabled on the server too and allow both TCP and UDP on its listening port. Both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated.'));
+	o.default = o.disabled;
+	o.rmempty = false;
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_failover_timeout', _('Failover timeout'),
+		_('Seconds without a fresh TCP or UDP health reply before the shared path is unavailable. Default: 5 seconds. These probes are shared by all connections, not sent per flow.'));
+	o.default = '5';
+	o.datatype = 'and(uinteger,range(1,300))';
+	o.depends({'type': 'multipath', 'multipath_failover_enabled': '1'});
+	o.retain = true;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'multipath_failback_delay', _('Failback stability period'),
+		_('Seconds the preferred path must stay healthy before returning to it. Default: 30 seconds. A single missed probe does not restart this period; another full failure timeout does. If the fallback fails, an available preferred path is used immediately.'));
+	o.default = '30';
+	o.datatype = 'and(uinteger,range(1,3600))';
+	o.depends({'type': 'multipath', 'multipath_failover_enabled': '1'});
+	o.retain = true;
 	o.modalonly = true;
 	/* Multipath config end */
 

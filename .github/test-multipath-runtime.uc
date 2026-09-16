@@ -72,3 +72,18 @@ mp = generate();
 for (let key in ['max_reorder_frames', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'aggregation_enabled', 'activation_on_queue'])
 	check(!(key in mp), 'Empty optional field must be omitted: ' + key);
 print('PASS: full UCI generator: legacy weights ignored, child recursion, explicit zero/false, memory strings, chunk cap and omitted defaults\n');
+
+uci.set('homeproxy', 'multipath_example', 'multipath_failover_enabled', '1');
+uci.set('homeproxy', 'multipath_example', 'multipath_failover_timeout', '7');
+uci.set('homeproxy', 'multipath_example', 'multipath_failback_delay', '45');
+uci.set('homeproxy', 'multipath_example', 'multipath_udp_outbound', 'secondary');
+uci.commit('homeproxy');
+mp = generate();
+check(mp.failover_enabled === true && mp.failover_timeout === '7s' && mp.failback_delay === '45s', 'Recovery timers must be emitted in seconds');
+check(mp.udp_outbound === mp.outbounds[1], 'UDP preference must remain independent');
+writefile('/tmp/homeproxy-beta6-recovery.json', readfile('/var/run/homeproxy/sing-box-c.json'));
+uci.set('homeproxy', 'multipath_example', 'multipath_failover_enabled', '0');
+uci.commit('homeproxy');
+mp = generate();
+check(mp.failover_enabled === false && !('failover_timeout' in mp) && !('failback_delay' in mp), 'Disabled recovery must omit hidden timers');
+print('PASS: recovery flag, durations, independent UDP preference and disabled timer omission\n');

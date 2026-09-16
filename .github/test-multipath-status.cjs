@@ -132,6 +132,20 @@ for (const message of ['i/o timeout', 'multipath hello rejected: invalid leg id'
 }
 
 const section = findNodes(page.root, node => node.tag === 'details')[0];
+document.node.recovery = { enabled: true, tcp_path: 1, udp_path: 1, udp_preferred: 0, usable_mask: 2,
+  failover_timeout_ms: 5000, failback_delay_ms: 30000,
+  paths: [{ healthy: false, tcp_reply_age_ms: -1, udp_reply_age_ms: 6000, stable_ms: -1 },
+    { healthy: true, tcp_reply_age_ms: 10, udp_reply_age_ms: 20, stable_ms: 35000 }] };
+document.node.legs[0].udp_cumulative = { rx_bytes: 1234 };
+render();
+assert.deepEqual(rows('Recovery paths'), ['TCP leg1 · UDP leg1']);
+assert.deepEqual(rows('Shared recovery health'), ['Unavailable', 'Healthy']);
+assert.equal(rows('UDP traffic').length, 2, 'Historical UDP counters must survive path changes');
+document.node.recovery.tcp_path = 0;
+document.node.recovery.udp_preferred = 1;
+render();
+assert.deepEqual(rows('Recovery paths'), ['TCP leg0 · UDP leg1']);
+delete document.node.recovery;
 section.attrs.toggle({ currentTarget: { open: false } });
 render();
 assert.equal(findNodes(page.root, node => node.tag === 'details')[0].attrs.open, null);

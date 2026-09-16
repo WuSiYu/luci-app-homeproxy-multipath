@@ -4257,6 +4257,105 @@ msgstr "仅统计活跃连接：已发送探测数 · 超时数 · 超时/发送
 msgid "Last remote failure stage reported by an active connection. Unlike the cumulative failure counter, this detail is not retained after that connection closes."
 msgstr "活跃连接报告的最近远端失败阶段。与累计失败次数不同，此详情不会在对应连接关闭后保留。"
 
+msgid "Enable TCP and UDP failover"
+msgstr "启用 TCP 和 UDP 故障接管"
+
+msgid "Failover active"
+msgstr "故障接管中"
+
+msgid "Upload single-path"
+msgstr "上传单路径"
+
+msgid "Connections without local TX aggregation. Optional failover may use leg1; server downlink aggregation remains independent."
+msgstr "未启用本端发送聚合的连接。可选的故障接管可使用 leg1，服务端下行聚合仍独立控制。"
+
+msgid "Preferred UDP child. Without recovery it forwards directly; with recovery both paths use the same server UDP relay. UDP is not aggregated."
+msgstr "UDP 首选子节点。未启用接管时直接转发；启用后双路径均使用同一服务端 UDP 中继。UDP 不进行聚合。"
+
+msgid "Controls client upload aggregation only. Any enabled condition activates aggregation (OR). Disabling aggregation does not disable optional failover or change server downlink policy."
+msgstr "仅控制客户端上传聚合，任一已启用条件均可触发（或）。关闭聚合不关闭可选故障接管，也不改变服务端下行策略。"
+
+msgid "Failover timeout"
+msgstr "故障判定超时"
+
+msgid "Failback stability period"
+msgstr "回切稳定等待时间"
+
+msgid "TCP and UDP failover"
+msgstr "TCP 和 UDP 故障接管"
+
+msgid "Recovery paths"
+msgstr "当前接管路径"
+
+msgid "Failure timeout / Stable return"
+msgstr "故障超时 / 稳定回切"
+
+msgid "Shared recovery health"
+msgstr "共享接管探测状态"
+
+msgid "TCP reply age / UDP reply age / Healthy for"
+msgstr "TCP 响应距今 / UDP 响应距今 / 持续健康"
+
+msgid "Recovery role"
+msgstr "接管角色"
+
+msgid "Healthy"
+msgstr "健康"
+
+msgid "TCP control"
+msgstr "TCP 控制路径"
+
+msgid "TCP standby or aggregation"
+msgstr "TCP 备用或聚合路径"
+
+msgid "UDP selected"
+msgstr "UDP 当前路径"
+
+msgid "UDP standby"
+msgstr "UDP 备用路径"
+
+msgid "Without failover, UDP uses this child directly. With failover, this is the preferred UDP leg; both legs relay through the multipath server to preserve its UDP source port. Choosing leg1 does not make UDP follow TCP failback to leg0."
+msgstr "未启用接管时，UDP 直接使用此子节点。启用后，此项表示 UDP 首选路径，两条路径均通过 multipath 服务端中继并保持 UDP 出口端口。选择 leg1 时，UDP 不会跟随 TCP 回切至 leg0。"
+
+msgid "Requires singbox-multipath beta6 on both endpoints. Legacy bandwidth settings are ignored."
+msgstr "双端均需使用 singbox-multipath beta6。旧版带宽配置会被忽略。"
+
+msgid "Controls client upload aggregation only. When disabled, upload uses leg0 unless optional failover is active. Server downlink is independent. Saved trigger settings are retained while hidden."
+msgstr "仅控制客户端上传聚合。关闭时上传使用 leg0，但可选的故障接管仍可使用 leg1。服务端下行独立控制。隐藏的触发条件保留已保存值。"
+
+msgid "Disabled by default, with no additional recovery probes. Enable failover_enabled on the server too and allow both TCP and UDP on its listening port. Both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated."
+msgstr "默认关闭，不增加接管探测。服务端也需开启 failover_enabled，并放行监听端口的 TCP 和 UDP。两个子节点均需支持 UDP。leg0 中断后保留原 TCP 会话及服务端 UDP socket；UDP 不进行聚合。"
+
+msgid "Seconds without a fresh TCP or UDP health reply before the shared path is unavailable. Default: 5 seconds. These probes are shared by all connections, not sent per flow."
+msgstr "TCP 或 UDP 健康探测连续未收到有效响应达到此秒数后，判定路径不可用。默认 5 秒。所有连接共享探测，不为每条流单独探测。"
+
+msgid "Seconds the preferred path must stay healthy before returning to it. Default: 30 seconds. A single missed probe does not restart this period; another full failure timeout does. If the fallback fails, an available preferred path is used immediately."
+msgstr "首选路径持续健康达到此秒数后回切，默认 30 秒。单次漏回包不重置计时，再次达到完整故障超时才重置。若备用路径故障，则立即使用已可用的首选路径。"
+
+msgid "Optional recovery is independent of the aggregation switches. With recovery disabled, no recovery probes or UDP relay are created."
+msgstr "故障接管独立于聚合开关。关闭后不创建接管探测或 UDP 中继。"
+
+msgid "Current TCP control path and selected UDP leg. UDP retains its own preference. A zero usable mask means no path is currently healthy."
+msgstr "当前 TCP 控制路径及 UDP 所选路径。UDP 保持独立的首选路径设置。可用路径掩码为零表示当前没有健康路径。"
+
+msgid "No fresh reply timeout · continuous healthy period before returning to the preferred path. Values are controlled by the client and synchronized to the server."
+msgstr "未收到有效响应的超时 · 回切首选路径前的持续健康时长。由客户端控制并同步切换结果至服务端。"
+
+msgid "Requires fresh TCP and native UDP replies on this child. Shared by all flows. This is reachability, not the per-flow probe loss estimate."
+msgstr "此子节点的 TCP 和原生 UDP 均需收到有效响应，所有流共享此状态。表示路径可达性，不是各流探测的丢包估计。"
+
+msgid "Time since the last valid TCP reply · time since the last valid UDP reply · continuous healthy duration. Missing samples are shown as a dash."
+msgstr "最近一次有效 TCP 响应距今时长 · 最近一次有效 UDP 响应距今时长 · 连续健康时长。无样本显示短横线。"
+
+msgid "TCP returns to leg0 after the stability period. UDP returns to its separately configured preferred leg."
+msgstr "TCP 在稳定等待期后返回 leg0。UDP 返回单独配置的首选路径。"
+
+msgid "Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and feedback on the control path (normally leg0, leg1 during failover), including queueing: largest smoothed RTT / smallest recorded RTT."
+msgstr "活跃连接的远端交付速率估计之和，并非当前吞吐或链路容量。反馈 RTT 包含此路径传输 DATA 及控制路径回传反馈（通常为 leg0，接管时为 leg1），含排队时延：最大平滑 RTT / 最小记录 RTT。"
+
+msgid "Since process start: attached leg transports · business TCP dial attempts (without recovery, leg0 counts logical connections) · reported remote failures, including closed connections. Shared recovery probes are excluded. An attached lazy transport may still be handshaking; unreported remote events cannot be counted."
+msgstr "自进程启动累计：挂接的路径传输实例 · 业务 TCP 拨号尝试（未启用接管时 leg0 为逻辑连接数）· 已报告的远端失败，包含已关闭连接。共享接管探测不计入。延迟建连的传输实例可能仍在握手；未报告的远端事件无法计入。"
+
 #~ msgid "Last error: %s"
 #~ msgstr "最近错误：%s"
 

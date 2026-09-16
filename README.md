@@ -27,7 +27,7 @@ disabled, otherwise zero. Explicit zero and disabled switches are preserved in
 the generated configuration. These options require a singbox-multipath build
 with the corresponding activation controls.
 
-This beta5 branch requires multipath protocol v9 and status schema 3 on the
+This beta6 branch requires multipath protocol v10 and status schema 3 on the
 matching sing-box build. Both multipath endpoints must be upgraded together.
 Manual bandwidth weights have been removed; the scheduler observes delivery
 through each complete child path. Old bandwidth UCI fields are no longer emitted.
@@ -46,10 +46,25 @@ both paths until the peer's cumulative Data ACK. An empty or zero
 
 ## Multipath Status
 
+The optional **Enable TCP and UDP failover** switch is off by default. It adds
+shared path health checks only when enabled. The server must also enable
+`failover_enabled`, and both children must reach its TCP and UDP listening port.
+The failure timeout defaults to 5 seconds; the preferred-path stability period
+defaults to 30 seconds. Both are editable in LuCI and hidden, with values retained,
+when recovery is off. Recovery is independent of the aggregation switches.
+
+TCP can retain its target connection on leg1 during a leg0 outage. UDP uses the
+common server relay from the beginning, retaining its source socket across switches.
+The UDP selector remains an independent preference: selecting leg1 keeps UDP there
+when TCP returns to leg0. UDP is not aggregated or carried inside TCP.
+With recovery disabled, UDP keeps its existing direct child forwarding behavior.
+
 The top-level status page refreshes every second. A topology diagram links the
 aggregate node to leg0 and leg1, with separate upload and download arrows. Each
 leg includes directional cumulative traffic, peak speeds, and the ten currently
-fastest TCP flows. UDP remains on its selected child and has separate counters.
+fastest TCP flows. UDP has separate per-leg counters, including earlier traffic on
+a path that is no longer selected. Recovery details show the selected TCP/UDP paths,
+the two timers, shared path health, reply ages and continuous healthy time.
 
 Collapsible details distinguish whole-path in-flight data, connection send
 history, reinjected bytes/mappings, writer blocking, receive reordering and the

@@ -678,6 +678,8 @@ function stateInfo(state) {
 		aggregating: [ _('Aggregating'), 'good' ],
 		carrying: [ _('Carrying traffic'), 'good' ],
 		preferred_only: [ _('Preferred only'), 'idle' ],
+		failover: [ _('Failover active'), 'warn' ],
+		unavailable: [ _('Unavailable'), 'bad' ],
 		standby: [ _('Standby'), 'idle' ],
 		connecting: [ _('Connecting'), 'warn' ],
 		retrying: [ _('Retrying'), 'warn' ],
@@ -761,6 +763,7 @@ function renderAggregate(node, stale) {
 	      cumulative = logical.cumulative || {},
 	      parameters = node.parameters || {},
 	      memory = node.memory || {},
+	      recovery = node.recovery,
 	      localSender = logical.local_sender || {},
 	      remoteSender = logical.remote_sender || {},
 	      remoteSnapshot = remoteSender.updated_at ? remoteSender : null;
@@ -797,7 +800,7 @@ function renderAggregate(node, stale) {
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':state', _('Aggregation state'), [
 			E('div', { 'class': 'mp-mode-row' }, [
-				E('span', { 'title': _('Connections using preferred-only local TX. This does not disable server downlink aggregation.') }, [ _('Upload preferred only'), E('strong', {}, [ String(number(logical.preferred_only_connections)) ]) ]),
+				E('span', { 'title': _('Connections without local TX aggregation. Optional failover may use leg1; server downlink aggregation remains independent.') }, [ recovery?.enabled ? _('Upload single-path') : _('Upload preferred only'), E('strong', {}, [ String(number(logical.preferred_only_connections)) ]) ]),
 				E('span', { 'title': _('Connections with local TX aggregation activated, even if currently idle.') }, [ _('Upload aggregation active'), E('strong', {}, [ String(number(logical.tx_aggregating_connections)) ]) ]),
 				E('span', { 'title': _('Connections with leg1 receive traffic in the current sample, not a persistent activation count.') }, [ _('Download on leg1'), E('strong', {}, [ String(number(logical.rx_aggregating_connections)) ]) ]),
 				E('span', {}, [ _('Booster degraded'), E('strong', {}, [ String(number(logical.booster_degraded_connections)) ]) ])
@@ -805,10 +808,15 @@ function renderAggregate(node, stale) {
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':parameters', _('Effective multipath parameters'), [
 			renderParameters([
+				[ _('TCP and UDP failover'), recovery?.enabled ? _('Enabled') : _('Disabled'), _('Optional recovery is independent of the aggregation switches. With recovery disabled, no recovery probes or UDP relay are created.') ],
+				...(recovery?.enabled ? [
+					[ _('Recovery paths'), number(recovery.usable_mask) ? 'TCP leg%d · UDP leg%d'.format(number(recovery.tcp_path), number(recovery.udp_path)) : _('Unavailable'), _('Current TCP control path and selected UDP leg. UDP retains its own preference. A zero usable mask means no path is currently healthy.') ],
+					[ _('Failure timeout / Stable return'), '%s · %s'.format(formatDuration(recovery.failover_timeout_ms), formatDuration(recovery.failback_delay_ms)), _('No fresh reply timeout · continuous healthy period before returning to the preferred path. Values are controlled by the client and synchronized to the server.') ]
+				] : []),
 				[ _('Aggregation server'), node.aggregation_server || '-', 'Remote multipath inbound used to join both child legs.' ],
-				[ _('UDP outbound'), displayTag(node.udp_outbound), 'Child outbound selected for UDP. UDP uses this one child and is not aggregated.' ],
+				[ _('UDP outbound'), displayTag(node.udp_outbound), _('Preferred UDP child. Without recovery it forwards directly; with recovery both paths use the same server UDP relay. UDP is not aggregated.') ],
 				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled'), 'Whether multipath connection setup can send early data. The child path must also support TCP Fast Open.' ],
-				[ _('Local TX aggregation'), parameters.aggregation_enabled !== false ? _('Enabled') : _('Disabled'), _('Controls client upload only. When enabled, any enabled queue, rate, or byte-count trigger activates aggregation (OR). When disabled, upload data always uses the preferred leg; server downlink and UDP are unchanged.') ],
+				[ _('Local TX aggregation'), parameters.aggregation_enabled !== false ? _('Enabled') : _('Disabled'), _('Controls client upload aggregation only. Any enabled condition activates aggregation (OR). Disabling aggregation does not disable optional failover or change server downlink policy.') ],
 				[ _('Activate on preferred queue'), parameters.activation_on_queue !== false ? _('Enabled') : _('Disabled'), _('Independent OR trigger: activate when the preferred path in-flight plus local unsent bytes remain at least 80% of the configured pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX.') ],
 				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : _('Disabled'), _('Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured.') ],
 				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : _('Disabled'), _('Independent OR trigger: cumulative application bytes accepted for local TX per connection. 0 disables this trigger.') ],
@@ -877,7 +885,7 @@ function renderFlows(flows) {
 	]));
 }
 
-function renderLeg(nodeTag, leg, stale, remoteSender) {
+function renderLeg(nodeTag, leg, stale, remoteSender, recovery) {
 	// Closed-session totals do not imply a current remote path or memory sample.
 	const remoteSnapshot = remoteSender?.updated_at ? remoteSender : null;
 	const current = leg.current || {}, cumulative = leg.cumulative || {}, frames = leg.frames || {},
@@ -887,7 +895,7 @@ function renderLeg(nodeTag, leg, stale, remoteSender) {
 	      parameterEntries = [
 			[ _('Remote scheduler estimate'), formatRemote(remoteSnapshot, number(leg.remote_delivery_bytes_per_second) > 0 ? '%s · %s %s · %s %s'.format(
 				formatRate(leg.remote_delivery_bytes_per_second), _('Feedback RTT'), formatLatency(leg.remote_delivery_rtt_max_ms),
-				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Sum of the remote scheduler delivery-rate estimates for active connections; idle connections may retain their last estimate. This is neither current one-second throughput nor physical link capacity. Feedback RTT is DATA via this leg plus feedback via leg0, including queueing: largest smoothed RTT / smallest recorded RTT across active connections.') ],
+				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and feedback on the control path (normally leg0, leg1 during failover), including queueing: largest smoothed RTT / smallest recorded RTT.') ],
 			[ _('Path in-flight data'), '%s %s (%s %s) · %s %s'.format(
 					_('Upload'), formatBytes(leg.backlog_bytes), _('peak'), formatBytes(leg.peak_backlog_bytes),
 					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), stale)), _('Each direction: bytes assigned to this path but not yet covered by a whole-path receipt, including child transport buffers. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start. This is not local queue utilization. Download is remote telemetry.') ],
@@ -896,7 +904,7 @@ function renderLeg(nodeTag, leg, stale, remoteSender) {
 					_('Download'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)), stale)), _('Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender.') ],
 			[ _('Frames'), _('TX %d · RX %d').format(number(frames.tx), number(frames.rx)), 'Frames sent on this leg · frames received on this leg.' ],
 			[ _('Leg lifecycle'), '%s %d · %s %d · %s %s'.format(
-				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), formatRemote(remoteSender, String(number(leg.remote_failure_count)), stale)), _('Since process start: locally attached leg transports, independent of TX activation · secondary dial attempts (leg0: logical connections created) · last-reported remote failures, including closed connections. An attached lazy leg0 may still be completing its handshake. Unreported remote events cannot be counted.') ],
+				_('joins'), number(leg.join_count), _('attempts'), number(leg.attempt_count), _('remote failures'), formatRemote(remoteSender, String(number(leg.remote_failure_count)), stale)), _('Since process start: attached leg transports · business TCP dial attempts (without recovery, leg0 counts logical connections) · reported remote failures, including closed connections. Shared recovery probes are excluded. An attached lazy transport may still be handshaking; unreported remote events cannot be counted.') ],
 			[ _('Peak 1-second speed'), '%s · %s'.format(
 				_('RX %s').format(formatRate(peak.rx_bytes_per_second)), _('TX %s').format(formatRate(peak.tx_bytes_per_second))), 'Peak one-second average speed since process start: received rate · transmitted rate.' ],
 			[ _('Probe RTT (active flows)'), '%s %s · %s %s · %s %s · %s %s–%s · %s %s'.format(
@@ -905,9 +913,18 @@ function renderLeg(nodeTag, leg, stale, remoteSender) {
 			[ _('Probe health (active flows)'), '%s %d · %s %d · %s'.format(
 				_('sent'), number(leg.probe_sent), _('timeouts'), number(leg.probe_timeout), formatPercent(leg.probe_timeout, leg.probe_sent)), _('Active connections only: probes sent · probe timeouts · timeout/sent ratio. These counters can decrease when connections close. A pending probe is not yet a success or timeout; zero timeouts with few samples does not establish link quality. This is not raw IP packet loss.') ]
 	      ];
+	if (recovery?.enabled) {
+		const health = recovery.paths?.[leg.id] || {},
+		      age = (ms) => number(ms) < 0 ? '-' : formatDuration(ms);
+		parameterEntries.unshift(
+			[ _('Shared recovery health'), stale ? _('Stale') : (health.healthy ? _('Healthy') : _('Unavailable')), _('Requires fresh TCP and native UDP replies on this child. Shared by all flows. This is reachability, not the per-flow probe loss estimate.') ],
+			[ _('TCP reply age / UDP reply age / Healthy for'), '%s · %s · %s'.format(age(health.tcp_reply_age_ms), age(health.udp_reply_age_ms), age(health.stable_ms)), _('Time since the last valid TCP reply · time since the last valid UDP reply · continuous healthy duration. Missing samples are shown as a dash.') ],
+			[ _('Recovery role'), '%s · %s'.format(number(recovery.tcp_path) === leg.id ? _('TCP control') : _('TCP standby or aggregation'), number(recovery.udp_path) === leg.id ? _('UDP selected') : _('UDP standby')), _('TCP returns to leg0 after the stability period. UDP returns to its separately configured preferred leg.') ]
+		);
+	}
 	if (leg.remote_last_failure_stage)
 		parameterEntries.push([ _('Last remote failure stage'), formatRemote(remoteSnapshot, legEventStageLabel(leg.remote_last_failure_stage), stale), _('Last remote failure stage reported by an active connection. Unlike the cumulative failure counter, this detail is not retained after that connection closes.') ]);
-	if (leg.udp_selected) {
+	if (leg.udp_selected || recovery?.enabled || number(udpCumulative.rx_bytes) || number(udpCumulative.tx_bytes)) {
 		parameterEntries.push(
 			[ _('UDP traffic'), '%s · %s · %s · %s'.format(
 				_('RX %s').format(formatRate(udpCurrent.rx_bytes_per_second)),
@@ -1053,9 +1070,9 @@ return view.extend({
 			content.push(E('div', { 'class': 'mp-topology' }, [
 				renderAggregate(node, stale),
 				renderConnector(leg0),
-				renderLeg(node.tag, leg0, stale, node.logical?.remote_sender),
+				renderLeg(node.tag, leg0, stale, node.logical?.remote_sender, node.recovery),
 				renderConnector(leg1),
-				renderLeg(node.tag, leg1, stale, node.logical?.remote_sender)
+				renderLeg(node.tag, leg1, stale, node.logical?.remote_sender, node.recovery)
 			]));
 		}
 
