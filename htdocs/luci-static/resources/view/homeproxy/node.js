@@ -663,7 +663,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 	o = s.option(form.Flag, 'multipath_failover_enabled', _('Enable TCP and UDP failover'),
-		_('Disabled by default, with no additional recovery probes. Enable failover_enabled on the server too and allow both TCP and UDP on its listening port. Both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated.'));
+		_('Client-only, disabled by default, with no additional recovery probes. The server always supports recovery and has no failover_enabled option. Allow both TCP and UDP on its listening port; both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated.'));
 	o.default = o.disabled;
 	o.rmempty = false;
 	o.depends('type', 'multipath');

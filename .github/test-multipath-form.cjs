@@ -25,6 +25,8 @@ assert.ok(![...fields.keys()].some(key => key.startsWith('multipath_bandwidth'))
 assert.ok(!fields.has('_multipath_scheduler'));
 assert.match(fields.get('multipath_aggregation_enabled').description, /beta6/);
 assert.equal(fields.get('multipath_failover_enabled').default, '0');
+assert.match(fields.get('multipath_failover_enabled').description, /Client-only/);
+assert.match(fields.get('multipath_failover_enabled').description, /server always supports recovery/);
 for (const key of ['failover_timeout', 'failback_delay']) {
   const field = fields.get('multipath_' + key);
   assert.equal(field.retain, true);

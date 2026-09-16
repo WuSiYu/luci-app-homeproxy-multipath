@@ -4323,8 +4323,8 @@ msgstr "双端均需使用 singbox-multipath beta6。旧版带宽配置会被忽
 msgid "Controls client upload aggregation only. When disabled, upload uses leg0 unless optional failover is active. Server downlink is independent. Saved trigger settings are retained while hidden."
 msgstr "仅控制客户端上传聚合。关闭时上传使用 leg0，但可选的故障接管仍可使用 leg1。服务端下行独立控制。隐藏的触发条件保留已保存值。"
 
-msgid "Disabled by default, with no additional recovery probes. Enable failover_enabled on the server too and allow both TCP and UDP on its listening port. Both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated."
-msgstr "默认关闭，不增加接管探测。服务端也需开启 failover_enabled，并放行监听端口的 TCP 和 UDP。两个子节点均需支持 UDP。leg0 中断后保留原 TCP 会话及服务端 UDP socket；UDP 不进行聚合。"
+msgid "Client-only, disabled by default, with no additional recovery probes. The server always supports recovery and has no failover_enabled option. Allow both TCP and UDP on its listening port; both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated."
+msgstr "仅客户端配置，默认关闭，不增加接管探测。服务端始终支持接管，没有 failover_enabled 选项。需放行监听端口的 TCP 和 UDP，两个子节点均需支持 UDP。leg0 中断后保留原 TCP 会话及服务端 UDP socket；UDP 不进行聚合。"
 
 msgid "Seconds without a fresh TCP or UDP health reply before the shared path is unavailable. Default: 5 seconds. These probes are shared by all connections, not sent per flow."
 msgstr "TCP 或 UDP 健康探测连续未收到有效响应达到此秒数后，判定路径不可用。默认 5 秒。所有连接共享探测，不为每条流单独探测。"

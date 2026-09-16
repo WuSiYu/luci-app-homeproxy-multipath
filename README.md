@@ -46,9 +46,11 @@ both paths until the peer's cumulative Data ACK. An empty or zero
 
 ## Multipath Status
 
-The optional **Enable TCP and UDP failover** switch is off by default. It adds
-shared path health checks only when enabled. The server must also enable
-`failover_enabled`, and both children must reach its TCP and UDP listening port.
+The client-only **Enable TCP and UDP failover** switch is off by default. It adds
+shared path health checks only when enabled. The server always accepts recovery
+sessions and listens on TCP and UDP; it has no `failover_enabled` field. Remove
+that field from existing server inbound configurations. Both children must reach
+the server's TCP and UDP listening port when recovery is enabled.
 The failure timeout defaults to 5 seconds; the preferred-path stability period
 defaults to 30 seconds. Both are editable in LuCI and hidden, with values retained,
 when recovery is off. Recovery is independent of the aggregation switches.
