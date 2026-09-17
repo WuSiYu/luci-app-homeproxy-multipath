@@ -47,17 +47,17 @@ function render(doc = document, extra = {}) {
   assert.ok(!JSON.stringify(page.root).includes('NaN'));
 }
 let document = {
-  schema_version: 3, generated_at: new Date().toISOString(), process_started_at: new Date().toISOString(),
-  node: { tag: 'mp-out', parameters: { max_reorder_frames: 0 }, logical: {}, legs: [{ id: 0, tag: 'primary' }, { id: 1, tag: 'booster' }] }
+  schema_version: 4, generated_at: new Date().toISOString(), process_started_at: new Date().toISOString(),
+  node: { tag: 'mp-out', parameters: { frame_size: 65536, upload: { aggregation_enabled: false, effective_send_buffer_bytes: 33554432 }, download: { aggregation_enabled: true, leg0_traffic_saving: true, effective_receive_window_bytes: 67108864 } }, logical: { upload_states: { leg0: 2 }, download_states: { leg1: 1, unknown: 1 } }, legs: [{ id: 0, tag: 'primary' }, { id: 1, tag: 'booster' }] }
 };
 if (process.argv[3]) {
-  const sample = fs.readFileSync(process.argv[3], 'utf8').split('\n').filter(line => line.startsWith('STATUS ')).at(-1);
+  const sample = fs.readFileSync(process.argv[3], 'utf8').split('\n').filter(line => line.includes('STATUS ')).at(-1);
   assert.ok(sample, 'No live status sample');
-  document = JSON.parse(sample.slice(7));
+  document = JSON.parse(sample.slice(sample.indexOf('STATUS ') + 7));
 }
 render();
 const rendered = JSON.stringify(page.root);
-for (const text of ['Connection send history', 'Path in-flight data', 'Reinjection', '16 KiB pages', 'Remote scheduler estimate', 'Upload preferred only', 'Download on leg1', 'Feedback RTT', 'Probe RTT (active flows)', 'Probe health (active flows)']) assert.ok(rendered.includes(text), text);
+for (const text of ['Connection send history', 'Path in-flight data', 'Reinjection', '16 KiB pages', 'Remote scheduler estimate', 'Upload modes', 'Download modes', 'Upload policy', 'Download policy', 'Activation: 1 OR 2 OR 3', 'Feedback RTT', 'Probe RTT (active flows)', 'Probe health (active flows)']) assert.ok(rendered.includes(text), text);
 assert.ok(!rendered.includes('Automatic delivery-based scheduling'));
 assert.ok(!rendered.includes('Local TX policy'));
 assert.ok(!rendered.includes('Queue utilization:'));
@@ -152,4 +152,4 @@ assert.equal(findNodes(page.root, node => node.tag === 'details')[0].attrs.open,
 render({ ...document, schema_version: 2 }, { incompatible_schemas: [2] });
 assert.ok(JSON.stringify(page.root).includes('No multipath status data is available.'));
 assert.ok(flatten(page.root).includes('Unsupported status schema: 2'));
-console.log('PASS: schema 3 counters/tooltips, unavailable/stale/historical states, folding, event dismissal, segment wrapping, 1s poll, old-schema notice');
+console.log('PASS: schema 4 directions/counters/tooltips, unavailable/stale/historical states, folding, event dismissal, segment wrapping, 1s poll, old-schema notice');

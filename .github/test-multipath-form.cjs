@@ -23,29 +23,32 @@ render({ option(kind, key, title, description) {
 } }, ['homeproxy'], { with_quic: true }, null, 'custom');
 assert.ok(![...fields.keys()].some(key => key.startsWith('multipath_bandwidth')));
 assert.ok(!fields.has('_multipath_scheduler'));
-assert.match(fields.get('multipath_aggregation_enabled').description, /beta6/);
+
 assert.equal(fields.get('multipath_failover_enabled').default, '0');
-assert.match(fields.get('multipath_failover_enabled').description, /Client-only/);
-assert.match(fields.get('multipath_failover_enabled').description, /server always supports recovery/);
-for (const key of ['failover_timeout', 'failback_delay']) {
-  const field = fields.get('multipath_' + key);
-  assert.equal(field.retain, true);
-  assert.equal(field.dependencies[0][0].multipath_failover_enabled, '1');
-}
 assert.equal(fields.get('multipath_failover_timeout').default, '5');
 assert.equal(fields.get('multipath_failback_delay').default, '30');
-assert.match(fields.get('multipath_aggregation_enabled').description, /condition 1 OR condition 2 OR condition 3/);
-for (const key of ['activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window']) {
-  const field = fields.get('multipath_' + key);
-  assert.equal(field.retain, true, key);
-  assert.equal(field.dependencies[0][0].multipath_aggregation_enabled, '1', key);
+for (const direction of ['upload', 'download']) {
+  const prefix = 'multipath_' + direction + '_';
+  assert.match(fields.get(prefix + 'aggregation_enabled').description, /condition 1 OR condition 2 OR condition 3/);
+  assert.equal(fields.get(prefix + 'aggregation_enabled').default, '1');
+  assert.equal(fields.get(prefix + 'leg0_traffic_saving').default, '0');
+  for (const key of ['leg0_traffic_saving', 'activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window']) {
+    const field = fields.get(prefix + key);
+    assert.equal(field.retain, true, key);
+    assert.equal(field.dependencies.length, 1, key);
+    assert.equal(field.dependencies[0][0][prefix + 'aggregation_enabled'], '1', key);
+  }
+  const rate = fields.get(prefix + 'activation_after_bytes_min_mbps').dependencies[0][0][prefix + 'activation_after_bytes'];
+  for (const value of ['1', '2MB', ' 002 MiB ']) assert.ok(rate.test(value));
+  for (const value of ['0', '0MB', '', 'abc']) assert.ok(!rate.test(value));
+  for (const key of ['activation_after_bytes', 'send_buffer_bytes', 'receive_window_bytes']) {
+    const validate = fields.get(prefix + key).validate;
+    for (const value of ['0', '2MB', '256 MiB', '2097152', '']) assert.equal(validate('test', value), true);
+  }
 }
-const rate = fields.get('multipath_activation_after_bytes_min_mbps').dependencies[0][0].multipath_activation_after_bytes;
-for (const value of ['1', '2MB', ' 002 MiB ']) assert.ok(rate.test(value));
-for (const value of ['0', '0MB', '', 'abc']) assert.ok(!rate.test(value));
-assert.equal(fields.get('multipath_max_reorder_frames').datatype, 'or(0,and(uinteger,range(64,65536)))');
-for (const key of ['multipath_activation_after_bytes', 'multipath_memory_limit']) {
-  const validate = fields.get(key).validate;
-  for (const value of ['0', '2MB', '256 MiB', '2097152', '']) assert.equal(validate('test', value), true);
-}
-console.log('PASS: no weight fields, directional OR controls/hidden-value retention, byte gate, optional integer chunk cap');
+for (const key of ['multipath_frame_size', 'multipath_memory_limit'])
+  for (const value of ['0', '2MB', '256 MiB', '2097152', '']) assert.equal(fields.get(key).validate('test', value), true);
+for (const key of ['aggregation_enabled', 'max_reorder_frames', 'receive_window_frames', 'chunk_size', 'leg1_replay_bytes'])
+  assert.ok(!fields.has('multipath_' + key));
+assert.match(fields.get('_multipath_beta8_migration').default, /ignored, not migrated/);
+console.log('PASS: beta8 directional OR controls, hidden-value retention, byte sizes, saving defaults, removed legacy controls');

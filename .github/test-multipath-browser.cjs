@@ -2,7 +2,8 @@
 // This is layout/interaction validation, not an installed LuCI/rpcd end-to-end test.
 const fs = require('node:fs');
 const [source, log, target] = process.argv.slice(2);
-const document = JSON.parse(fs.readFileSync(log, 'utf8').split('\n').filter(line => line.startsWith('STATUS ')).at(-1).slice(7));
+const sample = fs.readFileSync(log, 'utf8').split('\n').filter(line => line.includes('STATUS ')).at(-1);
+const document = JSON.parse(sample.slice(sample.indexOf('STATUS ') + 7));
 document.generated_at = new Date().toISOString();
 document.node.logical.remote_sender.updated_at = document.generated_at;
 document.node.logical.remote_sender.stale = false;
@@ -13,6 +14,8 @@ fs.writeFileSync(target, `<!doctype html><meta charset="utf-8"><title>Multipath 
 <body><script>
 String.prototype.format=function(...args){let i=0;return this.replace(/%(0?)(\\d*)([sd])/g,(_,z,w,t)=>String(t==='d'?Math.trunc(args[i++]):args[i++]).padStart(+w,z?'0':' '));};
 const fixture=${fixture};
+fixture.generated_at = new Date().toISOString();
+fixture.node.logical.remote_sender.updated_at = fixture.generated_at;
 function E(tag,attrs,children){
  if(Array.isArray(tag)){const fragment=document.createDocumentFragment(); tag.forEach(n=>fragment.append(n));return fragment;}
  if(Array.isArray(attrs)){children=attrs;attrs={};}

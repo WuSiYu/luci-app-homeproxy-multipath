@@ -6,43 +6,39 @@ It is designed to work with [singbox-multipath](https://github.com/WuSiYu/singbo
 
 ![Multipath status dashboard](screenshot.png)
 
-The multipath node form accepts `activation_after_bytes` and `memory_limit` as
-either bare byte counts or memory strings such as `2MB`; the latter uses
-sing-box's binary memory units. Other byte limits use integer byte counts. The
-`activation_after_bytes_min_mbps` field adds a recent-rate gate to
-`activation_after_bytes` without changing the existing throughput or leg 0 queue
-triggers.
+This branch targets **sing-box v1.14.1-multipath-beta8**, multipath wire protocol
+v11 and status schema 4. Upgrade both multipath endpoints and this LuCI package
+together.
 
-The **Enable local TX aggregation (upload)** switch maps to
-`aggregation_enabled`. Turning it off keeps client upload data on the preferred
-leg while server downlink aggregation and UDP remain available. The queue, rate,
-and byte-count conditions are independent **OR** triggers; any enabled condition
-can activate local aggregation. `activation_on_queue` toggles the sustained queue
-trigger. A rate or byte threshold of `0` disables that trigger. The minimum rate
-after bytes applies only to the byte-count trigger, and `0` removes that extra
-gate. With all three triggers disabled, upload stays on the preferred leg.
+The client node form owns separate **Upload** and **Download** policies. Each has
+an aggregation master switch, an optional **Save leg0 traffic** switch, and three
+numbered activation conditions: **1. queue OR 2. rate OR 3. cumulative bytes**.
+Condition 3 alone can also require a minimum average rate. Zero numeric thresholds
+disable their condition; an omitted rate defaults to 150 Mbps unless a byte trigger
+is configured. Disabling the master hides activation fields without clearing their
+saved values.
 
-An empty rate field uses sing-box's default: 150 Mbps when the byte trigger is
-disabled, otherwise zero. Explicit zero and disabled switches are preserved in
-the generated configuration. These options require a singbox-multipath build
-with the corresponding activation controls.
+Traffic-saving changes activated traffic from aggregation to leg1-only new DATA.
+Healthy leg1 backpressure waits instead of spilling onto leg0. Failures, stalls,
+memory protection, control frames and reinjection may still use leg0; this is not
+a zero-traffic guarantee. Activation persists for the connection lifetime, and UDP
+selection remains independent.
 
-This beta6 branch requires multipath protocol v10 and status schema 3 on the
-matching sing-box build. Both multipath endpoints must be upgraded together.
-Manual bandwidth weights have been removed; the scheduler observes delivery
-through each complete child path. Old bandwidth UCI fields are no longer emitted.
-They can remain in saved configurations without influencing scheduling. The
-matching sing-box build also accepts legacy JSON `bandwidth_mbps`, ignores it,
-and logs a warning when initializing the node.
+The common `frame_size` replaces `chunk_size`. Directional `queue_frames`
+limits unsent data in frame-size units; `send_buffer_bytes` covers unsent and
+unacknowledged data on both legs. `receive_window_bytes` applies at the direction's
+receiver: server for upload and client for download. There is no frame-count receive
+limit. `path_stall_timeout_min` replaces `leg1_replay_timeout`, expressing a floor
+on adaptive no-progress detection rather than a fixed retry timer.
+Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MiB`.
+Automatic buffer ceilings resolve against the owning host's `memory_limit`;
+the client cannot override the server's node-wide budget.
 
-Receive-window settings apply to local RX. `max_reorder_bytes` bounds receive
-storage, including contiguous bytes awaiting application reads;
-`max_reorder_frames` is an optional additional ceiling in negotiated chunk-size
-units, not a wire-frame count. Empty or zero adds no chunk ceiling. The pending
-send capacity (`queue_frames`) applies to local unsent TX data; the connection
-send buffer (`leg1_replay_bytes`, retained as a configuration name) holds data for
-both paths until the peer's cumulative Data ACK. An empty or zero
-`leg1_replay_timeout` uses adaptive delivery timing.
+Old flat UCI tuning fields are **ignored, not migrated**. The form lists legacy
+keys and the generator warns about them. They are not emitted into sing-box JSON.
+Reconfigure both directions explicitly; remove directional tuning from the server.
+The matching sing-box beta8 similarly warns and ignores recognized legacy JSON
+fields, while rejecting unknown fields or invalid new settings.
 
 ## Multipath Status
 
@@ -68,6 +64,10 @@ fastest TCP flows. UDP has separate per-leg counters, including earlier traffic 
 a path that is no longer selected. Recovery details show the selected TCP/UDP paths,
 the two timers, shared path health, reply ages and continuous healthy time.
 
+Upload/download policy sections show activation conditions, requested and effective
+buffer limits, and current sender mode counts. Remote values remain unavailable or
+stale when there is no fresh server sample, rather than being shown as zero.
+
 Collapsible details distinguish whole-path in-flight data, connection send
 history, reinjected bytes/mappings, writer blocking, receive reordering and the
 shared memory budget. Download sender counters and delivery estimates come from
@@ -80,7 +80,7 @@ matching. Unattributed EOF, reset and cancellation events remain visible. The
 destination identifies the affected flow, not a proven fault location. The updated
 sing-box excludes confirmed endpoint closures from event/failure counts; other
 hidden harmless events may still be counted. Error provenance requires
-the updated beta5 on both endpoints; protocol v8 is not compatible.
+beta8 on both endpoints.
 
 Reorder counts are 16 KiB storage pages, not wire frames. Their peaks are the
 largest per-connection peaks among currently active connections, and can drop
@@ -88,12 +88,12 @@ when a connection closes. Send-history and path in-flight peaks persist since
 process start and take the maximum of sampled node totals and observed
 per-connection peaks; they are not exact continuous aggregate high-water marks.
 An older status schema is rejected with an upgrade notice rather than displayed
-with beta5 labels.
+with current labels.
 
 Leg joins count locally attached transports independently of upload activation.
 Joins, attempts and reported remote failure counts include closed connections.
 Probe RTT and probe-health values, in contrast, summarize currently active
 connections only. Remote scheduler estimates are not one-second throughput or
 physical capacity; their DATA-feedback RTT follows the selected data leg outward
-and leg0 for the feedback. Stall detections do not necessarily cause reinjection,
+and the current control leg for the feedback. Stall detections do not necessarily cause reinjection,
 and accumulated sender wait time is not a single continuous pause.

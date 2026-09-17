@@ -366,6 +366,23 @@ function generate_outbound(node) {
 	return outbound;
 }
 
+function multipath_direction(node, direction) {
+	const prefix = 'multipath_' + direction + '_';
+	return {
+		aggregation_enabled: strToNullableBool(node[prefix + 'aggregation_enabled']),
+		leg0_traffic_saving: strToNullableBool(node[prefix + 'leg0_traffic_saving']),
+		activation_on_queue: strToNullableBool(node[prefix + 'activation_on_queue']),
+		activation_threshold_mbps: isEmpty(node[prefix + 'activation_threshold_mbps']) ? null : int(node[prefix + 'activation_threshold_mbps']),
+		activation_after_bytes: strToMemoryBytes(node[prefix + 'activation_after_bytes']),
+		activation_after_bytes_min_mbps: isEmpty(node[prefix + 'activation_after_bytes_min_mbps']) ? null : int(node[prefix + 'activation_after_bytes_min_mbps']),
+		activation_window: strToTime(node[prefix + 'activation_window']),
+		queue_frames: isEmpty(node[prefix + 'queue_frames']) ? null : int(node[prefix + 'queue_frames']),
+		send_buffer_bytes: strToMemoryBytes(node[prefix + 'send_buffer_bytes']),
+		receive_window_bytes: strToMemoryBytes(node[prefix + 'receive_window_bytes']),
+		path_stall_timeout_min: strToTime(node[prefix + 'path_stall_timeout_min'])
+	};
+}
+
 function generate_multipath_outbound(node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
@@ -380,6 +397,10 @@ function generate_multipath_outbound(node) {
 
 	const preferred_tag = 'cfg-' + preferred + '-out',
 	      secondary_tag = 'cfg-' + secondary + '-out';
+	for (let key in ['aggregation_enabled', 'activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window', 'queue_frames', 'chunk_size', 'max_reorder_frames', 'max_reorder_bytes', 'leg1_replay_bytes', 'leg1_replay_timeout', 'bandwidth_leg0_mbps', 'bandwidth_leg1_mbps']) {
+		if (('multipath_' + key) in node)
+			warn(sprintf('HomeProxy: %s: legacy multipath_%s is ignored in beta8; configure upload/download policies.\n', node['.name'], key));
+	}
 
 	return {
 		type: 'multipath',
@@ -393,23 +414,15 @@ function generate_multipath_outbound(node) {
 		failover_enabled: strToNullableBool(node.multipath_failover_enabled),
 		failover_timeout: strToBool(node.multipath_failover_enabled) ? strToTime(node.multipath_failover_timeout) : null,
 		failback_delay: strToBool(node.multipath_failover_enabled) ? strToTime(node.multipath_failback_delay) : null,
-		aggregation_enabled: strToNullableBool(node.multipath_aggregation_enabled),
-		activation_on_queue: strToNullableBool(node.multipath_activation_on_queue),
-		activation_threshold_mbps: isEmpty(node.multipath_activation_threshold_mbps) ? null : int(node.multipath_activation_threshold_mbps),
-		activation_after_bytes: strToMemoryBytes(node.multipath_activation_after_bytes),
-		activation_after_bytes_min_mbps: isEmpty(node.multipath_activation_after_bytes_min_mbps) ? null : int(node.multipath_activation_after_bytes_min_mbps),
-		activation_window: strToTime(node.multipath_activation_window),
-		chunk_size: strToInt(node.multipath_chunk_size),
-		queue_frames: strToInt(node.multipath_queue_frames),
-		max_reorder_frames: isEmpty(node.multipath_max_reorder_frames) ? null : int(node.multipath_max_reorder_frames),
-		max_reorder_bytes: strToInt(node.multipath_max_reorder_bytes),
-		leg1_replay_bytes: strToInt(node.multipath_leg1_replay_bytes),
-		leg1_replay_timeout: strToTime(node.multipath_leg1_replay_timeout),
+		frame_size: strToMemoryBytes(node.multipath_frame_size),
+		upload: multipath_direction(node, 'upload'),
+		download: multipath_direction(node, 'download'),
 		memory_limit: strToMemoryBytes(node.multipath_memory_limit),
 		handshake_timeout: strToTime(node.multipath_handshake_timeout),
 		status_file: RUN_DIR + '/multipath-status/' + node['.name'] + '.json'
 	};
 }
+
 
 function get_outbound(cfg) {
 	if (isEmpty(cfg))

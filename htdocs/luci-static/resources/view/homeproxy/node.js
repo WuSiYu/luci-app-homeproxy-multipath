@@ -540,7 +540,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.ListValue, 'multipath_secondary', _('Secondary leg'),
-		_('Additional node for aggregation. It remains available for server downlink when local TX aggregation is disabled.'));
+		_('Second path for aggregation, traffic-saving switching and optional failover. Upload and download activate it independently.'));
 	o.load = loadMultipathNodes;
 	o.validate = validateMultipathLeg;
 	o.depends('type', 'multipath');
@@ -568,89 +568,77 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.rmempty = false;
 	o.modalonly = true;
 
-	o = s.option(form.Flag, 'multipath_aggregation_enabled', _('Enable local TX aggregation (upload)'),
-		_('Requires singbox-multipath beta6 on both endpoints. Legacy bandwidth settings are ignored.') + '<br/>' +
-		_('Controls client upload aggregation only. When disabled, upload uses leg0 unless optional failover is active. Server downlink is independent. Saved trigger settings are retained while hidden.') + '<br/><strong>' +
-		_('Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition can activate aggregation; disabling all three keeps upload on the preferred leg.') + '</strong>');
-	o.default = o.enabled;
-	o.rmempty = false;
+
+	o = s.option(form.DummyValue, '_multipath_beta8_migration', _('Multipath beta8'));
+	o.default = _('Requires beta8 on both endpoints. Upload and download policies are now configured here. Old flat tuning fields are ignored, not migrated; review both directions before saving.');
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+	o = s.option(form.DummyValue, '_multipath_legacy_fields', _('Ignored legacy settings'));
+	o.cfgvalue = function(section) {
+		const names = ['aggregation_enabled', 'activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window', 'chunk_size', 'queue_frames', 'max_reorder_frames', 'max_reorder_bytes', 'leg1_replay_bytes', 'leg1_replay_timeout', 'bandwidth_leg0_mbps', 'bandwidth_leg1_mbps'];
+		const found = names.filter(key => uci.get('homeproxy', section, 'multipath_' + key) != null);
+		return found.length ? found.join(', ') : _('None');
+	};
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Flag, 'multipath_activation_on_queue', _('Condition 1: preferred queue'),
-		_('Independent OR trigger: activate when preferred-path in-flight plus local unsent bytes remain at least 80% of the pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX.'));
-	o.default = o.enabled;
-	o.rmempty = false;
-	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
-	o.retain = true;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_activation_threshold_mbps', _('Condition 2: average TX rate'),
-		_('Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured.'));
-	o.datatype = 'uinteger';
-	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
-	o.retain = true;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_activation_after_bytes', _('Condition 3: cumulative TX bytes'),
-		_('Independent OR trigger: cumulative application bytes accepted for local TX per connection. 0 or empty disables this trigger. Accepts bytes or a memory size such as <code>2MB</code>.'));
+	o = s.option(form.Value, 'multipath_frame_size', _('Frame size'),
+		_('Maximum DATA payload bytes, excluding headers; shared by upload and download. Frames may be smaller and are read incrementally. Accepts 65536 or 64KB. Default: 64 KiB.'));
 	o.validate = validateMemorySize;
-	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
-	o.retain = true;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_activation_after_bytes_min_mbps', _('Additional minimum rate for condition 3'),
-		_('Extra requirement for condition 3 only: the byte count and this minimum average rate over a complete activation window must both be satisfied. In Mbps; 0 or empty removes the rate gate. Conditions 1 and 2 remain independent.'));
-	o.datatype = 'uinteger';
-	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1',
-		'multipath_activation_after_bytes': /^\s*0*[1-9]\d*\s*(?:[kmgtpe]i?b|b)?\s*$/i});
-	o.retain = true;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_activation_window', _('Activation window'),
-		_('Rate measurement window and sustained high-queue duration, in seconds. Applies independently to each connection and local sending direction.'));
-	o.datatype = 'uinteger';
-	o.default = '1';
-	o.depends({'type': 'multipath', 'multipath_aggregation_enabled': '1'});
-	o.retain = true;
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_chunk_size', _('Chunk size'), _('Bytes per multipath data frame.'));
-	o.datatype = 'uinteger';
-	o.default = '65536';
+	o.default = '64KB';
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_queue_frames', _('Pending send capacity'),
-		_('Local unsent byte capacity per connection, in chunk-size units. It does not cap whole-path in-flight data. Path scheduling uses measured delivery, with no bandwidth weights.'));
-	o.datatype = 'uinteger';
-	o.default = '256';
-	o.depends('type', 'multipath');
-	o.modalonly = true;
+	for (const direction of ['upload', 'download']) {
+		const title = direction === 'upload' ? _('Upload') : _('Download');
+		const prefix = 'multipath_' + direction + '_';
+		const enabled = { type: 'multipath', [prefix + 'aggregation_enabled']: '1' };
+		const field = (kind, key, label, description, triggered) => {
+			const option = s.option(kind, prefix + key, title + ': ' + label, description);
+			if (triggered !== null)
+				option.depends(triggered ? enabled : { type: 'multipath' });
+			option.retain = true;
+			option.modalonly = true;
+			return option;
+		};
+		o = field(form.Flag, 'aggregation_enabled', _('Enable aggregation / switching'),
+			_('Client-controlled policy for this direction. When disabled, use leg0 except during optional failover. Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition activates leg1; all three disabled keeps the direction on leg0.'));
+		o.default = o.enabled;
+		o.rmempty = false;
 
-	o = s.option(form.Value, 'multipath_max_reorder_bytes', _('Maximum receive window'),
-		_('Local RX byte window, including in-order data awaiting application reads. Empty or 0 derives the ceiling from the shared memory budget: 224 MiB with a 512 MiB budget. Receive storage is allocated only for arriving data. This ceiling and the optional chunk-count ceiling both apply.'));
-	o.datatype = 'uinteger';
-	o.depends('type', 'multipath');
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_max_reorder_frames', _('Additional receive window cap (chunks)'),
-		_('Optional local RX ceiling in negotiated chunk-size units, not a count of received wire frames. Empty or 0 adds no extra ceiling. Otherwise use 64–65536; the smaller of this byte capacity and the receive-window byte limit applies.'));
-	o.datatype = 'or(0,and(uinteger,range(64,65536)))';
-	o.depends('type', 'multipath');
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_leg1_replay_bytes', _('Connection send buffer bytes'),
-		_('Retained local TX bytes for both legs, released only by the peer cumulative Data ACK. Empty or 0 derives the ceiling from the shared memory budget. This is not a per-path bandwidth limit.'));
-	o.datatype = 'uinteger';
-	o.depends('type', 'multipath');
-	o.modalonly = true;
-
-	o = s.option(form.Value, 'multipath_leg1_replay_timeout', _('Minimum reinjection timeout'),
-		_('In seconds. Empty or 0 uses adaptive delivery timing. A stalled path is paused, not automatically disconnected.'));
-	o.datatype = 'uinteger';
-	o.depends('type', 'multipath');
-	o.modalonly = true;
+		o = field(form.Flag, 'leg0_traffic_saving', _('Save leg0 traffic (switch instead of aggregate)'),
+			_('After activation and leg1 readiness, new data uses leg1 only. Normal backpressure waits rather than spilling onto leg0. Failure, stalls or memory protection may use leg0 for recovery; control traffic remains. Disabled by default.'), true);
+		o.default = o.disabled;
+		o.rmempty = false;
+		o = field(form.Flag, 'activation_on_queue', _('Condition 1: leg0 queue'),
+			_('Independent OR trigger: leg0 in-flight plus unsent bytes remain at least 80% of queue_frames × frame_size for the activation window.'), true);
+		o.default = o.enabled; o.rmempty = false;
+		o = field(form.Value, 'activation_threshold_mbps', _('Condition 2: average TX rate'),
+			_('Independent OR trigger in Mbps per connection. 0 disables it. Empty defaults to 150, or 0 when the byte trigger is enabled.'), true);
+		o.datatype = 'uinteger';
+		o = field(form.Value, 'activation_after_bytes', _('Condition 3: cumulative TX bytes'),
+			_('Independent OR trigger counting accepted application bytes in this direction. 0 or empty disables it. Accepts 2097152 or 2MB.'), true);
+		o.validate = validateMemorySize;
+		o = field(form.Value, 'activation_after_bytes_min_mbps', _('Additional minimum rate for condition 3'),
+			_('The byte threshold AND this average rate must both be met. Only condition 3 uses this gate; conditions 1 and 2 remain independent. 0 removes the rate gate.'), null);
+		o.depends({ ...enabled, [prefix + 'activation_after_bytes']: /^\s*0*[1-9]\d*\s*(?:[kmgtpe]i?b|b)?\s*$/i });
+		o.datatype = 'uinteger';
+		o = field(form.Value, 'activation_window', _('Activation window'),
+			_('Seconds used for rate sampling and sustained queue pressure. Each connection and direction triggers independently.'), true);
+		o.datatype = 'uinteger'; o.default = '1';
+		o = field(form.Value, 'queue_frames', _('Pending send capacity'),
+			_('Unsent queue capacity in frame-size units, not a count of in-flight frames. Default: 256. This is distinct from the complete send buffer.'), false);
+		o.datatype = 'or(0,and(uinteger,range(8,4096)))'; o.default = '256';
+		o = field(form.Value, 'send_buffer_bytes', _('Send buffer limit'),
+			_('Per-connection bytes retained at this direction\'s sender, including unsent data and data on both legs awaiting Data ACK. Empty or 0 is automatic using that host\'s memory budget.'), false);
+		o.validate = validateMemorySize;
+		o = field(form.Value, 'receive_window_bytes', _('Receive window limit'),
+			_('Window at this direction\'s receiver: server for upload, client for download. Includes unread in-order data. Empty or 0 is automatic using the receiver\'s budget. There is no frame-count limit.'), false);
+		o.validate = validateMemorySize;
+		o = field(form.Value, 'path_stall_timeout_min', _('Path stall timeout floor'),
+			_('Seconds; 0 or empty keeps adaptive timing. This is a lower bound on no-progress detection, not a fixed retransmission interval or a disconnect timer.'), false);
+		o.datatype = 'uinteger';
+	}
 
 	o = s.option(form.Value, 'multipath_memory_limit', _('Memory limit'),
 		_('Shared multipath memory budget. Accepts a memory size such as <code>256MB</code>.'));

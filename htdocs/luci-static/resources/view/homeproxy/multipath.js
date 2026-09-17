@@ -676,6 +676,8 @@ function displayTag(tag) {
 function stateInfo(state) {
 	const states = {
 		aggregating: [ _('Aggregating'), 'good' ],
+		traffic_saving: [ _('Traffic saving active'), 'good' ],
+		leg0_fallback: [ _('leg0 recovery fallback'), 'warn' ],
 		carrying: [ _('Carrying traffic'), 'good' ],
 		preferred_only: [ _('Preferred only'), 'idle' ],
 		failover: [ _('Failover active'), 'warn' ],
@@ -756,6 +758,45 @@ function activationDescription(activation) {
 	return description;
 }
 
+
+function directionModes(states) {
+	const labels = { leg0: _('leg0'), aggregate: _('Aggregate'), leg1: _('leg1 only'), leg0_fallback: _('leg0 fallback'), failover: _('Failover'), unknown: _('Unknown') };
+	return Object.entries(states || {}).filter(([key, count]) => count > 0)
+		.map(([key, count]) => (labels[key] || labels.unknown) + ' ' + count).join(' · ') || _('No active connections');
+}
+
+function renderDirectionPolicy(node, direction, remote, stale) {
+	const p = node.parameters?.[direction] || {}, upload = direction === 'upload';
+	const limit = (requested, effective, remoteOwned) => {
+		const setting = number(requested) ? formatBytes(requested) : _('Automatic');
+		const resolved = effective == null ? _('Unavailable') : formatBytes(effective);
+		return setting + ' · ' + _('Effective') + ' ' + (remoteOwned ? formatRemote(remote, resolved, stale) : resolved);
+	};
+	return renderCollapsible('aggregate:' + node.tag + ':' + direction, upload ? _('Upload policy') : _('Download policy'), [
+		renderParameters([
+			[ _('Data policy'), !p.aggregation_enabled ? _('leg0 only (except failover)') : (p.leg0_traffic_saving ? _('Switch to leg1 after activation') : _('Aggregate after activation')),
+				_('Configured by the client for this direction. Traffic-saving waits on healthy leg1 backpressure; failure, stalls or memory protection permit leg0 recovery. Control traffic remains on the control leg. UDP is independent.') ],
+			[ _('Activation: 1 OR 2 OR 3'), p.aggregation_enabled ? _('Any enabled condition activates leg1') : _('Disabled by master switch'),
+				_('Per connection and direction: condition 1 OR condition 2 OR condition 3. All disabled means no activation. Activation persists for the connection lifetime; there is no low-rate deactivation.') ],
+			[ _('1. Queue pressure'), p.activation_on_queue ? _('Enabled') : _('Disabled'),
+				_('Sender leg0 in-flight plus unsent bytes remain at least 80% of queue_frames × frame_size for the activation window.') ],
+			[ _('2. Average TX rate'), p.activation_threshold_mbps ? p.activation_threshold_mbps + ' Mbps' : _('Disabled'),
+				_('Sender average application rate over the activation window. Zero disables this condition.') ],
+			[ _('3. Cumulative bytes / Minimum rate'), (p.activation_after_bytes ? formatBytes(p.activation_after_bytes) : _('Disabled')) + ' · ' + (p.activation_after_bytes_min_mbps ? p.activation_after_bytes_min_mbps + ' Mbps' : _('No rate gate')),
+				_('Cumulative accepted application bytes AND the minimum average rate over a complete window. The rate gate applies only to condition 3. Zero bytes disables condition 3; zero minimum removes the gate.') ],
+			[ _('Activation window'), formatDuration(p.activation_window_ms), _('Sender sampling interval for rate and sustained queue pressure checks.') ],
+			[ _('Pending send capacity'), '%d units · %s'.format(number(p.queue_frames), formatBytes(p.queue_bytes)),
+				_('Sender unsent capacity in frame-size units and bytes. Part of the complete send buffer, not an extra in-flight limit.') ],
+			[ _('Send buffer limit'), limit(p.send_buffer_bytes, p.effective_send_buffer_bytes, !upload),
+				_('Requested limit · effective limit at the sender: client for upload, server for download. Includes unsent data and both paths awaiting cumulative Data ACK. Automatic is resolved against that host memory budget.') ],
+			[ _('Receive window limit'), limit(p.receive_window_bytes, p.effective_receive_window_bytes, upload),
+				_('Requested limit · effective limit at the receiver: server for upload, client for download. Covers receive byte sequence space including unread in-order data. No frame-count limit.') ],
+			[ _('Path stall timeout floor'), p.path_stall_timeout_min_ms ? formatDuration(p.path_stall_timeout_min_ms) : _('Adaptive'),
+				_('Optional lower bound on adaptive sender no-progress detection. Applies to either path, not a fixed retransmission or disconnect timer.') ]
+		])
+	]);
+}
+
 function renderAggregate(node, stale) {
 	const logical = node.logical || {},
 	      current = logical.current || {},
@@ -799,14 +840,10 @@ function renderAggregate(node, stale) {
 			])
 		]),
 		renderCollapsible('aggregate:' + node.tag + ':state', _('Aggregation state'), [
-			E('div', { 'class': 'mp-mode-row' }, [
-				E('span', { 'title': _('Connections without local TX aggregation. Optional failover may use leg1; server downlink aggregation remains independent.') }, [ recovery?.enabled ? _('Upload single-path') : _('Upload preferred only'), E('strong', {}, [ String(number(logical.preferred_only_connections)) ]) ]),
-				E('span', { 'title': _('Connections with local TX aggregation activated, even if currently idle.') }, [ _('Upload aggregation active'), E('strong', {}, [ String(number(logical.tx_aggregating_connections)) ]) ]),
-				E('span', { 'title': _('Connections with leg1 receive traffic in the current sample, not a persistent activation count.') }, [ _('Download on leg1'), E('strong', {}, [ String(number(logical.rx_aggregating_connections)) ]) ]),
-				E('span', {}, [ _('Booster degraded'), E('strong', {}, [ String(number(logical.booster_degraded_connections)) ]) ])
-			])
-		]),
-		renderCollapsible('aggregate:' + node.tag + ':parameters', _('Effective multipath parameters'), [
+			renderParameters([
+				[ _('Upload modes'), directionModes(logical.upload_states) + (stale ? _(' (stale)') : ''), _('Current connections by sender policy: leg0 before activation; aggregate uses both; leg1 is traffic-saving; leg0 fallback permits recovery; failover uses the surviving path. Busy leg1 writers do not cause fallback.') ],
+				[ _('Download modes'), directionModes(logical.download_states) + (stale ? _(' (stale)') : ''), _('Server-reported modes for current connections. Missing or stale samples are Unknown, not inferred from throughput.') ]
+			]),
 			renderParameters([
 				[ _('TCP and UDP failover'), recovery?.enabled ? _('Enabled') : _('Disabled'), _('Optional recovery is independent of the aggregation switches. With recovery disabled, no recovery probes or UDP relay are created.') ],
 				...(recovery?.enabled ? [
@@ -816,20 +853,12 @@ function renderAggregate(node, stale) {
 				[ _('Aggregation server'), node.aggregation_server || '-', 'Remote multipath inbound used to join both child legs.' ],
 				[ _('UDP outbound'), displayTag(node.udp_outbound), _('Preferred UDP child. Without recovery it forwards directly; with recovery both paths use the same server UDP relay. UDP is not aggregated.') ],
 				[ _('TCP Fast Open'), node.tcp_fast_open ? _('Enabled') : _('Disabled'), 'Whether multipath connection setup can send early data. The child path must also support TCP Fast Open.' ],
-				[ _('Local TX aggregation'), parameters.aggregation_enabled !== false ? _('Enabled') : _('Disabled'), _('Controls client upload aggregation only. Any enabled condition activates aggregation (OR). Disabling aggregation does not disable optional failover or change server downlink policy.') ],
-				[ _('Activate on preferred queue'), parameters.activation_on_queue !== false ? _('Enabled') : _('Disabled'), _('Independent OR trigger: activate when the preferred path in-flight plus local unsent bytes remain at least 80% of the configured pending-send byte capacity for the activation window. All triggers disabled means preferred-only TX.') ],
-				[ _('Activation threshold'), parameters.activation_threshold_mbps ? parameters.activation_threshold_mbps + ' Mbps' : _('Disabled'), _('Independent OR trigger: average local TX rate per connection, in Mbps. 0 disables this trigger. If empty, sing-box uses 150 unless a non-zero byte-count trigger is configured.') ],
-				[ _('Activation after bytes'), parameters.activation_after_bytes ? formatBytes(parameters.activation_after_bytes) : _('Disabled'), _('Independent OR trigger: cumulative application bytes accepted for local TX per connection. 0 disables this trigger.') ],
-				[ _('Minimum rate after bytes'), parameters.activation_after_bytes_min_mbps ? parameters.activation_after_bytes_min_mbps + ' Mbps' : _('Disabled'), _('Only the byte-count trigger requires this minimum average rate over a complete activation window, in Mbps. 0 or empty removes the rate gate; queue and rate triggers remain independent.') ],
-				[ _('Activation window'), formatDuration(parameters.activation_window_ms), 'Sampling window used by rate and sustained leg 0 queue activation checks.' ],
-				[ _('Chunk size'), formatBytes(parameters.chunk_size), 'Maximum payload carried by one multipath data frame.' ],
-				[ _('Pending send capacity'), '%d chunks · %s'.format(number(parameters.queue_frames), formatBytes(parameters.queue_bytes)), 'Local unsent capacity per connection: chunk-size units · bytes. Separate from data already assigned to a path and from the shared send history.' ],
-				[ _('Maximum receive window'), '%s · %s'.format(parameters.max_reorder_frames ? _('%d chunks').format(number(parameters.max_reorder_frames)) : _('No extra chunk cap'), formatBytes(parameters.max_reorder_bytes)), 'Local RX limits: optional chunk-size units · resolved byte ceiling. Short frames consume actual bytes. The default byte ceiling is derived from the shared memory budget, not preallocated per connection.' ],
-				[ _('Send history / Recovery floor'), '%s · %s'.format(formatBytes(parameters.leg1_replay_bytes), parameters.leg1_replay_timeout_ms ? formatDuration(parameters.leg1_replay_timeout_ms) : _('Adaptive')), 'Local send history for both paths · optional minimum reinjection interval. Only cumulative Data ACK releases history. Empty timeout uses measured delivery RTT and variation.' ],
+				[ _('Frame size'), formatBytes(parameters.frame_size), _('Maximum DATA payload in either direction, excluding headers. Short frames and incremental reads remain supported.') ],
 				[ _('Handshake timeout'), formatDuration(parameters.handshake_timeout_ms), 'Maximum time allowed for a multipath leg handshake.' ],
 				[ _('Last activation'), activationDescription(logical.last_activation), 'Most recent reason leg 1 was activated, with the observed trigger value when available.' ]
 			])
 		]),
+		...['upload', 'download'].map(direction => renderDirectionPolicy(node, direction, remoteSnapshot, stale)),
 		renderCollapsible('aggregate:' + node.tag + ':buffers', _('Live buffers'), [
 			renderParameters([
 				[ _('Connection send history'), '%s %s (%s %s) · %s %s'.format(
@@ -993,7 +1022,7 @@ function renderConnector(leg) {
 
 function normalizeDocuments(result) {
 	const documents = Array.isArray(result?.nodes) ? result.nodes : [];
-	return documents.filter((document) => document?.schema_version === 3 && document?.node)
+	return documents.filter((document) => document?.schema_version === 4 && document?.node)
 		.sort((left, right) => String(left.node.tag).localeCompare(String(right.node.tag)));
 }
 
@@ -1058,7 +1087,7 @@ return view.extend({
 		else if (stale)
 			content.push(E('div', { 'class': 'mp-notice' }, [ _('Multipath status data is stale.') ]));
 		if (this.result?.incompatible_schemas?.length)
-			content.push(E('div', { 'class': 'mp-notice' }, [ _('Unsupported status schema: %s. This page requires singbox-multipath beta5 status schema 3; upgrade sing-box and restart HomeProxy.').format(this.result.incompatible_schemas.join(', ')) ]));
+			content.push(E('div', { 'class': 'mp-notice' }, [ _('Unsupported status schema: %s. This page requires singbox-multipath beta8 status schema 4; upgrade sing-box and restart HomeProxy.').format(this.result.incompatible_schemas.join(', ')) ]));
 
 		if (!selected) {
 			content.push(E('div', { 'class': 'mp-empty' }, [ _('No multipath status data is available.') ]));
