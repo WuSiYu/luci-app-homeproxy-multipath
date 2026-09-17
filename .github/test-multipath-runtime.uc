@@ -41,7 +41,7 @@ uci.set('homeproxy', 'multipath_example', 'multipath_download_activation_thresho
 uci.set('homeproxy', 'multipath_example', 'multipath_download_activation_after_bytes', '2MB');
 uci.set('homeproxy', 'multipath_example', 'multipath_download_activation_after_bytes_min_mbps', '0');
 uci.set('homeproxy', 'multipath_example', 'multipath_download_send_buffer_bytes', '64MB');
-uci.set('homeproxy', 'multipath_example', 'multipath_download_receive_window_bytes', '128 MiB');
+uci.set('homeproxy', 'multipath_example', 'multipath_download_receive_window_bytes', '128 MB');
 uci.set('homeproxy', 'multipath_example', 'multipath_download_path_stall_timeout_min', '2');
 uci.set('homeproxy', 'multipath_example', 'multipath_frame_size', '64KB');
 uci.set('homeproxy', 'multipath_example', 'multipath_memory_limit', '256MB');
@@ -63,7 +63,7 @@ check(mp.upload.aggregation_enabled === false && mp.download.aggregation_enabled
 check(mp.download.leg0_traffic_saving === true && mp.download.activation_on_queue === false, 'Direction flags lost');
 check(mp.download.activation_threshold_mbps === 0 && mp.download.activation_after_bytes_min_mbps === 0, 'Explicit zero lost');
 check(mp.download.activation_after_bytes === '2MB' && mp.memory_limit === '256MB' && mp.frame_size === '64KB', 'Size strings lost');
-check(mp.download.send_buffer_bytes === '64MB' && mp.download.receive_window_bytes === '128 MiB', 'Window strings lost');
+check(mp.download.send_buffer_bytes === '64MB' && mp.download.receive_window_bytes === '128 MB', 'Window strings lost');
 check(mp.download.path_stall_timeout_min === '2s', 'Stall floor not emitted as duration');
 writefile('/tmp/homeproxy-beta8-zero.json', readfile('/var/run/homeproxy/sing-box-c.json'));
 

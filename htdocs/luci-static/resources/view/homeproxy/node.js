@@ -412,7 +412,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 		return true;
 	};
 	const validateMemorySize = function(section_id, value) {
-		if (section_id && value && !/^\d+\s*(?:[kmgtpe]i?b|b)?$/i.test(value.trim()))
+		if (section_id && value && !/^\d+\s*(?:[kmgtpe]b?|b)?$/i.test(value.trim()))
 			return _('Expecting: %s').format(_('valid memory size'));
 
 		return true;
@@ -621,7 +621,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 		o.validate = validateMemorySize;
 		o = field(form.Value, 'activation_after_bytes_min_mbps', _('Additional minimum rate for condition 3'),
 			_('The byte threshold AND this average rate must both be met. Only condition 3 uses this gate; conditions 1 and 2 remain independent. 0 removes the rate gate.'), null);
-		o.depends({ ...enabled, [prefix + 'activation_after_bytes']: /^\s*0*[1-9]\d*\s*(?:[kmgtpe]i?b|b)?\s*$/i });
+		o.depends({ ...enabled, [prefix + 'activation_after_bytes']: /^\s*0*[1-9]\d*\s*(?:[kmgtpe]b?|b)?\s*$/i });
 		o.datatype = 'uinteger';
 		o = field(form.Value, 'activation_window', _('Activation window'),
 			_('Seconds used for rate sampling and sustained queue pressure. Each connection and direction triggers independently.'), true);

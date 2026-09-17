@@ -39,15 +39,16 @@ for (const direction of ['upload', 'download']) {
     assert.equal(field.dependencies[0][0][prefix + 'aggregation_enabled'], '1', key);
   }
   const rate = fields.get(prefix + 'activation_after_bytes_min_mbps').dependencies[0][0][prefix + 'activation_after_bytes'];
-  for (const value of ['1', '2MB', ' 002 MiB ']) assert.ok(rate.test(value));
+  for (const value of ['1', '2MB', ' 002 MB ']) assert.ok(rate.test(value));
   for (const value of ['0', '0MB', '', 'abc']) assert.ok(!rate.test(value));
   for (const key of ['activation_after_bytes', 'send_buffer_bytes', 'receive_window_bytes']) {
     const validate = fields.get(prefix + key).validate;
-    for (const value of ['0', '2MB', '256 MiB', '2097152', '']) assert.equal(validate('test', value), true);
+    for (const value of ['0', '2MB', '256 MB', '2097152', '']) assert.equal(validate('test', value), true);
+    for (const value of ['2MiB', '256 MiB', '-1', '1.5MB']) assert.notEqual(validate('test', value), true);
   }
 }
 for (const key of ['multipath_frame_size', 'multipath_memory_limit'])
-  for (const value of ['0', '2MB', '256 MiB', '2097152', '']) assert.equal(fields.get(key).validate('test', value), true);
+  for (const value of ['0', '2MB', '256 MB', '2097152', '']) assert.equal(fields.get(key).validate('test', value), true);
 for (const key of ['aggregation_enabled', 'max_reorder_frames', 'receive_window_frames', 'chunk_size', 'leg1_replay_bytes'])
   assert.ok(!fields.has('multipath_' + key));
 assert.match(fields.get('_multipath_beta8_migration').default, /ignored, not migrated/);

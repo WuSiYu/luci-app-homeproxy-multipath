@@ -30,7 +30,8 @@ unacknowledged data on both legs. `receive_window_bytes` applies at the directio
 receiver: server for upload and client for download. There is no frame-count receive
 limit. `path_stall_timeout_min` replaces `leg1_replay_timeout`, expressing a floor
 on adaptive no-progress detection rather than a fixed retry timer.
-Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MiB`.
+Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MB`.
+The `KB`/`MB`/`GB` suffixes use binary units; `KiB`/`MiB`/`GiB` suffixes are not accepted.
 Automatic buffer ceilings resolve against the owning host's `memory_limit`;
 the client cannot override the server's node-wide budget.
 
