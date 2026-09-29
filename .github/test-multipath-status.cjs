@@ -146,6 +146,37 @@ document.node.recovery.udp_preferred = 1;
 render();
 assert.deepEqual(rows('Recovery paths'), ['TCP leg0 · UDP leg1']);
 delete document.node.recovery;
+
+// The title follows attached connections, not historical activation or speed.
+document.node.logical.state = 'traffic_saving';
+document.node.logical.connections = 1;
+document.node.legs[1].connections = 0;
+render();
+assert.ok(flatten(page.root).includes('Booster degraded'));
+assert.ok(!flatten(page.root).includes('Traffic saving active'));
+document.node.legs[1].connections = 1;
+document.node.legs[1].current = { rx_bytes_per_second: 0, tx_bytes_per_second: 0 };
+render();
+assert.ok(flatten(page.root).includes('Traffic saving active'), 'An idle attached booster remains valid');
+document.node.logical.connections = 0;
+document.node.legs[1].connections = 0;
+render();
+assert.ok(!flatten(page.root).includes('Traffic saving active'));
+assert.ok(flatten(page.root).includes('Idle'));
+document.node.legs[0].udp_current = { rx_bytes_per_second: 10 };
+render();
+assert.ok(flatten(page.root).includes('Preferred only'));
+document.node.logical.connections = 1;
+document.node.legs[1].connections = 1;
+document.generated_at = '2000-01-01T00:00:00Z';
+render();
+assert.ok(!flatten(page.root).includes('Traffic saving active'));
+assert.ok(flatten(page.root).includes('Offline'));
+document.generated_at = new Date().toISOString();
+document.node.logical.state = 'failover';
+render();
+assert.ok(flatten(page.root).includes('Failover active'));
+
 section.attrs.toggle({ currentTarget: { open: false } });
 render();
 assert.equal(findNodes(page.root, node => node.tag === 'details')[0].attrs.open, null);

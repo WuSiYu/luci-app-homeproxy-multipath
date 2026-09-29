@@ -797,6 +797,19 @@ function renderDirectionPolicy(node, direction, remote, stale) {
 	]);
 }
 
+function aggregateState(node) {
+	const logical = node.logical || {};
+	if (logical.state !== 'traffic_saving')
+		return logical.state;
+	// Guard inconsistent snapshots without using a zero transfer rate as proof
+	// of a dead path. Per-session remote-mode validation belongs to sing-box.
+	const legs = Array.isArray(node.legs) ? node.legs : [];
+	if (number(logical.connections) === 0)
+		return legs.some(leg => number(leg.udp_current?.rx_bytes_per_second) + number(leg.udp_current?.tx_bytes_per_second) > 0) ? 'preferred_only' : 'idle';
+	const booster = legs.find(leg => leg.id === 1);
+	return number(booster?.connections) > 0 ? 'traffic_saving' : 'booster_degraded';
+}
+
 function renderAggregate(node, stale) {
 	const logical = node.logical || {},
 	      current = logical.current || {},
@@ -814,7 +827,7 @@ function renderAggregate(node, stale) {
 				E('h3', {}, [ displayTag(node.tag) ]),
 				E('div', { 'class': 'mp-panel-subtitle' }, [ node.aggregation_server || '-' ])
 			]),
-			renderState(logical.state, stale)
+			renderState(aggregateState(node), stale)
 		]),
 		E('div', { 'class': 'mp-metrics' }, [
 			renderMetric(_('TCP connections'), String(number(logical.connections))),
@@ -842,13 +855,13 @@ function renderAggregate(node, stale) {
 		renderCollapsible('aggregate:' + node.tag + ':state', _('Aggregation state'), [
 			renderParameters([
 				[ _('Upload modes'), directionModes(logical.upload_states) + (stale ? _(' (stale)') : ''), _('Current connections by sender policy: leg0 before activation; aggregate uses both; leg1 is traffic-saving; leg0 fallback permits recovery; failover uses the surviving path. Busy leg1 writers do not cause fallback.') ],
-				[ _('Download modes'), directionModes(logical.download_states) + (stale ? _(' (stale)') : ''), _('Server-reported modes for current connections. Missing or stale samples are Unknown, not inferred from throughput.') ]
+				[ _('Download modes'), directionModes(logical.download_states) + (stale ? _(' (stale)') : ''), _('Server-reported modes for current connections. Missing or stale samples are Unknown. Aggregate and traffic-saving modes also require the same connection to have a locally attached booster; zero throughput alone does not invalidate a mode.') ]
 			]),
 			renderParameters([
 				[ _('TCP and UDP failover'), recovery?.enabled ? _('Enabled') : _('Disabled'), _('Optional recovery is independent of the aggregation switches. With recovery disabled, no recovery probes or UDP relay are created.') ],
 				...(recovery?.enabled ? [
 					[ _('Recovery paths'), number(recovery.usable_mask) ? 'TCP leg%d · UDP leg%d'.format(number(recovery.tcp_path), number(recovery.udp_path)) : _('Unavailable'), _('Current TCP control path and selected UDP leg. UDP retains its own preference. A zero usable mask means no path is currently healthy.') ],
-					[ _('Failure timeout / Stable return'), '%s · %s'.format(formatDuration(recovery.failover_timeout_ms), formatDuration(recovery.failback_delay_ms)), _('No fresh reply timeout · continuous healthy period before returning to the preferred path. Values are controlled by the client and synchronized to the server.') ]
+					[ _('Failure timeout / Stable return'), '%s · %s'.format(formatDuration(recovery.failover_timeout_ms), formatDuration(recovery.failback_delay_ms)), _('No fresh reply timeout · continuous healthy period before returning after a previously healthy path fails. First healthy discovery at startup has no return delay. Values are controlled by the client and synchronized to the server.') ]
 				] : []),
 				[ _('Aggregation server'), node.aggregation_server || '-', 'Remote multipath inbound used to join both child legs.' ],
 				[ _('UDP outbound'), displayTag(node.udp_outbound), _('Preferred UDP child. Without recovery it forwards directly; with recovery both paths use the same server UDP relay. UDP is not aggregated.') ],

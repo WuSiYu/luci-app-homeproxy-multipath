@@ -666,7 +666,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_failback_delay', _('Failback stability period'),
-		_('Seconds the preferred path must stay healthy before returning to it. Default: 30 seconds. A single missed probe does not restart this period; another full failure timeout does. If the fallback fails, an available preferred path is used immediately.'));
+		_('Seconds the preferred path must stay healthy before returning after a previously healthy path fails. Default: 30 seconds. First healthy discovery at startup has no return delay. A single missed probe does not restart this period; another full failure timeout does. If the fallback fails, an available preferred path is used immediately.'));
 	o.default = '30';
 	o.datatype = 'and(uinteger,range(1,3600))';
 	o.depends({'type': 'multipath', 'multipath_failover_enabled': '1'});
