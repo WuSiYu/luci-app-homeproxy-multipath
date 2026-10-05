@@ -563,7 +563,13 @@ function legEventHint(category, message) {
 	if (category === 'peer_closed')
 		return _('The peer closed this leg. This commonly appears when a short connection ends; investigate the underlying outbound only if the count rises while active traffic stalls.');
 	if (category === 'hello_rejected' && message.indexOf('session no longer exists') >= 0)
-		return _('The booster reached the server after the control session had already closed. This is expected for some short connections because leg1 is established asynchronously.');
+		return _('A leg reached the server after the session had already closed. This is expected for some short connections because the second leg is established asynchronously.');
+	if (category === 'hello_rejected' && message.indexOf('authentication failed') >= 0)
+		return _('The server rejected the pre-shared key. Configure the same key on this node and on the server inbound, and check that both clocks are within two minutes.');
+	if (category === 'hello_rejected' && message.indexOf('protocol version') >= 0)
+		return _('The two endpoints run different multipath protocol versions. Upgrade sing-box on both the client and the server to beta10.');
+	if (category === 'hello_rejected' && message.indexOf('parameters mismatch') >= 0)
+		return _('The server holds this session with different parameters. This can follow a configuration change while connections were open; new connections use the new parameters.');
 	if (category === 'hello_rejected' && message.indexOf('unspecified by server') >= 0)
 		return _('The server rejected this leg but did not provide a reason. Upgrade the server binary to obtain a detailed rejection reason.');
 	if (category === 'hello_rejected')
@@ -571,7 +577,7 @@ function legEventHint(category, message) {
 	if (category === 'replay_timeout')
 		return _('Path delivery stalled. The sender can reinject missing byte ranges on another available path; a timing stall alone does not close the leg.');
 	if (category === 'timeout')
-		return _('A dial or handshake operation timed out. The booster will be retried while the preferred leg remains available.');
+		return _('A dial or handshake operation timed out. The leg is redialed with backoff while the session continues on the other leg.');
 	return _('The leg failed during transport I/O. Use the stage and destination below to identify the affected operation.');
 }
 
@@ -766,31 +772,34 @@ function directionModes(states) {
 }
 
 function renderDirectionPolicy(node, direction, remote, stale) {
-	const p = node.parameters?.[direction] || {}, upload = direction === 'upload';
-	const limit = (requested, effective, remoteOwned) => {
-		const setting = number(requested) ? formatBytes(requested) : _('Automatic');
-		const resolved = effective == null ? _('Unavailable') : formatBytes(effective);
-		return setting + ' · ' + _('Effective') + ' ' + (remoteOwned ? formatRemote(remote, resolved, stale) : resolved);
+	const p = node.parameters?.[direction] || {}, upload = direction === 'upload',
+	      logical = node.logical || {},
+	      sender = upload ? (logical.local_sender || {}) : (logical.remote_sender || {});
+	const ceiling = (requested, effective) => number(requested) ? formatBytes(requested) :
+		_('Automatic') + (effective == null ? '' : ' (%s)'.format(formatBytes(effective)));
+	const live = (value) => {
+		const text = number(value) ? formatBytes(value) : '-';
+		return upload ? text : formatRemote(remote, text, stale);
 	};
 	return renderCollapsible('aggregate:' + node.tag + ':' + direction, upload ? _('Upload policy') : _('Download policy'), [
 		renderParameters([
-			[ _('Data policy'), !p.aggregation_enabled ? _('leg0 only (except failover)') : (p.leg0_traffic_saving ? _('Switch to leg1 after activation') : _('Aggregate after activation')),
-				_('Configured by the client for this direction. Traffic-saving waits on healthy leg1 backpressure; failure, stalls or memory protection permit leg0 recovery. Control traffic remains on the control leg. UDP is independent.') ],
+			[ _('Data policy'), !p.aggregation_enabled ? _('leg0 only (leg1 if leg0 fails)') : (p.leg0_traffic_saving ? _('Switch to leg1 after activation') : _('Aggregate after activation')),
+				_('Configured by the client for this direction. Traffic-saving waits on healthy leg1 backpressure; a missing or stalled leg1 lets leg0 take over. Control traffic may use either leg. UDP is independent.') ],
 			[ _('Activation: 1 OR 2 OR 3'), p.aggregation_enabled ? _('Any enabled condition activates leg1') : _('Disabled by master switch'),
 				_('Per connection and direction: condition 1 OR condition 2 OR condition 3. All disabled means no activation. Activation persists for the connection lifetime; there is no low-rate deactivation.') ],
-			[ _('1. Queue pressure'), p.activation_on_queue ? _('Enabled') : _('Disabled'),
-				_('Sender leg0 in-flight plus unsent bytes remain at least 80% of queue_frames × frame_size for the activation window.') ],
+			[ _('1. leg0 is the bottleneck'), p.activation_on_queue ? _('Enabled') : _('Disabled'),
+				_('Unsent data stay at or above half of the current unsent limit for the activation window, and leg0\'s delivery rate has stopped growing (leg0 has left slow start).') ],
 			[ _('2. Average TX rate'), p.activation_threshold_mbps ? p.activation_threshold_mbps + ' Mbps' : _('Disabled'),
 				_('Sender average application rate over the activation window. Zero disables this condition.') ],
 			[ _('3. Cumulative bytes / Minimum rate'), (p.activation_after_bytes ? formatBytes(p.activation_after_bytes) : _('Disabled')) + ' · ' + (p.activation_after_bytes_min_mbps ? p.activation_after_bytes_min_mbps + ' Mbps' : _('No rate gate')),
 				_('Cumulative accepted application bytes AND the minimum average rate over a complete window. The rate gate applies only to condition 3. Zero bytes disables condition 3; zero minimum removes the gate.') ],
-			[ _('Activation window'), formatDuration(p.activation_window_ms), _('Sender sampling interval for rate and sustained queue pressure checks.') ],
-			[ _('Pending send capacity'), '%d units · %s'.format(number(p.queue_frames), formatBytes(p.queue_bytes)),
-				_('Sender unsent capacity in frame-size units and bytes. Part of the complete send buffer, not an extra in-flight limit.') ],
-			[ _('Send buffer limit'), limit(p.send_buffer_bytes, p.effective_send_buffer_bytes, !upload),
-				_('Requested limit · effective limit at the sender: client for upload, server for download. Includes unsent data and both paths awaiting cumulative Data ACK. Automatic is resolved against that host memory budget.') ],
-			[ _('Receive window limit'), limit(p.receive_window_bytes, p.effective_receive_window_bytes, upload),
-				_('Requested limit · effective limit at the receiver: server for upload, client for download. Covers receive byte sequence space including unread in-order data. No frame-count limit.') ],
+			[ _('Activation window'), formatDuration(p.activation_window_ms), _('Sender sampling interval for rate and sustained queue checks.') ],
+			[ _('Unsent data: ceiling · live'), '%s · %s'.format(formatBytes(p.queue_bytes), live(sender.unsent_limit_bytes)),
+				_('Data waiting to be assigned to a path. The live limit follows the delivery rate of the carrying paths (about 10 ms of data, at least 1 MiB) and is the largest among open connections.') ],
+			[ _('Send history: ceiling · live'), '%s · %s'.format(ceiling(p.send_buffer_bytes, upload ? p.effective_send_buffer_bytes : null), live(sender.history_limit_bytes)),
+				_('Bytes retained at the sender until cumulative Data ACK, both paths and unsent data included. The live limit is about twice the bandwidth-delay product within the sender\'s fair memory share, largest among open connections.') ],
+			[ _('Receive window: ceiling · live'), '%s · %s'.format(ceiling(p.receive_window_bytes, upload ? null : p.effective_receive_window_bytes), upload ? _('server share') : formatBytes(node.memory?.receive_share_bytes)),
+				_('Window at the receiver: server for upload, client for download. The live window is each active session\'s fair share of the receiver\'s memory.') ],
 			[ _('Path stall timeout floor'), p.path_stall_timeout_min_ms ? formatDuration(p.path_stall_timeout_min_ms) : _('Adaptive'),
 				_('Optional lower bound on adaptive sender no-progress detection. Applies to either path, not a fixed retransmission or disconnect timer.') ]
 		])
@@ -877,9 +886,12 @@ function renderAggregate(node, stale) {
 				[ _('Connection send history'), '%s %s (%s %s) · %s %s'.format(
 					_('Upload'), formatBytes(localSender.replay_bytes), _('peak'), formatBytes(localSender.replay_peak_bytes),
 					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(remoteSender.replay_bytes), _('peak'), formatBytes(remoteSender.replay_peak_bytes)), stale)), _('Each direction: logical bytes accepted but not yet Data-ACKed, including both paths and unsent data. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start; it is not an exact continuous aggregate high-water mark. Download is remote telemetry.') ],
-				[ _('Reinjection'), '%s %s / %d / %d · %s %s'.format(
+				[ _('Repairs'), '%s %s / %d / %d · %s %s'.format(
 					_('Upload'), formatBytes(localSender.fallback_bytes), number(localSender.fallback_frames), number(localSender.replay_timeouts),
-					_('Download'), formatRemote(remoteSender, '%s / %d / %d'.format(formatBytes(remoteSender.fallback_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)), stale)), _('Each direction, cumulative since process start: reinjected bytes / reinjected mappings / path stall detections. A stall can recover before reinjection, so detections may be nonzero with zero reinjected bytes. These are not TCP/QUIC retransmissions or IP packet loss counters.') ],
+					_('Download'), formatRemote(remoteSender, '%s / %d / %d'.format(formatBytes(remoteSender.fallback_bytes), number(remoteSender.fallback_frames), number(remoteSender.replay_timeouts)), stale)), _('Each direction, cumulative since process start: repaired bytes / repaired ranges / path stall detections. Repairs cover receiver-dropped ranges, failed or stalled paths and opportunistic reinjection. A stall can recover before any repair. These are not TCP/QUIC retransmissions or IP packet loss counters.') ],
+				[ _('Opportunistic / tail reinjection'), '%s %d · %d (%s) · %s %s'.format(
+					_('Upload'), number(localSender.opportunistic_reinjections), number(localSender.tail_reinjections), formatBytes(localSender.tail_reinjection_bytes),
+					_('Download'), formatRemote(remoteSender, '%d · %d (%s)'.format(number(remoteSender.opportunistic_reinjections), number(remoteSender.tail_reinjections), formatBytes(remoteSender.tail_reinjection_bytes)), stale)), _('Each direction, cumulative: head data resent on an idle path because the other path held the connection head back · data resent at the end of a transfer because the slower path would deliver it later (bytes). Whichever copy arrives first is used.') ],
 				[ _('Sender backpressure'), '%s %d / %s · %s %s'.format(
 					_('Upload'), number(localSender.backpressure_events), formatDuration(localSender.backpressure_duration_ms),
 					_('Download'), formatRemote(remoteSender, '%d / %s'.format(number(remoteSender.backpressure_events), formatDuration(remoteSender.backpressure_duration_ms)), stale)), _('Each direction, summed across connections since process start: wait count / accumulated wait time for pending-send or retained-history capacity. This is not the longest stall or network queueing delay. Shared-memory pressure has separate counters.') ],
@@ -887,7 +899,11 @@ function renderAggregate(node, stale) {
 					formatBytes(logical.reorder_bytes), number(logical.reorder_pages), _('peak flow'), formatBytes(logical.reorder_peak_bytes), number(logical.reorder_peak_pages)), _('Out-of-order receive storage: bytes / 16 KiB pages. Current is summed across active connections. Each peak is the largest per-connection peak among currently active connections; it may disappear when a connection closes. Byte and page peaks may occur at different times. Pages are not wire frames.') ],
 				[ _('Memory usage'), '%s %s / %s / %s · %s %s'.format(
 					_('Local'), formatBytes(memory.used_bytes), formatBytes(memory.peak_used_bytes), formatBytes(memory.limit_bytes),
-					_('Remote'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(remoteSender.memory_used_bytes), formatBytes(remoteSender.memory_peak_used_bytes)), stale)), 'Local current / peak / limit memory, followed by remote current / peak memory. Remote values come from server telemetry.' ],
+					_('Remote'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(remoteSender.memory_used_bytes), formatBytes(remoteSender.memory_peak_used_bytes)), stale)), _('Local current / peak / limit memory, followed by remote current / peak memory. Remote values come from server telemetry.') ],
+				[ _('Local memory regions'), '%s %s · %s %s · %s %s · %s %s'.format(
+					_('TX'), formatBytes(memory.tx_bytes), _('RX'), formatBytes(memory.rx_bytes), _('reserved'), formatBytes(memory.reserved_bytes), _('cache'), formatBytes(memory.cached_bytes)), _('Transmit payload · receive pages · fixed session reservations · reusable cache. Transmit and receive borrow from each other but always leave the other side a reserve.') ],
+				[ _('Fair shares'), '%s %d · %s %d · %s %s'.format(
+					_('senders'), number(memory.active_senders), _('receivers'), number(memory.active_receivers), _('receive window'), formatBytes(memory.receive_share_bytes)), _('Sessions that moved data within the last second, and the receive window each active receiver currently gets.') ],
 				[ _('Memory pressure'), '%s %s / %d / %d · %s %s'.format(
 					_('Local'), memory.pressure ? _('Active') : _('Normal'), number(memory.pressure_events), number(memory.backpressure_events),
 					_('Remote'), formatRemote(remoteSnapshot, '%s / %d / %d'.format(remoteSender.memory_pressure ? _('Active') : _('Normal'), number(remoteSender.memory_pressure_events), number(remoteSender.memory_backpressure_events)), stale)), 'Each side: pressure state / pressure event count / memory backpressure event count.' ],
@@ -933,14 +949,18 @@ function renderLeg(nodeTag, leg, stale, remoteSender, recovery) {
 	const current = leg.current || {}, cumulative = leg.cumulative || {}, frames = leg.frames || {},
 	      peak = leg.peak || {},
 	      udpCurrent = leg.udp_current || {}, udpCumulative = leg.udp_cumulative || {},
-	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Booster'),
+	      title = leg.id === 0 ? _('leg0 · Preferred') : _('leg1 · Secondary'),
 	      parameterEntries = [
 			[ _('Remote scheduler estimate'), formatRemote(remoteSnapshot, number(leg.remote_delivery_bytes_per_second) > 0 ? '%s · %s %s · %s %s'.format(
 				formatRate(leg.remote_delivery_bytes_per_second), _('Feedback RTT'), formatLatency(leg.remote_delivery_rtt_max_ms),
-				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and feedback on the control path (normally leg0, leg1 during failover), including queueing: largest smoothed RTT / smallest recorded RTT.') ],
-			[ _('Path in-flight data'), '%s %s (%s %s) · %s %s'.format(
+				_('minimum'), formatLatency(leg.remote_delivery_rtt_min_ms)) : _('No delivery sample'), stale), _('Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and the first feedback copy to return on either leg, including queueing: largest smoothed RTT / smallest recorded RTT.') ],
+			[ _('In flight / limit'), '%s %s / %s · %s %s'.format(
+					_('Upload'), formatBytes(leg.outstanding_bytes), formatBytes(leg.pipeline_limit_bytes),
+					_('Download'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(leg.remote_outstanding_bytes), formatBytes(leg.remote_pipeline_limit_bytes)), stale)), _('Each direction: bytes sent on this path and not yet confirmed by a path receipt · the most this path may hold (only bounded until its first delivery sample). Summed across active connections. Download is remote telemetry.') ],
+			[ _('Feedback frames'), _('TX %d · RX %d').format(number(leg.feedback_frames_sent), number(leg.feedback_frames_received)), _('Window feedback frames sent and received on this leg since process start. Feedback uses the least blocked leg and copies the other leg at least every 20 ms, so both legs normally carry some.') ],
+			[ _('Writer queue'), '%s %s (%s %s) · %s %s'.format(
 					_('Upload'), formatBytes(leg.backlog_bytes), _('peak'), formatBytes(leg.peak_backlog_bytes),
-					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), stale)), _('Each direction: bytes assigned to this path but not yet covered by a whole-path receipt, including child transport buffers. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start. This is not local queue utilization. Download is remote telemetry.') ],
+					_('Download'), formatRemote(remoteSnapshot, '%s (%s %s)'.format(formatBytes(leg.remote_backlog_bytes), _('peak'), formatBytes(leg.remote_peak_backlog_bytes)), stale)), _('Each direction: bytes queued to this leg\'s writer and not yet handed to the child transport. Current is summed across active connections; peak since process start. Download is remote telemetry.') ],
 			[ _('Writer state'), '%s %s / %s · %s %s'.format(
 					_('Upload'), formatBytes(leg.writing_bytes), formatDuration(leg.write_blocked_ms),
 					_('Download'), formatRemote(remoteSnapshot, '%s / %s'.format(formatBytes(leg.remote_writing_bytes), formatDuration(leg.remote_write_blocked_ms)), stale)), _('Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender.') ],
@@ -1035,7 +1055,7 @@ function renderConnector(leg) {
 
 function normalizeDocuments(result) {
 	const documents = Array.isArray(result?.nodes) ? result.nodes : [];
-	return documents.filter((document) => document?.schema_version === 4 && document?.node)
+	return documents.filter((document) => document?.schema_version === 5 && document?.node)
 		.sort((left, right) => String(left.node.tag).localeCompare(String(right.node.tag)));
 }
 
@@ -1100,7 +1120,7 @@ return view.extend({
 		else if (stale)
 			content.push(E('div', { 'class': 'mp-notice' }, [ _('Multipath status data is stale.') ]));
 		if (this.result?.incompatible_schemas?.length)
-			content.push(E('div', { 'class': 'mp-notice' }, [ _('Unsupported status schema: %s. This page requires singbox-multipath beta8 status schema 4; upgrade sing-box and restart HomeProxy.').format(this.result.incompatible_schemas.join(', ')) ]));
+			content.push(E('div', { 'class': 'mp-notice' }, [ _('Unsupported status schema: %s. This page requires singbox-multipath beta10 status schema 5; upgrade sing-box on both endpoints and restart HomeProxy.').format(this.result.incompatible_schemas.join(', ')) ]));
 
 		if (!selected) {
 			content.push(E('div', { 'class': 'mp-empty' }, [ _('No multipath status data is available.') ]));

@@ -4392,3 +4392,463 @@ msgstr "自进程启动累计：挂接的路径传输实例 · 业务 TCP 拨号
 #~ msgstr ""
 #~ "被拒绝的 DNS 响应缓存超时时间（单位：秒）。默认为 <code>604800（7 天）</"
 #~ "code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "duration such as 500ms, 2s or 1m"
+msgstr "时长，如 500ms、2s 或 1m"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "a duration between %s and %s"
+msgstr "介于 %s 与 %s 之间的时长"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Both legs are bound to %s. They may leave through the same uplink and cannot aggregate two lines."
+msgstr "两条 leg 都绑定到 %s，可能从同一条上行线路出去，无法聚合两条线路。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Neither leg binds an interface. Unless their nodes route through different uplinks, both legs may leave through the same line and cannot aggregate two lines."
+msgstr "两条 leg 都没有绑定接口。除非两个节点经不同上行线路路由，否则可能从同一条线路出去，无法聚合两条线路。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Second path for aggregation, traffic-saving switching and optional failover. Upload and download activate it independently."
+msgstr "用于聚合、节流切换和可选故障接管的第二条路径。上传和下载分别独立激活。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Must match the server. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child nodes, not by this key. Empty disables authentication."
+msgstr "须与服务端一致。每次握手都经 HMAC-SHA256 认证并防重放。数据加密由子节点负责，而非此密钥。留空则不认证。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Leg interfaces"
+msgstr "leg 接口"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Multipath beta10"
+msgstr "Multipath beta10"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Requires beta10 (protocol v13) on both endpoints. Defaults are the recommended values: leave the activation and buffer fields empty unless you need a specific behavior. Buffer fields are ceilings, not capacities."
+msgstr "两端须为 beta10（协议 v13）。默认值即推荐值：除非需要特定行为，激活和缓冲字段请留空。缓冲字段是上限，不是容量。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Ignored legacy settings"
+msgstr "已忽略的旧设置"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Frame size"
+msgstr "帧大小"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Maximum DATA payload bytes, excluding headers; shared by upload and download. Frames may be smaller and are read incrementally. Accepts 65536 or 64KB. Default: 64 KiB."
+msgstr "DATA 最大载荷字节数，不含帧头；上传和下载共用。帧可以更短，并按增量读取。可填 65536 或 64KB。默认：64 KiB。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Enable aggregation / switching"
+msgstr "启用聚合 / 切换"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Client-controlled policy for this direction. When disabled, new data stay on leg0 and move to leg1 only if leg0 fails. Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition activates leg1; all three disabled keeps the direction on leg0."
+msgstr "由客户端控制的本方向策略。关闭时新数据留在 leg0，仅在 leg0 失效时转到 leg1。激活逻辑：条件 1 或条件 2 或条件 3。任一已启用条件满足即激活 leg1；三者全部关闭则本方向保持在 leg0。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Save leg0 traffic (switch instead of aggregate)"
+msgstr "节省 leg0 流量（切换而非聚合）"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "After activation and leg1 readiness, new data uses leg1 only. Normal backpressure waits rather than spilling onto leg0. A missing or stalled leg1 lets leg0 take over until it recovers; some control traffic may remain. Disabled by default."
+msgstr "激活且 leg1 就绪后，新数据只走 leg1。正常反压时等待，不会溢出到 leg0。leg1 缺失或停滞时由 leg0 接替直至其恢复；仍可能有少量控制流量。默认关闭。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 1: leg0 is the bottleneck"
+msgstr "条件 1：leg0 成为瓶颈"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger, enabled by default: unsent data stay at or above half of the current unsent limit for the activation window, and leg0's delivery rate has stopped growing (leg0 has left slow start)."
+msgstr "独立的“或”触发条件，默认启用：未发送数据在激活窗口内持续不低于当前未发送上限的一半，且 leg0 的交付速率已不再增长（leg0 已走出慢启动）。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger in Mbps per connection. Empty or 0 disables it. For the behavior before beta10, use 150 with a 1s activation window."
+msgstr "独立的“或”触发条件，单位为每连接 Mbps。留空或 0 为关闭。如需 beta10 之前的行为，填 150 并将激活窗口设为 1s。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger counting accepted application bytes in this direction. 0 or empty disables it. Accepts 2097152 or 2MB."
+msgstr "独立的“或”触发条件，统计本方向已接收的应用字节数。0 或留空为关闭。可填 2097152 或 2MB。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The byte threshold AND this average rate must both be met. Only condition 3 uses this gate; conditions 1 and 2 remain independent. 0 removes the rate gate."
+msgstr "字节阈值与此平均速率须同时满足。仅条件 3 使用此门限；条件 1 和 2 保持独立。0 表示取消速率门限。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration used for rate sampling and sustained queue pressure, such as 200ms or 1s; a bare number means seconds. Range 20ms to 10s. Default: 200ms. Each connection and direction triggers independently."
+msgstr "速率采样与持续排队判断所用的时长，如 200ms 或 1s；纯数字表示秒。范围 20ms–10s。默认：200ms。每个连接、每个方向独立触发。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: unsent data"
+msgstr "高级上限：未发送数据"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of data waiting to be assigned to a path, in frame-size units. The working value follows the delivery rate (about 10ms of data, at least 1 MiB). Empty uses 256; range 8 to 4096."
+msgstr "等待分配到路径的数据上限，以帧大小为单位。实际值跟随交付速率（约 10ms 的数据量，至少 1 MiB）。留空为 256；范围 8–4096。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: send history"
+msgstr "高级上限：发送历史"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of bytes retained at this direction's sender until Data ACK, both legs and unsent data included. The working value is about twice the bandwidth-delay product within the host's fair share. Empty is 512 MiB."
+msgstr "本方向发送端在 Data ACK 之前保留的字节上限，含两条 leg 与未发送数据。实际值约为两倍带宽时延积，并受本机公平份额约束。留空为 512 MiB。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: receive window"
+msgstr "高级上限：接收窗口"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of the window at this direction's receiver: server for upload, client for download. The working value is the session's fair share of the receiver's memory. Empty is 512 MiB."
+msgstr "本方向接收端窗口的上限：上传为服务端，下载为客户端。实际值为该会话在接收端内存中的公平份额。留空为 512 MiB。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Path stall timeout floor"
+msgstr "路径停滞超时下限"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration such as 500ms or 2s; empty keeps adaptive timing. Range 100ms to 5m. This is a lower bound on no-progress detection, not a fixed retransmission interval or a disconnect timer."
+msgstr "时长，如 500ms 或 2s；留空为自适应。范围 100ms–5m。这是无进展检测的下限，不是固定重传间隔或断连计时。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration such as 10s; a bare number means seconds. Range 1s to 60s. Default: 10s."
+msgstr "时长，如 10s；纯数字表示秒。范围 1s–60s。默认：10s。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Multipath early write"
+msgstr "Multipath 提前写入"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Send the multipath handshake together with the first data and save one round trip. Enabled by default. TCP Fast Open inside the child nodes is configured on those nodes."
+msgstr "把 multipath 握手与首批数据一起发送，节省一个往返。默认启用。子节点内部的 TCP Fast Open 在各自节点上配置。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Client-only, disabled by default. TCP sessions already survive the loss of either leg without it; failover adds shared health checks, path selection for new sessions, a UDP relay that keeps the server UDP socket across path switches, and session retention across long outages. Allow both TCP and UDP on the server port; both child nodes must support UDP. UDP is not aggregated."
+msgstr "仅客户端，默认关闭。不开启时 TCP 会话也能在任一 leg 丢失后继续；故障接管额外提供共享健康检查、新会话选路、切换路径时保留服务端 UDP socket 的 UDP 中继，以及长时间中断时的会话保留。服务端端口须同时放行 TCP 和 UDP；两个子节点都必须支持 UDP。UDP 不做聚合。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Time without a fresh TCP or UDP health reply before the shared path is unavailable, such as 5s; a bare number means seconds. Range 1s to 5m. Default: 5s. These probes are shared by all connections, not sent per flow."
+msgstr "共享路径在多久没有新的 TCP 或 UDP 健康回应后判为不可用，如 5s；纯数字表示秒。范围 1s–5m。默认：5s。这些探测由所有连接共享，不按流发送。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Longest time the preferred path must stay healthy before returning after it failed: 3s at first, doubling with repeated failures up to this value. Range 1s to 1h. Default: 30s. First healthy discovery at startup has no return delay. A single missed probe does not restart the hold; another full failure timeout does. If the fallback fails, an available preferred path is used immediately."
+msgstr "首选路径故障后需持续健康多久才回切的最长时间：首次 3s，反复故障时翻倍，至多此值。范围 1s–1h。默认：30s。启动时首次确认健康无需等待。单次漏探测不会重置计时，完整的失效超时才会。若备用路径也失效，则立即使用可用的首选路径。"
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Must match the clients. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child protocols, not by this key. Without a key or allowed sources, anyone who can reach this port can relay through this server."
+msgstr "须与客户端一致。每次握手都经 HMAC-SHA256 认证并防重放。数据加密由子协议负责，而非此密钥。既无密钥也无来源限制时，任何能访问此端口的人都能经本服务端转发流量。"
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Allowed sources"
+msgstr "允许的来源"
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Accept multipath legs only from these addresses or prefixes, as seen by this server. Empty allows any source."
+msgstr "只接受来自这些地址或前缀（以本服务端看到的来源为准）的 multipath leg。留空则不限制来源。"
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Shared multipath memory budget of this server, such as <code>256MB</code>. Empty or 0 uses min(512 MiB, half of the available memory)."
+msgstr "本服务端 multipath 的共享内存预算，如 <code>256MB</code>。留空或 0 为 min(512 MiB, 可用内存的一半)。"
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Seconds allowed for a leg handshake. Range 1 to 60. Default: 10."
+msgstr "leg 握手允许的秒数。范围 1–60。默认：10。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "A leg reached the server after the session had already closed. This is expected for some short connections because the second leg is established asynchronously."
+msgstr "某条 leg 到达服务端时会话已关闭。由于第二条 leg 异步建立，部分短连接出现这种情况属正常。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The server rejected the pre-shared key. Configure the same key on this node and on the server inbound, and check that both clocks are within two minutes."
+msgstr "服务端拒绝了预共享密钥。请在本节点和服务端入站配置相同的密钥，并确认两端时钟相差不超过两分钟。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The two endpoints run different multipath protocol versions. Upgrade sing-box on both the client and the server to beta10."
+msgstr "两端运行的 multipath 协议版本不同。请把客户端和服务端的 sing-box 都升级到 beta10。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The server holds this session with different parameters. This can follow a configuration change while connections were open; new connections use the new parameters."
+msgstr "服务端以不同参数持有该会话。这可能是连接未关闭时修改了配置所致；新连接会使用新参数。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "A dial or handshake operation timed out. The leg is redialed with backoff while the session continues on the other leg."
+msgstr "拨号或握手超时。该 leg 会按退避重拨，会话在另一条 leg 上继续。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Source"
+msgstr "来源"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Traffic saving active"
+msgstr "节流模式运行中"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 recovery fallback"
+msgstr "leg0 恢复回退"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0"
+msgstr "leg0"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Aggregate"
+msgstr "聚合"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg1 only"
+msgstr "仅 leg1"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 fallback"
+msgstr "leg0 回退"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Failover"
+msgstr "故障接管"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No active connections"
+msgstr "没有活跃连接"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Upload policy"
+msgstr "上传策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Download policy"
+msgstr "下载策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Data policy"
+msgstr "数据策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 only (leg1 if leg0 fails)"
+msgstr "仅 leg0（leg0 失效时用 leg1）"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Switch to leg1 after activation"
+msgstr "激活后切换到 leg1"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Aggregate after activation"
+msgstr "激活后聚合"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Configured by the client for this direction. Traffic-saving waits on healthy leg1 backpressure; a missing or stalled leg1 lets leg0 take over. Control traffic may use either leg. UDP is independent."
+msgstr "由客户端为本方向配置。节流模式下健康 leg1 反压时等待；leg1 缺失或停滞时由 leg0 接替。控制流量可走任一 leg。UDP 独立。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Activation: 1 OR 2 OR 3"
+msgstr "激活：1 或 2 或 3"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Any enabled condition activates leg1"
+msgstr "任一已启用条件即可激活 leg1"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Disabled by master switch"
+msgstr "已被总开关关闭"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Per connection and direction: condition 1 OR condition 2 OR condition 3. All disabled means no activation. Activation persists for the connection lifetime; there is no low-rate deactivation."
+msgstr "按连接和方向：条件 1 或条件 2 或条件 3。全部关闭则不激活。激活在连接生命周期内保持，不会因速率降低而退出。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "1. leg0 is the bottleneck"
+msgstr "1. leg0 成为瓶颈"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsent data stay at or above half of the current unsent limit for the activation window, and leg0's delivery rate has stopped growing (leg0 has left slow start)."
+msgstr "未发送数据在激活窗口内持续不低于当前未发送上限的一半，且 leg0 的交付速率已不再增长（leg0 已走出慢启动）。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "2. Average TX rate"
+msgstr "2. 平均发送速率"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender average application rate over the activation window. Zero disables this condition."
+msgstr "发送端在激活窗口内的平均应用速率。0 关闭此条件。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "3. Cumulative bytes / Minimum rate"
+msgstr "3. 累计字节 / 最低速率"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No rate gate"
+msgstr "无速率门限"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Cumulative accepted application bytes AND the minimum average rate over a complete window. The rate gate applies only to condition 3. Zero bytes disables condition 3; zero minimum removes the gate."
+msgstr "累计接收的应用字节，且完整窗口内的最低平均速率。速率门限仅作用于条件 3。字节为 0 关闭条件 3；最低速率为 0 取消门限。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender sampling interval for rate and sustained queue checks."
+msgstr "发送端用于速率和持续排队判断的采样间隔。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsent data: ceiling · live"
+msgstr "未发送数据：上限 · 实时"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Data waiting to be assigned to a path. The live limit follows the delivery rate of the carrying paths (about 10 ms of data, at least 1 MiB) and is the largest among open connections."
+msgstr "等待分配到路径的数据。实时上限跟随承载路径的交付速率（约 10 ms 的数据量，至少 1 MiB），取开放连接中的最大值。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Send history: ceiling · live"
+msgstr "发送历史：上限 · 实时"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Bytes retained at the sender until cumulative Data ACK, both paths and unsent data included. The live limit is about twice the bandwidth-delay product within the sender's fair memory share, largest among open connections."
+msgstr "发送端在累计 Data ACK 前保留的字节，含两条路径和未发送数据。实时上限约为两倍带宽时延积，受发送端公平内存份额约束，取开放连接中的最大值。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Receive window: ceiling · live"
+msgstr "接收窗口：上限 · 实时"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "server share"
+msgstr "服务端份额"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Window at the receiver: server for upload, client for download. The live window is each active session's fair share of the receiver's memory."
+msgstr "接收端的窗口：上传为服务端，下载为客户端。实时窗口为每个活跃会话在接收端内存中的公平份额。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Optional lower bound on adaptive sender no-progress detection. Applies to either path, not a fixed retransmission or disconnect timer."
+msgstr "发送端自适应无进展检测的可选下限。适用于任一路径，不是固定的重传或断连计时。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Upload modes"
+msgstr "上传模式"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid " (stale)"
+msgstr "（过期）"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Current connections by sender policy: leg0 before activation; aggregate uses both; leg1 is traffic-saving; leg0 fallback permits recovery; failover uses the surviving path. Busy leg1 writers do not cause fallback."
+msgstr "按发送策略统计的当前连接：激活前为 leg0；聚合使用两条；leg1 为节流；leg0 回退用于恢复；故障接管使用存活路径。leg1 写入繁忙不会导致回退。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Download modes"
+msgstr "下载模式"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Server-reported modes for current connections. Missing or stale samples are Unknown. Aggregate and traffic-saving modes also require the same connection to have a locally attached booster; zero throughput alone does not invalidate a mode."
+msgstr "服务端报告的当前连接模式。缺失或过期的样本为未知。聚合和节流模式还要求同一连接在本地挂接了第二条 leg；仅吞吐为零不会使模式失效。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No fresh reply timeout · continuous healthy period before returning after a previously healthy path fails. First healthy discovery at startup has no return delay. Values are controlled by the client and synchronized to the server."
+msgstr "无新回应的超时 · 曾健康的路径故障后回切前须连续健康的时长。启动时首次确认健康无需等待。数值由客户端控制并同步到服务端。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Maximum DATA payload in either direction, excluding headers. Short frames and incremental reads remain supported."
+msgstr "任一方向的 DATA 最大载荷，不含帧头。仍支持短帧和增量读取。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Repairs"
+msgstr "修复"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction, cumulative since process start: repaired bytes / repaired ranges / path stall detections. Repairs cover receiver-dropped ranges, failed or stalled paths and opportunistic reinjection. A stall can recover before any repair. These are not TCP/QUIC retransmissions or IP packet loss counters."
+msgstr "每个方向自进程启动以来的累计值：修复字节 / 修复区间 / 路径停滞检测次数。修复包括接收端丢弃的区间、失效或停滞的路径以及机会性重注入。停滞可能在修复前恢复。这些不是 TCP/QUIC 重传或 IP 丢包计数。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Opportunistic / tail reinjection"
+msgstr "机会性 / 尾部重注入"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction, cumulative: head data resent on an idle path because the other path held the connection head back · data resent at the end of a transfer because the slower path would deliver it later (bytes). Whichever copy arrives first is used."
+msgstr "每个方向的累计值：因另一路径卡住连接队头而在空闲路径上重发队头数据的次数 · 因较慢路径会更晚送达而在传输尾部重发的次数（字节）。先到的副本生效。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local current / peak / limit memory, followed by remote current / peak memory. Remote values come from server telemetry."
+msgstr "本地当前 / 峰值 / 上限内存，其后为远端当前 / 峰值内存。远端数值来自服务端遥测。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local memory regions"
+msgstr "本地内存分区"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TX"
+msgstr "发送"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "RX"
+msgstr "接收"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "reserved"
+msgstr "预留"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "cache"
+msgstr "缓存"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Transmit payload · receive pages · fixed session reservations · reusable cache. Transmit and receive borrow from each other but always leave the other side a reserve."
+msgstr "发送载荷 · 接收页 · 固定会话预留 · 可复用缓存。发送与接收互相借用，但总会给对方留出保底。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fair shares"
+msgstr "公平份额"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "senders"
+msgstr "发送会话"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "receivers"
+msgstr "接收会话"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "receive window"
+msgstr "接收窗口"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sessions that moved data within the last second, and the receive window each active receiver currently gets."
+msgstr "最近一秒内有数据移动的会话数，以及每个活跃接收会话当前获得的接收窗口。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg1 · Secondary"
+msgstr "leg1 · 第二路径"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "minimum"
+msgstr "最小"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and the first feedback copy to return on either leg, including queueing: largest smoothed RTT / smallest recorded RTT."
+msgstr "活跃连接远端交付速率估计之和，不是当前吞吐或链路容量。反馈 RTT 包括本 leg 上的 DATA 与任一 leg 上最先返回的反馈副本，含排队：最大平滑 RTT / 最小记录 RTT。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "In flight / limit"
+msgstr "在途 / 上限"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: bytes sent on this path and not yet confirmed by a path receipt · the most this path may hold (only bounded until its first delivery sample). Summed across active connections. Download is remote telemetry."
+msgstr "每个方向：已在本路径发送、尚未被路径回执确认的字节 · 本路径最多可持有的量（仅在首个交付样本前受限）。为活跃连接之和。下载为远端遥测。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Feedback frames"
+msgstr "反馈帧"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Window feedback frames sent and received on this leg since process start. Feedback uses the least blocked leg and copies the other leg at least every 20 ms, so both legs normally carry some."
+msgstr "自进程启动以来本 leg 收发的窗口反馈帧。反馈走写入阻塞最轻的 leg，并至少每 20 ms 在另一条 leg 上发一份副本，因此两条 leg 通常都会承载一些。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Writer queue"
+msgstr "写入队列"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: bytes queued to this leg's writer and not yet handed to the child transport. Current is summed across active connections; peak since process start. Download is remote telemetry."
+msgstr "每个方向：已排给本 leg 写入器、尚未交给子传输的字节。当前值为活跃连接之和；峰值自进程启动起。下载为远端遥测。"
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsupported status schema: %s. This page requires singbox-multipath beta10 status schema 5; upgrade sing-box on both endpoints and restart HomeProxy."
+msgstr "不支持的状态 schema：%s。本页面需要 singbox-multipath beta10 的状态 schema 5；请升级两端的 sing-box 并重启 HomeProxy。"

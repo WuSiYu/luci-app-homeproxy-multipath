@@ -1,100 +1,91 @@
 # HomeProxy Multipath
 
-An OpenWrt LuCI frontend based on HomeProxy, updated for sing-box 1.14 and extended with multipath node configuration, connection latency checks, and a live multipath status dashboard.
+An OpenWrt LuCI frontend based on HomeProxy, updated for sing-box 1.14 and extended with multipath node configuration, a multipath server inbound, connection latency checks, and a live multipath status dashboard.
 
 It is designed to work with [singbox-multipath](https://github.com/WuSiYu/singbox-multipath).
 
 ![Multipath status dashboard](screenshot.png)
 
-This branch targets **sing-box v1.14.1-multipath-beta8**, multipath wire protocol
-v11 and status schema 4. Upgrade both multipath endpoints and this LuCI package
-together.
+This branch targets **sing-box v1.14.1-multipath-beta10**, multipath wire protocol
+v13 and status schema 5. Upgrade both multipath endpoints and this LuCI package
+together; an endpoint with a different protocol version is rejected with an
+explicit reason, and an older status schema is shown as an upgrade notice.
 
-The client node form owns separate **Upload** and **Download** policies. Each has
-an aggregation master switch, an optional **Save leg0 traffic** switch, and three
-numbered activation conditions: **1. queue OR 2. rate OR 3. cumulative bytes**.
-Condition 3 alone can also require a minimum average rate. Zero numeric thresholds
-disable their condition; an omitted rate defaults to 150 Mbps unless a byte trigger
-is configured. Disabling the master hides activation fields without clearing their
-saved values.
+## Client node
 
-Traffic-saving changes activated traffic from aggregation to leg1-only new DATA.
-Healthy leg1 backpressure waits instead of spilling onto leg0. Failures, stalls,
-memory protection, control frames and reinjection may still use leg0; this is not
-a zero-traffic guarantee. Activation persists for the connection lifetime, and UDP
-selection remains independent.
+A multipath node combines two existing nodes. Bind each leg to the device of a
+different uplink (for example `pppoe-wan` and `pppoe-wan2`); the form warns when
+both legs bind the same interface or neither binds one, because two legs leaving
+through the same line cannot aggregate two lines.
 
-The common `frame_size` replaces `chunk_size`. Directional `queue_frames`
-limits unsent data in frame-size units; `send_buffer_bytes` covers unsent and
-unacknowledged data on both legs. `receive_window_bytes` applies at the direction's
-receiver: server for upload and client for download. There is no frame-count receive
-limit. `path_stall_timeout_min` replaces `leg1_replay_timeout`, expressing a floor
-on adaptive no-progress detection rather than a fixed retry timer.
-Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MB`.
-The `KB`/`MB`/`GB` suffixes use binary units; `KiB`/`MiB`/`GiB` suffixes are not accepted.
-Automatic buffer ceilings resolve against the owning host's `memory_limit`;
-the client cannot override the server's node-wide budget.
+Set the same **Pre-shared key** on the node and on the server inbound. Every
+handshake is then authenticated with HMAC-SHA256 and checked against replay. The
+key does not encrypt data; the child nodes do.
 
-Old flat UCI tuning fields are **ignored, not migrated**. The form lists legacy
-keys and the generator warns about them. They are not emitted into sing-box JSON.
-Reconfigure both directions explicitly; remove directional tuning from the server.
-The matching sing-box beta8 similarly warns and ignores recognized legacy JSON
-fields, while rejecting unknown fields or invalid new settings.
+**The defaults are the recommended values.** Leave activation and buffer fields
+empty unless you need a specific behavior:
 
-## Multipath Status
+- Each of **Upload** and **Download** has an aggregation master switch, an optional
+  **Save leg0 traffic** switch and three activation conditions:
+  **1. leg0 is the bottleneck OR 2. average rate OR 3. cumulative bytes**.
+  Condition 1 (on by default) waits until unsent data stay high for the activation
+  window (default 200ms) and leg0's delivery rate has stopped growing. Condition 2
+  is off unless a rate is set; for the behavior before beta10 use 150 Mbps with a
+  1s window. Disabling the master hides activation fields without clearing them.
+- **Advanced ceilings** (`queue_frames`, send history, receive window) are upper
+  bounds. The working values follow path rates, round-trip times and memory shares
+  automatically; values set only to enlarge buffers can be removed.
+- Durations accept `500ms`, `2s`, `1m` or `1h`, and a bare number means seconds.
+  Ranges: activation window 20ms–10s, path stall floor 100ms–5m, handshake 1–60s,
+  failover timeout 1s–5m, failback stability 1s–1h.
+- **Multipath early write** (on by default) sends the handshake with the first data.
+  TCP Fast Open inside the child nodes is set on those nodes.
 
-The client-only **Enable TCP and UDP failover** switch is off by default. It adds
-shared path health checks only when enabled. The server always accepts recovery
-sessions and listens on TCP and UDP; it has no `failover_enabled` field. Remove
-that field from existing server inbound configurations. Both children must reach
-the server's TCP and UDP listening port when recovery is enabled.
-The failure timeout defaults to 5 seconds; the preferred-path stability period
-defaults to 30 seconds. Both are editable in LuCI and hidden, with values retained,
-when recovery is off. Recovery is independent of the aggregation switches.
+Sessions survive the loss of either leg without any extra option: control and
+feedback travel on both legs, and a lost leg is redialed and rejoins its session.
+The optional client-only **TCP and UDP failover** adds shared health checks, path
+selection for new sessions, a UDP relay that keeps the server UDP socket across
+path switches, and session retention across long outages. Both children must then
+reach the server port over TCP and UDP. UDP is never aggregated.
 
-TCP can retain its target connection on leg1 during a leg0 outage. UDP uses the
-common server relay from the beginning, retaining its source socket across switches.
-The UDP selector remains an independent preference: selecting leg1 keeps UDP there
-when TCP returns to leg0. UDP is not aggregated or carried inside TCP.
-With recovery disabled, UDP keeps its existing direct child forwarding behavior.
+Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MB`
+(`KB`/`MB`/`GB` are binary units; `KiB`/`MiB` suffixes are not accepted).
 
-The top-level status page refreshes every second. A topology diagram links the
-aggregate node to leg0 and leg1, with separate upload and download arrows. Each
-leg includes directional cumulative traffic, peak speeds, and the ten currently
-fastest TCP flows. UDP has separate per-leg counters, including earlier traffic on
-a path that is no longer selected. Recovery details show the selected TCP/UDP paths,
-the two timers, shared path health, reply ages and continuous healthy time.
+Old flat UCI tuning fields are **ignored, not migrated**; the form lists them and
+the generator warns about them. On upgrade, the migration moves the node's TCP Fast
+Open flag to **Multipath early write**, drops a `queue_frames` equal to the default,
+and lets the untouched example node follow the new activation defaults.
 
-Upload/download policy sections show activation conditions, requested and effective
-buffer limits, and current sender mode counts. Remote values remain unavailable or
-stale when there is no fresh server sample, rather than being shown as zero.
+## Server inbound
 
-Collapsible details distinguish whole-path in-flight data, connection send
-history, reinjected bytes/mappings, writer blocking, receive reordering and the
-shared memory budget. Download sender counters and delivery estimates come from
-server telemetry. Unavailable and stale samples are explicitly marked; delivery
-RTT and probe timeout ratios are not physical ping latency or raw IP loss rates.
-Hover over a row label for definitions and units. Non-harmless leg events can be
-dismissed until a new event arrives. Confirmed local or remote application-endpoint
-closures are filtered using sing-box's `last_error_source`, not error-message
-matching. Unattributed EOF, reset and cancellation events remain visible. The
-destination identifies the affected flow, not a proven fault location. The updated
-sing-box excludes confirmed endpoint closures from event/failure counts; other
-hidden harmless events may still be counted. Error provenance requires
-beta8 on both endpoints.
+The server page offers a **Multipath** inbound with listen address and port,
+pre-shared key, allowed source prefixes, memory limit and handshake timeout.
+Directional policies arrive from the clients. Without a key or allowed sources on
+a public address, sing-box warns that anyone who can reach the port can relay
+through it. The firewall option opens the port for TCP and UDP.
 
-Reorder counts are 16 KiB storage pages, not wire frames. Their peaks are the
-largest per-connection peaks among currently active connections, and can drop
-when a connection closes. Send-history and path in-flight peaks persist since
-process start and take the maximum of sampled node totals and observed
-per-connection peaks; they are not exact continuous aggregate high-water marks.
-An older status schema is rejected with an upgrade notice rather than displayed
-with current labels.
+## Multipath status
 
-Leg joins count locally attached transports independently of upload activation.
-Joins, attempts and reported remote failure counts include closed connections.
-Probe RTT and probe-health values, in contrast, summarize currently active
-connections only. Remote scheduler estimates are not one-second throughput or
-physical capacity; their DATA-feedback RTT follows the selected data leg outward
-and the current control leg for the feedback. Stall detections do not necessarily cause reinjection,
-and accumulated sender wait time is not a single continuous pause.
+The status page refreshes every second. A topology diagram links the aggregate
+node to leg0 and leg1 with separate upload and download arrows. Each leg includes
+cumulative traffic, peak speeds, the ten fastest TCP flows and, when selected or
+used by failover, UDP counters.
+
+- **Policies** show each direction's activation conditions and, for each ceiling,
+  the live value: unsent limit and send-history limit (largest among open
+  connections; download values come from the server) and the receive window share.
+- **Legs** show bytes in flight against the path limit in each direction, writer
+  queues, window feedback frames sent and received, the remote scheduler's delivery
+  estimate and feedback RTT, joins, attempts and probe statistics.
+- **Live buffers** show connection send history, repairs (receiver-dropped ranges,
+  failed paths and opportunistic reinjection), opportunistic and tail reinjection
+  counts, sender backpressure, receive reordering, memory regions (TX, RX, reserved,
+  cache) and fair shares.
+- Leg events explain handshake rejections such as a wrong pre-shared key or a
+  protocol version mismatch. Confirmed application-endpoint closures are filtered
+  using sing-box's `last_error_source`, not message matching.
+
+Remote values are marked unavailable or stale when there is no fresh server
+sample, rather than shown as zero. Delivery RTT and probe timeout ratios are not
+physical ping latency or raw IP loss. Reorder counts are 16 KiB storage pages, not
+wire frames. Hover over a row label for definitions and units.

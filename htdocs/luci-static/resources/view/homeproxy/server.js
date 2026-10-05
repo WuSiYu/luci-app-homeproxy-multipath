@@ -182,6 +182,7 @@ return view.extend({
 			o.value('naive', _('NaïveProxy'));
 		}
 		o.value('mixed', _('Mixed'));
+		o.value('multipath', _('Multipath'));
 		o.value('shadowsocks', _('Shadowsocks'));
 		o.value('socks', _('Socks'));
 		o.value('trojan', _('Trojan'));
@@ -240,6 +241,37 @@ return view.extend({
 			return true;
 		}
 		o.modalonly = true;
+
+		/* Multipath config start */
+		o = s.option(CBIGenValue, 'multipath_psk', _('Pre-shared key'),
+			_('Must match the clients. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child protocols, not by this key. Without a key or allowed sources, anyone who can reach this port can relay through this server.'));
+		o.password = true;
+		o.depends('type', 'multipath');
+		o.modalonly = true;
+
+		o = s.option(form.DynamicList, 'multipath_allowed_ips', _('Allowed sources'),
+			_('Accept multipath legs only from these addresses or prefixes, as seen by this server. Empty allows any source.'));
+		o.datatype = 'or(ipaddr,cidr)';
+		o.depends('type', 'multipath');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'multipath_memory_limit', _('Memory limit'),
+			_('Shared multipath memory budget of this server, such as <code>256MB</code>. Empty or 0 uses min(512 MiB, half of the available memory).'));
+		o.validate = function(section_id, value) {
+			if (section_id && value && !/^\d+\s*(?:[kmgtpe]b?|b)?$/i.test(value.trim()))
+				return _('Expecting: %s').format(_('valid memory size'));
+			return true;
+		};
+		o.depends('type', 'multipath');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'multipath_handshake_timeout', _('Handshake timeout'),
+			_('Seconds allowed for a leg handshake. Range 1 to 60. Default: 10.'));
+		o.datatype = 'and(uinteger,range(1,60))';
+		o.placeholder = '10';
+		o.depends('type', 'multipath');
+		o.modalonly = true;
+		/* Multipath config end */
 
 		/* AnyTLS config */
 		o = s.option(form.DynamicList, 'anytls_padding_scheme', _('Padding scheme'),

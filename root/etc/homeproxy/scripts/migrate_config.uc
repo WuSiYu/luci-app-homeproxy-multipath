@@ -251,6 +251,33 @@ uci.foreach(uciconfig, uciroutingrule, (cfg) => {
 	}
 });
 
+/* multipath beta10 */
+uci.foreach(uciconfig, ucinode, (cfg) => {
+	if (cfg.type !== 'multipath')
+		return;
+
+	/* multipath early write now has its own switch and defaults to enabled */
+	if (!isEmpty(cfg.tcp_fast_open)) {
+		if (isEmpty(cfg.multipath_tcp_fast_open))
+			uci.set(uciconfig, cfg['.name'], 'multipath_tcp_fast_open', cfg.tcp_fast_open);
+		uci.delete(uciconfig, cfg['.name'], 'tcp_fast_open');
+	}
+
+	for (let direction in ['upload', 'download']) {
+		const prefix = 'multipath_' + direction + '_';
+		/* queue_frames is now a ceiling whose default is 256 */
+		if (cfg[prefix + 'queue_frames'] === '256')
+			uci.delete(uciconfig, cfg['.name'], prefix + 'queue_frames');
+		/* untouched values from the old example follow the new defaults */
+		if (cfg['.name'] === 'multipath_example') {
+			if (cfg[prefix + 'activation_threshold_mbps'] === '120')
+				uci.delete(uciconfig, cfg['.name'], prefix + 'activation_threshold_mbps');
+			if (cfg[prefix + 'activation_window'] === '1')
+				uci.delete(uciconfig, cfg['.name'], prefix + 'activation_window');
+		}
+	}
+});
+
 /* server options */
 /* auto_firewall was moved into server options */
 const auto_firewall = uci.get(uciconfig, uciserver, 'auto_firewall');

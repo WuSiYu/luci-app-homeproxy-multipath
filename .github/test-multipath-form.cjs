@@ -51,5 +51,27 @@ for (const key of ['multipath_frame_size', 'multipath_memory_limit'])
   for (const value of ['0', '2MB', '256 MB', '2097152', '']) assert.equal(fields.get(key).validate('test', value), true);
 for (const key of ['aggregation_enabled', 'max_reorder_frames', 'receive_window_frames', 'chunk_size', 'leg1_replay_bytes'])
   assert.ok(!fields.has('multipath_' + key));
-assert.match(fields.get('_multipath_beta8_migration').default, /ignored, not migrated/);
-console.log('PASS: beta8 directional OR controls, hidden-value retention, byte sizes, saving defaults, removed legacy controls');
+assert.match(fields.get('_multipath_beta10_migration').default, /beta10/);
+assert.ok(!fields.has('_multipath_beta8_migration'));
+assert.equal(fields.get('multipath_psk').password, true);
+assert.equal(fields.get('multipath_tcp_fast_open').default, '1');
+assert.equal(fields.get('multipath_tcp_fast_open').rmempty, false);
+assert.equal(typeof fields.get('_multipath_leg_warning').cfgvalue, 'function');
+const durations = {
+  multipath_handshake_timeout: [['10s', '1', '60', '1000ms'], ['500ms', '61s', '2m', 'abc', '1.5s', '-1']],
+  multipath_failover_timeout: [['5', '5s', '1s', '5m', '300s'], ['999ms', '301s', '6m']],
+  multipath_failback_delay: [['30', '1s', '1h', '3600s'], ['0', '3601s', '2h']],
+  multipath_upload_activation_window: [['200ms', '20ms', '1', '10s'], ['19ms', '11s', '0', '1m']],
+  multipath_download_path_stall_timeout_min: [['0', '100ms', '2s', '5m'], ['99ms', '6m', '1h']]
+};
+for (const [key, [valid, invalid]] of Object.entries(durations)) {
+  const field = fields.get(key);
+  for (const value of [...valid, '']) assert.equal(field.validate.call(field, 'test', value), true, key + ' ' + value);
+  for (const value of invalid) assert.notEqual(field.validate.call(field, 'test', value), true, key + ' ' + value);
+}
+for (const direction of ['upload', 'download']) {
+  const prefix = 'multipath_' + direction + '_';
+  assert.equal(fields.get(prefix + 'queue_frames').default, undefined);
+  assert.equal(fields.get(prefix + 'activation_window').default, undefined);
+}
+console.log('PASS: beta10 directional OR controls, durations, psk, early write, hidden-value retention, byte sizes, removed legacy controls');

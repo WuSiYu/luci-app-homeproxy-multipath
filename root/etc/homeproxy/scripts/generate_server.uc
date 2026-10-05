@@ -15,6 +15,14 @@ import {
 	removeBlankAttrs, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
+function strToMemoryBytes(value) {
+	if (isEmpty(value))
+		return null;
+
+	value = trim(value);
+	return match(value, /^\d+$/) ? int(value) : value;
+}
+
 /* UCI config start */
 const uci = cursor();
 
@@ -77,6 +85,12 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 		method: (cfg.type === 'shadowsocks') ? cfg.shadowsocks_encrypt_method : null,
 		password: (cfg.type in ['shadowsocks', 'shadowtls']) ? cfg.password : null,
 
+		/* Multipath */
+		psk: (cfg.type === 'multipath') ? cfg.multipath_psk : null,
+		allowed_ips: (cfg.type === 'multipath') ? cfg.multipath_allowed_ips : null,
+		memory_limit: (cfg.type === 'multipath') ? strToMemoryBytes(cfg.multipath_memory_limit) : null,
+		handshake_timeout: (cfg.type === 'multipath') ? strToTime(cfg.multipath_handshake_timeout) : null,
+
 		/* Tuic */
 		congestion_control: cfg.tuic_congestion_control,
 		auth_timeout: strToTime(cfg.tuic_auth_timeout),
@@ -84,7 +98,7 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 		heartbeat: strToTime(cfg.tuic_heartbeat),
 
 		/* AnyTLS / HTTP / Hysteria (2) / Mixed / Socks / Trojan / Tuic / VLESS / VMess */
-		users: (cfg.type !== 'shadowsocks') ? [
+		users: !(cfg.type in ['multipath', 'shadowsocks']) ? [
 			{
 				name: !(cfg.type in ['http', 'mixed', 'naive', 'socks']) ? 'cfg-' + cfg['.name'] + '-server' : null,
 				username: cfg.username,

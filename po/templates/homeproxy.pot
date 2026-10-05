@@ -3875,3 +3875,671 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/multipath.js
 msgid "weight"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "duration such as 500ms, 2s or 1m"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "a duration between %s and %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Both legs are bound to %s. They may leave through the same uplink and cannot aggregate two lines."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Neither leg binds an interface. Unless their nodes route through different uplinks, both legs may leave through the same line and cannot aggregate two lines."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Second path for aggregation, traffic-saving switching and optional failover. Upload and download activate it independently."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Without failover, UDP uses this child directly. With failover, this is the preferred UDP leg; both legs relay through the multipath server to preserve its UDP source port. Choosing leg1 does not make UDP follow TCP failback to leg0."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Must match the server. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child nodes, not by this key. Empty disables authentication."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Leg interfaces"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Multipath beta10"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Requires beta10 (protocol v13) on both endpoints. Defaults are the recommended values: leave the activation and buffer fields empty unless you need a specific behavior. Buffer fields are ceilings, not capacities."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Ignored legacy settings"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Frame size"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Maximum DATA payload bytes, excluding headers; shared by upload and download. Frames may be smaller and are read incrementally. Accepts 65536 or 64KB. Default: 64 KiB."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Enable aggregation / switching"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Client-controlled policy for this direction. When disabled, new data stay on leg0 and move to leg1 only if leg0 fails. Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition activates leg1; all three disabled keeps the direction on leg0."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Save leg0 traffic (switch instead of aggregate)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "After activation and leg1 readiness, new data uses leg1 only. Normal backpressure waits rather than spilling onto leg0. A missing or stalled leg1 lets leg0 take over until it recovers; some control traffic may remain. Disabled by default."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 1: leg0 is the bottleneck"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger, enabled by default: unsent data stay at or above half of the current unsent limit for the activation window, and leg0's delivery rate has stopped growing (leg0 has left slow start)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 2: average TX rate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger in Mbps per connection. Empty or 0 disables it. For the behavior before beta10, use 150 with a 1s activation window."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Condition 3: cumulative TX bytes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Independent OR trigger counting accepted application bytes in this direction. 0 or empty disables it. Accepts 2097152 or 2MB."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Additional minimum rate for condition 3"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The byte threshold AND this average rate must both be met. Only condition 3 uses this gate; conditions 1 and 2 remain independent. 0 removes the rate gate."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration used for rate sampling and sustained queue pressure, such as 200ms or 1s; a bare number means seconds. Range 20ms to 10s. Default: 200ms. Each connection and direction triggers independently."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: unsent data"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of data waiting to be assigned to a path, in frame-size units. The working value follows the delivery rate (about 10ms of data, at least 1 MiB). Empty uses 256; range 8 to 4096."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: send history"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of bytes retained at this direction's sender until Data ACK, both legs and unsent data included. The working value is about twice the bandwidth-delay product within the host's fair share. Empty is 512 MiB."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Advanced ceiling: receive window"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Upper bound of the window at this direction's receiver: server for upload, client for download. The working value is the session's fair share of the receiver's memory. Empty is 512 MiB."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Path stall timeout floor"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration such as 500ms or 2s; empty keeps adaptive timing. Range 100ms to 5m. This is a lower bound on no-progress detection, not a fixed retransmission interval or a disconnect timer."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Duration such as 10s; a bare number means seconds. Range 1s to 60s. Default: 10s."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Multipath early write"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Send the multipath handshake together with the first data and save one round trip. Enabled by default. TCP Fast Open inside the child nodes is configured on those nodes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Enable TCP and UDP failover"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Client-only, disabled by default. TCP sessions already survive the loss of either leg without it; failover adds shared health checks, path selection for new sessions, a UDP relay that keeps the server UDP socket across path switches, and session retention across long outages. Allow both TCP and UDP on the server port; both child nodes must support UDP. UDP is not aggregated."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Failover timeout"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Time without a fresh TCP or UDP health reply before the shared path is unavailable, such as 5s; a bare number means seconds. Range 1s to 5m. Default: 5s. These probes are shared by all connections, not sent per flow."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Failback stability period"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Longest time the preferred path must stay healthy before returning after it failed: 3s at first, doubling with repeated failures up to this value. Range 1s to 1h. Default: 30s. First healthy discovery at startup has no return delay. A single missed probe does not restart the hold; another full failure timeout does. If the fallback fails, an available preferred path is used immediately."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Must match the clients. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child protocols, not by this key. Without a key or allowed sources, anyone who can reach this port can relay through this server."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Allowed sources"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Accept multipath legs only from these addresses or prefixes, as seen by this server. Empty allows any source."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Shared multipath memory budget of this server, such as <code>256MB</code>. Empty or 0 uses min(512 MiB, half of the available memory)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Seconds allowed for a leg handshake. Range 1 to 60. Default: 10."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "%s (stale)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "A leg reached the server after the session had already closed. This is expected for some short connections because the second leg is established asynchronously."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The server rejected the pre-shared key. Configure the same key on this node and on the server inbound, and check that both clocks are within two minutes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The two endpoints run different multipath protocol versions. Upgrade sing-box on both the client and the server to beta10."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "The server holds this session with different parameters. This can follow a configuration change while connections were open; new connections use the new parameters."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Path delivery stalled. The sender can reinject missing byte ranges on another available path; a timing stall alone does not close the leg."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "A dial or handshake operation timed out. The leg is redialed with backoff while the session continues on the other leg."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Multipath transport"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Service shutdown"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local application endpoint"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote application endpoint"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unattributed"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Source"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Confirmed application-endpoint closures are hidden. Unattributed events remain visible; the destination identifies the affected flow, not the cause. Occurrences includes hidden events."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Traffic saving active"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 recovery fallback"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Failover active"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Aggregate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg1 only"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 fallback"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Failover"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No active connections"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Upload policy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Download policy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Data policy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg0 only (leg1 if leg0 fails)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Switch to leg1 after activation"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Aggregate after activation"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Configured by the client for this direction. Traffic-saving waits on healthy leg1 backpressure; a missing or stalled leg1 lets leg0 take over. Control traffic may use either leg. UDP is independent."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Activation: 1 OR 2 OR 3"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Any enabled condition activates leg1"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Disabled by master switch"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Per connection and direction: condition 1 OR condition 2 OR condition 3. All disabled means no activation. Activation persists for the connection lifetime; there is no low-rate deactivation."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "1. leg0 is the bottleneck"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsent data stay at or above half of the current unsent limit for the activation window, and leg0's delivery rate has stopped growing (leg0 has left slow start)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "2. Average TX rate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender average application rate over the activation window. Zero disables this condition."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "3. Cumulative bytes / Minimum rate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No rate gate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Cumulative accepted application bytes AND the minimum average rate over a complete window. The rate gate applies only to condition 3. Zero bytes disables condition 3; zero minimum removes the gate."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sender sampling interval for rate and sustained queue checks."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsent data: ceiling · live"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Data waiting to be assigned to a path. The live limit follows the delivery rate of the carrying paths (about 10 ms of data, at least 1 MiB) and is the largest among open connections."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Send history: ceiling · live"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Bytes retained at the sender until cumulative Data ACK, both paths and unsent data included. The live limit is about twice the bandwidth-delay product within the sender's fair memory share, largest among open connections."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Receive window: ceiling · live"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "server share"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Window at the receiver: server for upload, client for download. The live window is each active session's fair share of the receiver's memory."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Adaptive"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Optional lower bound on adaptive sender no-progress detection. Applies to either path, not a fixed retransmission or disconnect timer."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Upload modes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid " (stale)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Current connections by sender policy: leg0 before activation; aggregate uses both; leg1 is traffic-saving; leg0 fallback permits recovery; failover uses the surviving path. Busy leg1 writers do not cause fallback."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Download modes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Server-reported modes for current connections. Missing or stale samples are Unknown. Aggregate and traffic-saving modes also require the same connection to have a locally attached booster; zero throughput alone does not invalidate a mode."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TCP and UDP failover"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Optional recovery is independent of the aggregation switches. With recovery disabled, no recovery probes or UDP relay are created."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Recovery paths"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Current TCP control path and selected UDP leg. UDP retains its own preference. A zero usable mask means no path is currently healthy."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Failure timeout / Stable return"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No fresh reply timeout · continuous healthy period before returning after a previously healthy path fails. First healthy discovery at startup has no return delay. Values are controlled by the client and synchronized to the server."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Preferred UDP child. Without recovery it forwards directly; with recovery both paths use the same server UDP relay. UDP is not aggregated."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Maximum DATA payload in either direction, excluding headers. Short frames and incremental reads remain supported."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Connection send history"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: logical bytes accepted but not yet Data-ACKed, including both paths and unsent data. Current is summed across active connections. Peak is the maximum of sampled node totals and observed per-connection peaks since process start; it is not an exact continuous aggregate high-water mark. Download is remote telemetry."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Repairs"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction, cumulative since process start: repaired bytes / repaired ranges / path stall detections. Repairs cover receiver-dropped ranges, failed or stalled paths and opportunistic reinjection. A stall can recover before any repair. These are not TCP/QUIC retransmissions or IP packet loss counters."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Opportunistic / tail reinjection"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction, cumulative: head data resent on an idle path because the other path held the connection head back · data resent at the end of a transfer because the slower path would deliver it later (bytes). Whichever copy arrives first is used."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction, summed across connections since process start: wait count / accumulated wait time for pending-send or retained-history capacity. This is not the longest stall or network queueing delay. Shared-memory pressure has separate counters."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "peak flow"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Out-of-order receive storage: bytes / 16 KiB pages. Current is summed across active connections. Each peak is the largest per-connection peak among currently active connections; it may disappear when a connection closes. Byte and page peaks may occur at different times. Pages are not wire frames."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local current / peak / limit memory, followed by remote current / peak memory. Remote values come from server telemetry."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Local memory regions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TX"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "RX"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "reserved"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "cache"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Transmit payload · receive pages · fixed session reservations · reusable cache. Transmit and receive borrow from each other but always leave the other side a reserve."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Fair shares"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "senders"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "receivers"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "receive window"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sessions that moved data within the last second, and the receive window each active receiver currently gets."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Historical totals only"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote telemetry availability and freshness. With no active sample, historical totals may remain. Stale values are retained and marked, not treated as live measurements. Timestamp: last received update."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "leg1 · Secondary"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Remote scheduler estimate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Feedback RTT"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "minimum"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "No delivery sample"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Sum of remote delivery-rate estimates across active connections, not current throughput or link capacity. Feedback RTT includes DATA on this leg and the first feedback copy to return on either leg, including queueing: largest smoothed RTT / smallest recorded RTT."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "In flight / limit"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: bytes sent on this path and not yet confirmed by a path receipt · the most this path may hold (only bounded until its first delivery sample). Summed across active connections. Download is remote telemetry."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Feedback frames"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Window feedback frames sent and received on this leg since process start. Feedback uses the least blocked leg and copies the other leg at least every 20 ms, so both legs normally carry some."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Writer queue"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: bytes queued to this leg's writer and not yet handed to the child transport. Current is summed across active connections; peak since process start. Download is remote telemetry."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Each direction: bytes currently held by writers, summed across connections / longest current write-blocked duration among active connections. Download is reported by the remote sender."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Since process start: attached leg transports · business TCP dial attempts (without recovery, leg0 counts logical connections) · reported remote failures, including closed connections. Shared recovery probes are excluded. An attached lazy transport may still be handshaking; unreported remote events cannot be counted."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Probe RTT (active flows)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Same-leg multipath ping/pong RTT, including child transport queueing. Active connections only: sample-weighted latest value · mean across samples · sample-weighted EWMA · minimum-maximum · sample-weighted jitter. Closed connections are excluded; one sample cannot characterize variability."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Probe health (active flows)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Active connections only: probes sent · probe timeouts · timeout/sent ratio. These counters can decrease when connections close. A pending probe is not yet a success or timeout; zero timeouts with few samples does not establish link quality. This is not raw IP packet loss."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Shared recovery health"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Healthy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Requires fresh TCP and native UDP replies on this child. Shared by all flows. This is reachability, not the per-flow probe loss estimate."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TCP reply age / UDP reply age / Healthy for"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Time since the last valid TCP reply · time since the last valid UDP reply · continuous healthy duration. Missing samples are shown as a dash."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Recovery role"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TCP control"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TCP standby or aggregation"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "UDP selected"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "UDP standby"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "TCP returns to leg0 after the stability period. UDP returns to its separately configured preferred leg."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Last remote failure stage reported by an active connection. Unlike the cumulative failure counter, this detail is not retained after that connection closes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Traffic on this leg since process start, including TCP payload and UDP when this child is selected for UDP. Download is RX; upload is TX. Protocol overhead is excluded."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/multipath.js
+msgid "Unsupported status schema: %s. This page requires singbox-multipath beta10 status schema 5; upgrade sing-box on both endpoints and restart HomeProxy."
+msgstr ""

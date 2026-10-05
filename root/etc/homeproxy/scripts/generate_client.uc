@@ -27,6 +27,15 @@ function strToMemoryBytes(value) {
 	return match(value, /^\d+$/) ? int(value) : value;
 }
 
+/* Multipath durations accept 500ms, 2s, 1m or 1h; a bare number is seconds. */
+function strToDuration(value) {
+	if (isEmpty(value))
+		return null;
+
+	value = trim(value);
+	return match(value, /^\d+$/) ? (value + 's') : value;
+}
+
 /* const features = ubus.call('luci.homeproxy', 'singbox_get_features') || {}; */
 
 /* UCI config start */
@@ -375,11 +384,11 @@ function multipath_direction(node, direction) {
 		activation_threshold_mbps: isEmpty(node[prefix + 'activation_threshold_mbps']) ? null : int(node[prefix + 'activation_threshold_mbps']),
 		activation_after_bytes: strToMemoryBytes(node[prefix + 'activation_after_bytes']),
 		activation_after_bytes_min_mbps: isEmpty(node[prefix + 'activation_after_bytes_min_mbps']) ? null : int(node[prefix + 'activation_after_bytes_min_mbps']),
-		activation_window: strToTime(node[prefix + 'activation_window']),
+		activation_window: strToDuration(node[prefix + 'activation_window']),
 		queue_frames: isEmpty(node[prefix + 'queue_frames']) ? null : int(node[prefix + 'queue_frames']),
 		send_buffer_bytes: strToMemoryBytes(node[prefix + 'send_buffer_bytes']),
 		receive_window_bytes: strToMemoryBytes(node[prefix + 'receive_window_bytes']),
-		path_stall_timeout_min: strToTime(node[prefix + 'path_stall_timeout_min'])
+		path_stall_timeout_min: strToDuration(node[prefix + 'path_stall_timeout_min'])
 	};
 }
 
@@ -399,7 +408,7 @@ function generate_multipath_outbound(node) {
 	      secondary_tag = 'cfg-' + secondary + '-out';
 	for (let key in ['aggregation_enabled', 'activation_on_queue', 'activation_threshold_mbps', 'activation_after_bytes', 'activation_after_bytes_min_mbps', 'activation_window', 'queue_frames', 'chunk_size', 'max_reorder_frames', 'max_reorder_bytes', 'leg1_replay_bytes', 'leg1_replay_timeout', 'bandwidth_leg0_mbps', 'bandwidth_leg1_mbps']) {
 		if (('multipath_' + key) in node)
-			warn(sprintf('HomeProxy: %s: legacy multipath_%s is ignored in beta8; configure upload/download policies.\n', node['.name'], key));
+			warn(sprintf('HomeProxy: %s: legacy multipath_%s is ignored since beta8; configure upload/download policies.\n', node['.name'], key));
 	}
 
 	return {
@@ -410,15 +419,16 @@ function generate_multipath_outbound(node) {
 		udp_outbound: (node.multipath_udp_outbound === 'secondary') ? secondary_tag : preferred_tag,
 		server: node.multipath_server,
 		server_port: strToInt(node.multipath_server_port),
-		tcp_fast_open: strToBool(node.tcp_fast_open),
+		tcp_fast_open: strToNullableBool(node.multipath_tcp_fast_open),
+		psk: node.multipath_psk,
 		failover_enabled: strToNullableBool(node.multipath_failover_enabled),
-		failover_timeout: strToBool(node.multipath_failover_enabled) ? strToTime(node.multipath_failover_timeout) : null,
-		failback_delay: strToBool(node.multipath_failover_enabled) ? strToTime(node.multipath_failback_delay) : null,
+		failover_timeout: strToBool(node.multipath_failover_enabled) ? strToDuration(node.multipath_failover_timeout) : null,
+		failback_delay: strToBool(node.multipath_failover_enabled) ? strToDuration(node.multipath_failback_delay) : null,
 		frame_size: strToMemoryBytes(node.multipath_frame_size),
 		upload: multipath_direction(node, 'upload'),
 		download: multipath_direction(node, 'download'),
 		memory_limit: strToMemoryBytes(node.multipath_memory_limit),
-		handshake_timeout: strToTime(node.multipath_handshake_timeout),
+		handshake_timeout: strToDuration(node.multipath_handshake_timeout),
 		status_file: RUN_DIR + '/multipath-status/' + node['.name'] + '.json'
 	};
 }

@@ -204,7 +204,7 @@ const methods = {
 				}
 				if (type(document) !== 'object' || type(document.node) !== 'object')
 					continue;
-				if (document.schema_version !== 4) {
+				if (document.schema_version !== 5) {
 					if (type(document.schema_version) === 'int' && index(incompatible_schemas, document.schema_version) === -1)
 						push(incompatible_schemas, document.schema_version);
 					continue;

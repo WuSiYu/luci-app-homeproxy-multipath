@@ -417,6 +417,46 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 		return true;
 	};
+	/* Durations accept 500ms, 2s, 1m or 1h; a bare number means seconds. */
+	const durationMilliseconds = function(value) {
+		const match = /^(\d+)\s*(ms|s|m|h)?$/i.exec(String(value).trim());
+		if (!match)
+			return null;
+		const scale = { ms: 1, s: 1000, m: 60000, h: 3600000 }[(match[2] || 's').toLowerCase()];
+		return Number(match[1]) * scale;
+	};
+	const validateDuration = function(minimum, maximum, allowZero) {
+		return function(section_id, value) {
+			if (!section_id || !value)
+				return true;
+			const milliseconds = durationMilliseconds(value);
+			if (milliseconds === null)
+				return _('Expecting: %s').format(_('duration such as 500ms, 2s or 1m'));
+			if ((milliseconds !== 0 || !allowZero) && (milliseconds < minimum || milliseconds > maximum))
+				return _('Expecting: %s').format(_('a duration between %s and %s').format(this.minText, this.maxText));
+			return true;
+		};
+	};
+	const durationOption = function(option, minimum, maximum, minText, maxText, allowZero) {
+		option.validate = validateDuration(minimum, maximum, allowZero);
+		option.minText = minText;
+		option.maxText = maxText;
+		return option;
+	};
+	/* Two legs leaving through the same uplink cannot aggregate two lines. */
+	const multipathLegWarning = function(section_id) {
+		const preferred = uci.get('homeproxy', section_id, 'multipath_preferred'),
+		      secondary = uci.get('homeproxy', section_id, 'multipath_secondary');
+		if (!preferred || !secondary)
+			return _('None');
+		const preferredInterface = uci.get('homeproxy', preferred, 'bind_interface') || '',
+		      secondaryInterface = uci.get('homeproxy', secondary, 'bind_interface') || '';
+		if (preferredInterface === secondaryInterface)
+			return preferredInterface ?
+				_('Both legs are bound to %s. They may leave through the same uplink and cannot aggregate two lines.').format(preferredInterface) :
+				_('Neither leg binds an interface. Unless their nodes route through different uplinks, both legs may leave through the same line and cannot aggregate two lines.');
+		return _('None');
+	};
 	s.rowcolors = true;
 	s.sortable = true;
 	s.nodescriptions = true;
@@ -568,9 +608,19 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.rmempty = false;
 	o.modalonly = true;
 
+	o = s.option(form.Value, 'multipath_psk', _('Pre-shared key'),
+		_('Must match the server. Every handshake is authenticated with HMAC-SHA256 and checked against replay. Data encryption is provided by the child nodes, not by this key. Empty disables authentication.'));
+	o.password = true;
+	o.depends('type', 'multipath');
+	o.modalonly = true;
 
-	o = s.option(form.DummyValue, '_multipath_beta8_migration', _('Multipath beta8'));
-	o.default = _('Requires beta8 on both endpoints. Upload and download policies are now configured here. Old flat tuning fields are ignored, not migrated; review both directions before saving.');
+	o = s.option(form.DummyValue, '_multipath_leg_warning', _('Leg interfaces'));
+	o.cfgvalue = multipathLegWarning;
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.DummyValue, '_multipath_beta10_migration', _('Multipath beta10'));
+	o.default = _('Requires beta10 (protocol v13) on both endpoints. Defaults are the recommended values: leave the activation and buffer fields empty unless you need a specific behavior. Buffer fields are ceilings, not capacities.');
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 	o = s.option(form.DummyValue, '_multipath_legacy_fields', _('Ignored legacy settings'));
@@ -602,20 +652,21 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 			return option;
 		};
 		o = field(form.Flag, 'aggregation_enabled', _('Enable aggregation / switching'),
-			_('Client-controlled policy for this direction. When disabled, use leg0 except during optional failover. Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition activates leg1; all three disabled keeps the direction on leg0.'));
+			_('Client-controlled policy for this direction. When disabled, new data stay on leg0 and move to leg1 only if leg0 fails. Activation logic: condition 1 OR condition 2 OR condition 3. Any enabled condition activates leg1; all three disabled keeps the direction on leg0.'));
 		o.default = o.enabled;
 		o.rmempty = false;
 
 		o = field(form.Flag, 'leg0_traffic_saving', _('Save leg0 traffic (switch instead of aggregate)'),
-			_('After activation and leg1 readiness, new data uses leg1 only. Normal backpressure waits rather than spilling onto leg0. Failure, stalls or memory protection may use leg0 for recovery; control traffic remains. Disabled by default.'), true);
+			_('After activation and leg1 readiness, new data uses leg1 only. Normal backpressure waits rather than spilling onto leg0. A missing or stalled leg1 lets leg0 take over until it recovers; some control traffic may remain. Disabled by default.'), true);
 		o.default = o.disabled;
 		o.rmempty = false;
-		o = field(form.Flag, 'activation_on_queue', _('Condition 1: leg0 queue'),
-			_('Independent OR trigger: leg0 in-flight plus unsent bytes remain at least 80% of queue_frames × frame_size for the activation window.'), true);
+		o = field(form.Flag, 'activation_on_queue', _('Condition 1: leg0 is the bottleneck'),
+			_('Independent OR trigger, enabled by default: unsent data stay at or above half of the current unsent limit for the activation window, and leg0\'s delivery rate has stopped growing (leg0 has left slow start).'), true);
 		o.default = o.enabled; o.rmempty = false;
 		o = field(form.Value, 'activation_threshold_mbps', _('Condition 2: average TX rate'),
-			_('Independent OR trigger in Mbps per connection. 0 disables it. Empty defaults to 150, or 0 when the byte trigger is enabled.'), true);
+			_('Independent OR trigger in Mbps per connection. Empty or 0 disables it. For the behavior before beta10, use 150 with a 1s activation window.'), true);
 		o.datatype = 'uinteger';
+		o.placeholder = '0';
 		o = field(form.Value, 'activation_after_bytes', _('Condition 3: cumulative TX bytes'),
 			_('Independent OR trigger counting accepted application bytes in this direction. 0 or empty disables it. Accepts 2097152 or 2MB.'), true);
 		o.validate = validateMemorySize;
@@ -624,20 +675,22 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 		o.depends({ ...enabled, [prefix + 'activation_after_bytes']: /^\s*0*[1-9]\d*\s*(?:[kmgtpe]b?|b)?\s*$/i });
 		o.datatype = 'uinteger';
 		o = field(form.Value, 'activation_window', _('Activation window'),
-			_('Seconds used for rate sampling and sustained queue pressure. Each connection and direction triggers independently.'), true);
-		o.datatype = 'uinteger'; o.default = '1';
-		o = field(form.Value, 'queue_frames', _('Pending send capacity'),
-			_('Unsent queue capacity in frame-size units, not a count of in-flight frames. Default: 256. This is distinct from the complete send buffer.'), false);
-		o.datatype = 'or(0,and(uinteger,range(8,4096)))'; o.default = '256';
-		o = field(form.Value, 'send_buffer_bytes', _('Send buffer limit'),
-			_('Per-connection bytes retained at this direction\'s sender, including unsent data and data on both legs awaiting Data ACK. Empty or 0 is automatic using that host\'s memory budget.'), false);
+			_('Duration used for rate sampling and sustained queue pressure, such as 200ms or 1s; a bare number means seconds. Range 20ms to 10s. Default: 200ms. Each connection and direction triggers independently.'), true);
+		durationOption(o, 20, 10000, '20ms', '10s', false);
+		o.placeholder = '200ms';
+		o = field(form.Value, 'queue_frames', _('Advanced ceiling: unsent data'),
+			_('Upper bound of data waiting to be assigned to a path, in frame-size units. The working value follows the delivery rate (about 10ms of data, at least 1 MiB). Empty uses 256; range 8 to 4096.'), false);
+		o.datatype = 'or(0,and(uinteger,range(8,4096)))';
+		o.placeholder = '256';
+		o = field(form.Value, 'send_buffer_bytes', _('Advanced ceiling: send history'),
+			_('Upper bound of bytes retained at this direction\'s sender until Data ACK, both legs and unsent data included. The working value is about twice the bandwidth-delay product within the host\'s fair share. Empty is 512 MiB.'), false);
 		o.validate = validateMemorySize;
-		o = field(form.Value, 'receive_window_bytes', _('Receive window limit'),
-			_('Window at this direction\'s receiver: server for upload, client for download. Includes unread in-order data. Empty or 0 is automatic using the receiver\'s budget. There is no frame-count limit.'), false);
+		o = field(form.Value, 'receive_window_bytes', _('Advanced ceiling: receive window'),
+			_('Upper bound of the window at this direction\'s receiver: server for upload, client for download. The working value is the session\'s fair share of the receiver\'s memory. Empty is 512 MiB.'), false);
 		o.validate = validateMemorySize;
 		o = field(form.Value, 'path_stall_timeout_min', _('Path stall timeout floor'),
-			_('Seconds; 0 or empty keeps adaptive timing. This is a lower bound on no-progress detection, not a fixed retransmission interval or a disconnect timer.'), false);
-		o.datatype = 'uinteger';
+			_('Duration such as 500ms or 2s; empty keeps adaptive timing. Range 100ms to 5m. This is a lower bound on no-progress detection, not a fixed retransmission interval or a disconnect timer.'), false);
+		durationOption(o, 100, 300000, '100ms', '5m', true);
 	}
 
 	o = s.option(form.Value, 'multipath_memory_limit', _('Memory limit'),
@@ -646,29 +699,38 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
-	o = s.option(form.Value, 'multipath_handshake_timeout', _('Handshake timeout'), _('In seconds.'));
-	o.datatype = 'uinteger';
+	o = s.option(form.Value, 'multipath_handshake_timeout', _('Handshake timeout'),
+		_('Duration such as 10s; a bare number means seconds. Range 1s to 60s. Default: 10s.'));
+	durationOption(o, 1000, 60000, '1s', '60s', false);
+	o.placeholder = '10s';
+	o.depends('type', 'multipath');
+	o.modalonly = true;
+
+	o = s.option(form.Flag, 'multipath_tcp_fast_open', _('Multipath early write'),
+		_('Send the multipath handshake together with the first data and save one round trip. Enabled by default. TCP Fast Open inside the child nodes is configured on those nodes.'));
+	o.default = o.enabled;
+	o.rmempty = false;
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 	o = s.option(form.Flag, 'multipath_failover_enabled', _('Enable TCP and UDP failover'),
-		_('Client-only, disabled by default, with no additional recovery probes. The server always supports recovery and has no failover_enabled option. Allow both TCP and UDP on its listening port; both child nodes must support UDP. Existing TCP sessions and the server UDP socket survive a leg0 outage; UDP is not aggregated.'));
+		_('Client-only, disabled by default. TCP sessions already survive the loss of either leg without it; failover adds shared health checks, path selection for new sessions, a UDP relay that keeps the server UDP socket across path switches, and session retention across long outages. Allow both TCP and UDP on the server port; both child nodes must support UDP. UDP is not aggregated.'));
 	o.default = o.disabled;
 	o.rmempty = false;
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_failover_timeout', _('Failover timeout'),
-		_('Seconds without a fresh TCP or UDP health reply before the shared path is unavailable. Default: 5 seconds. These probes are shared by all connections, not sent per flow.'));
+		_('Time without a fresh TCP or UDP health reply before the shared path is unavailable, such as 5s; a bare number means seconds. Range 1s to 5m. Default: 5s. These probes are shared by all connections, not sent per flow.'));
 	o.default = '5';
-	o.datatype = 'and(uinteger,range(1,300))';
+	durationOption(o, 1000, 300000, '1s', '5m', false);
 	o.depends({'type': 'multipath', 'multipath_failover_enabled': '1'});
 	o.retain = true;
 	o.modalonly = true;
 
 	o = s.option(form.Value, 'multipath_failback_delay', _('Failback stability period'),
-		_('Seconds the preferred path must stay healthy before returning after a previously healthy path fails. Default: 30 seconds. First healthy discovery at startup has no return delay. A single missed probe does not restart this period; another full failure timeout does. If the fallback fails, an available preferred path is used immediately.'));
+		_('Longest time the preferred path must stay healthy before returning after it failed: 3s at first, doubling with repeated failures up to this value. Range 1s to 1h. Default: 30s. First healthy discovery at startup has no return delay. A single missed probe does not restart the hold; another full failure timeout does. If the fallback fails, an available preferred path is used immediately.'));
 	o.default = '30';
-	o.datatype = 'and(uinteger,range(1,3600))';
+	durationOption(o, 1000, 3600000, '1s', '1h', false);
 	o.depends({'type': 'multipath', 'multipath_failover_enabled': '1'});
 	o.retain = true;
 	o.modalonly = true;
@@ -1362,6 +1424,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'tcp_fast_open', _('TCP fast open'));
+	o.depends({'type': 'multipath', '!reverse': true});
 	o.modalonly = true;
 
 	o = s.option(form.Flag, 'tcp_multi_path', _('MultiPath TCP'));

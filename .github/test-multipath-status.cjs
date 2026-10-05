@@ -42,12 +42,13 @@ function rows(label) {
     return output;
   });
 }
+const number = value => Number(value) || 0;
 function render(doc = document, extra = {}) {
   page.render({ nodes: [doc], ...extra });
   assert.ok(!JSON.stringify(page.root).includes('NaN'));
 }
 let document = {
-  schema_version: 4, generated_at: new Date().toISOString(), process_started_at: new Date().toISOString(),
+  schema_version: 5, generated_at: new Date().toISOString(), process_started_at: new Date().toISOString(),
   node: { tag: 'mp-out', parameters: { frame_size: 65536, upload: { aggregation_enabled: false, effective_send_buffer_bytes: 33554432 }, download: { aggregation_enabled: true, leg0_traffic_saving: true, effective_receive_window_bytes: 67108864 } }, logical: { upload_states: { leg0: 2 }, download_states: { leg1: 1, unknown: 1 } }, legs: [{ id: 0, tag: 'primary' }, { id: 1, tag: 'booster' }] }
 };
 if (process.argv[3]) {
@@ -57,7 +58,7 @@ if (process.argv[3]) {
 }
 render();
 const rendered = JSON.stringify(page.root);
-for (const text of ['Connection send history', 'Path in-flight data', 'Reinjection', '16 KiB pages', 'Remote scheduler estimate', 'Upload modes', 'Download modes', 'Upload policy', 'Download policy', 'Activation: 1 OR 2 OR 3', 'Feedback RTT', 'Probe RTT (active flows)', 'Probe health (active flows)']) assert.ok(rendered.includes(text), text);
+for (const text of ['Connection send history', 'In flight / limit', 'Writer queue', 'Feedback frames', 'Repairs', 'Opportunistic / tail reinjection', 'Local memory regions', 'Fair shares', 'Unsent data: ceiling · live', 'Send history: ceiling · live', 'Receive window: ceiling · live', '1. leg0 is the bottleneck', 'leg1 · Secondary', '16 KiB pages', 'Remote scheduler estimate', 'Upload modes', 'Download modes', 'Upload policy', 'Download policy', 'Activation: 1 OR 2 OR 3', 'Feedback RTT', 'Probe RTT (active flows)', 'Probe health (active flows)']) assert.ok(rendered.includes(text), text);
 assert.ok(!rendered.includes('Automatic delivery-based scheduling'));
 assert.ok(!rendered.includes('Local TX policy'));
 assert.ok(!rendered.includes('Queue utilization:'));
@@ -70,13 +71,14 @@ assert.ok(findNodes(page.root, node => node.tag === 'dt').every(node => node.att
 document.generated_at = new Date().toISOString();
 document.node.logical.remote_sender = { available: false };
 render();
-for (const label of ['Reinjection', 'Memory pressure', 'Connection send history', 'Writer state', 'Path in-flight data'])
+for (const label of ['Repairs', 'Opportunistic / tail reinjection', 'Memory pressure', 'Connection send history', 'Writer state', 'Writer queue', 'In flight / limit'])
   assert.ok(rows(label).every(value => /(?:Download|Remote) Unavailable/.test(value)), label);
+assert.ok(rows('Unsent data: ceiling · live').some(value => value.endsWith('Unavailable')));
 assert.ok(rows('Remote scheduler estimate').every(value => value === 'Unavailable'));
 
 document.node.logical.remote_sender = { available: true, stale: true, updated_at: new Date().toISOString() };
 render();
-for (const label of ['Reinjection', 'Memory pressure', 'Connection send history', 'Remote scheduler estimate'])
+for (const label of ['Repairs', 'Opportunistic / tail reinjection', 'Memory pressure', 'Connection send history', 'Remote scheduler estimate'])
   assert.ok(rows(label).every(value => value.includes('(stale)')), label);
 document.node.logical.remote_sender.stale = false;
 document.node.legs.forEach(leg => { leg.remote_delivery_bytes_per_second = 0; });
@@ -88,7 +90,7 @@ render();
 assert.deepEqual(rows('Remote sender status'), ['Historical totals only']);
 assert.ok(rows('Leg lifecycle').every(value => value.includes('remote failures 7')));
 assert.ok(rows('Memory pressure')[0].includes('Remote Unavailable'));
-assert.ok(rows('Path in-flight data').every(value => value.includes('Download Unavailable')));
+assert.ok(rows('In flight / limit').every(value => value.includes('Download Unavailable')));
 document.node.logical.remote_sender.updated_at = new Date().toISOString();
 document.generated_at = '2000-01-01T00:00:00Z';
 render();
@@ -130,6 +132,21 @@ for (const message of ['i/o timeout', 'multipath hello rejected: invalid leg id'
   render();
   assert.ok(flatten(page.root).includes(message));
 }
+for (const [message, hint] of [['multipath hello rejected: authentication failed (check psk on both endpoints)', 'pre-shared key'], ['multipath hello rejected: unsupported protocol version (both endpoints must use v13)', 'beta10']]) {
+  Object.assign(leg, { last_error: message, last_error_source: 'unknown', last_error_harmless: false, error_count: number(leg.error_count) + 1 });
+  render();
+  assert.ok(flatten(page.root).includes(hint), hint);
+}
+// Schema 5 live values: local upload limits, remote download limits, per-leg in flight.
+document.node.logical.local_sender = { unsent_limit_bytes: 1048576, history_limit_bytes: 8388608, opportunistic_reinjections: 3, tail_reinjections: 2, tail_reinjection_bytes: 131072 };
+document.node.logical.remote_sender = { available: true, updated_at: new Date().toISOString(), unsent_limit_bytes: 2097152, history_limit_bytes: 16777216 };
+document.node.memory = { tx_bytes: 1024, rx_bytes: 2048, reserved_bytes: 4096, cached_bytes: 0, active_senders: 1, active_receivers: 2, receive_share_bytes: 33554432 };
+Object.assign(document.node.legs[0], { outstanding_bytes: 65536, pipeline_limit_bytes: 262144, feedback_frames_sent: 5, feedback_frames_received: 6 });
+render();
+assert.ok(rows('Unsent data: ceiling · live').some(value => value.includes('1.00 MiB') || value.includes('1 MiB')), JSON.stringify(rows('Unsent data: ceiling · live')));
+assert.ok(rows('Fair shares')[0].includes('receivers 2'));
+assert.ok(rows('Feedback frames').some(value => value.includes('TX 5 · RX 6')));
+assert.ok(rows('Opportunistic / tail reinjection')[0].includes('Upload 3 · 2'));
 
 const section = findNodes(page.root, node => node.tag === 'details')[0];
 document.node.recovery = { enabled: true, tcp_path: 1, udp_path: 1, udp_preferred: 0, usable_mask: 2,
@@ -183,4 +200,4 @@ assert.equal(findNodes(page.root, node => node.tag === 'details')[0].attrs.open,
 render({ ...document, schema_version: 2 }, { incompatible_schemas: [2] });
 assert.ok(JSON.stringify(page.root).includes('No multipath status data is available.'));
 assert.ok(flatten(page.root).includes('Unsupported status schema: 2'));
-console.log('PASS: schema 4 directions/counters/tooltips, unavailable/stale/historical states, folding, event dismissal, segment wrapping, 1s poll, old-schema notice');
+console.log('PASS: schema 5 directions/live limits/counters/tooltips, rejection hints, unavailable/stale/historical states, folding, event dismissal, segment wrapping, 1s poll, old-schema notice');
