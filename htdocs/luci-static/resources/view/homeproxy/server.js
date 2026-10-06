@@ -330,15 +330,17 @@ return view.extend({
 		o.depends({'type': 'hysteria2', 'hysteria_obfs_type': /[\s\S]/});
 		o.modalonly = true;
 
-		o = s.option(form.Value, 'hysteria_recv_window_conn', _('QUIC stream receive window'),
-			_('The QUIC stream-level flow control window for receiving data.'));
+		/* sing-box maps recv_window_conn to the connection-level window and
+		 * recv_window_client to the stream-level window. */
+		o = s.option(form.Value, 'hysteria_recv_window_conn', _('QUIC connection receive window'),
+			_('The QUIC connection-level flow control window for receiving data.'));
 		o.datatype = 'uinteger';
 		o.default = '67108864';
 		o.depends('type', 'hysteria');
 		o.modalonly = true;
 
-		o = s.option(form.Value, 'hysteria_recv_window_client', _('QUIC connection receive window'),
-			_('The QUIC connection-level flow control window for receiving data.'));
+		o = s.option(form.Value, 'hysteria_recv_window_client', _('QUIC stream receive window'),
+			_('The QUIC stream-level flow control window for receiving data.'));
 		o.datatype = 'uinteger';
 		o.default = '15728640';
 		o.depends('type', 'hysteria');

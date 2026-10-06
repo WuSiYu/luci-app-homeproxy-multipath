@@ -18,6 +18,15 @@ different uplink (for example `pppoe-wan` and `pppoe-wan2`); the form warns when
 both legs bind the same interface or neither binds one, because two legs leaving
 through the same line cannot aggregate two lines.
 
+Legs may be subscription nodes: a subscription refresh updates the fields the
+subscription carries and keeps local settings such as the bound interface and the
+Hysteria2 bandwidth. In custom routing mode, the routing node that uses a leg node
+supplies its interface, detour and resolver regardless of the order of routing
+nodes.
+
+The **UDP outbound** leg, and with failover both legs, must use nodes that carry
+UDP; HTTP, SSH, Tor, ShadowTLS and naive without UDP over TCP are rejected.
+
 Set the same **Pre-shared key** on the node and on the server inbound. Every
 handshake is then authenticated with HMAC-SHA256 and checked against replay. The
 key does not encrypt data; the child nodes do.
@@ -54,7 +63,8 @@ Memory sizes accept integer bytes or binary strings such as `2MB` and `64 MB`
 Old flat UCI tuning fields are **ignored, not migrated**; the form lists them and
 the generator warns about them. On upgrade, the migration moves the node's TCP Fast
 Open flag to **Multipath early write**, drops a `queue_frames` equal to the default,
-and lets the untouched example node follow the new activation defaults.
+limits an activation window above 10 seconds to 10 seconds, and lets the untouched
+example node follow the new activation defaults.
 
 ## Server inbound
 
@@ -66,7 +76,9 @@ through it. The firewall option opens the port for TCP and UDP.
 
 ## Multipath status
 
-The status page refreshes every second. A topology diagram links the aggregate
+The status page refreshes every second. Each multipath node writes its status to
+`/var/run/homeproxy/multipath-status/`, which is mounted writable when sing-box
+runs in ujail. A topology diagram links the aggregate
 node to leg0 and leg1 with separate upload and download arrows. Each leg includes
 cumulative traffic, peak speeds, the ten fastest TCP flows and, when selected or
 used by failover, UDP counters.

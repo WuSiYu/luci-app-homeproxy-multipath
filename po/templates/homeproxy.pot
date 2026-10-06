@@ -87,6 +87,10 @@ msgstr ""
 msgid "Activation after bytes"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js:742
+msgid "Failover requires both legs to support UDP."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:584
 msgid "Minimum rate after bytes"
 msgstr ""
@@ -773,6 +777,10 @@ msgstr ""
 msgid ""
 "Do not activate the secondary leg before this many bytes have been sent. Accepts "
 "a memory size such as <code>2MB</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js:607
+msgid "This leg's node does not support UDP."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:585

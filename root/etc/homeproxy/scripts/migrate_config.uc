@@ -93,6 +93,10 @@ if (default_dns_server === 'block-dns') {
 	uci.set(uciconfig, '_migration_dns_final_block', 'mode', 'default');
 	uci.set(uciconfig, '_migration_dns_final_block', 'action', 'reject');
 	uci.set(uciconfig, ucidns, 'default_server', 'default-dns');
+} else if (!isEmpty(default_dns_server) && !(default_dns_server in ['default-dns', 'system-dns']) &&
+           uci.get(uciconfig, default_dns_server) !== ucidnsserver) {
+	/* the old default 'local-dns' names no DNS server */
+	uci.set(uciconfig, ucidns, 'default_server', 'default-dns');
 }
 
 const dns_server_migration = {};
@@ -268,6 +272,15 @@ uci.foreach(uciconfig, ucinode, (cfg) => {
 		/* queue_frames is now a ceiling whose default is 256 */
 		if (cfg[prefix + 'queue_frames'] === '256')
 			uci.delete(uciconfig, cfg['.name'], prefix + 'queue_frames');
+		/* activation_window was whole seconds without a limit; it is now a
+		 * duration from 20ms to 10s, and 0 still means the default */
+		const window = cfg[prefix + 'activation_window'];
+		if (match(window, /^\d+$/)) {
+			if (int(window) === 0)
+				uci.delete(uciconfig, cfg['.name'], prefix + 'activation_window');
+			else if (int(window) > 10)
+				uci.set(uciconfig, cfg['.name'], prefix + 'activation_window', '10');
+		}
 		/* untouched values from the old example follow the new defaults */
 		if (cfg['.name'] === 'multipath_example') {
 			if (cfg[prefix + 'activation_threshold_mbps'] === '120')

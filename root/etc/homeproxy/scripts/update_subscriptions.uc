@@ -83,6 +83,28 @@ function service_action(action) {
 	return system([ '/etc/init.d/homeproxy', action ]);
 }
 
+/* Options a subscription URI can set. Any other option of a subscription
+ * node is a local setting and survives a refresh. */
+const subscription_options = [
+	'address', 'grouphash', 'grpc_servicename', 'http_host', 'http_path',
+	'httpupgrade_host', 'hysteria_auth_payload', 'hysteria_auth_type',
+	'hysteria_obfs_password', 'hysteria_obfs_type', 'hysteria_protocol',
+	'label', 'packet_encoding', 'password', 'port', 'shadowsocks_encrypt_method',
+	'shadowsocks_plugin', 'shadowsocks_plugin_opts', 'socks_version', 'tls',
+	'tls_alpn', 'tls_insecure', 'tls_reality', 'tls_reality_public_key',
+	'tls_reality_short_id', 'tls_sni', 'tls_utls', 'transport',
+	'tuic_congestion_control', 'tuic_udp_relay_mode', 'type', 'username', 'uuid',
+	'vless_flow', 'vmess_alterid', 'vmess_encrypt', 'vmess_global_padding',
+	'websocket_early_data', 'websocket_early_data_header', 'ws_host', 'ws_path'
+];
+
+function subscription_option(node, option) {
+	/* Only Hysteria (v1) URIs carry bandwidth; Hysteria2 bandwidth is local. */
+	if (option in ['hysteria_up_mbps', 'hysteria_down_mbps'])
+		return node.type === 'hysteria';
+	return option in subscription_options;
+}
+
 function parse_uri(uri) {
 	let config, url, params;
 
@@ -572,13 +594,16 @@ function main() {
 
 			log(sprintf('Removing node: %s.', cfg.label || cfg['name']));
 		} else {
-			map(keys(cfg), (v) => {
-				if (v in node_cache[cfg.grouphash][cfg['.name']])
-					uci.set(uciconfig, cfg['.name'], v, node_cache[cfg.grouphash][cfg['.name']][v]);
-				else
-					uci.delete(uciconfig, cfg['.name'], v);
-			});
-			node_cache[cfg.grouphash][cfg['.name']].isExisting = true;
+			const node = node_cache[cfg.grouphash][cfg['.name']];
+			for (let option in keys(node))
+				if (node[option] != null && option !== 'isExisting')
+					uci.set(uciconfig, cfg['.name'], option, node[option]);
+			/* Options the subscription no longer carries are removed; local
+			 * settings, such as the WAN binding of a multipath leg, stay. */
+			for (let option in keys(cfg))
+				if (node[option] == null && subscription_option(node, option))
+					uci.delete(uciconfig, cfg['.name'], option);
+			node.isExisting = true;
 		}
 	});
 	for (let nodes in node_result)

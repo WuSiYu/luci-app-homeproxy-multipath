@@ -18,6 +18,55 @@ function hasKernelModule(kmod) {
 	return (system(sprintf('[ -e "/lib/modules/$(uname -r)"/%s ]', shellquote(kmod))) === 0);
 }
 
+/* Kanged from luci-app-commands */
+function isBinary(str) {
+	for (let off = 0, byte = ord(str); off < length(str); byte = ord(str, ++off))
+		if (byte <= 8 || (byte >= 14 && byte <= 31))
+			return true;
+
+	return false;
+}
+
+/*
+ * PEM blocks of the accepted types, as sing-box's TLS loader reads them:
+ * certificate files may hold a chain; key files hold one unencrypted
+ * PKCS#1, SEC 1 or PKCS#8 key, optionally after EC parameters.
+ */
+function validPEM(content, priv) {
+	const types = priv ? [ 'RSA PRIVATE KEY', 'EC PRIVATE KEY', 'PRIVATE KEY' ] : [ 'CERTIFICATE' ],
+	      ignored = priv ? [ 'EC PARAMETERS' ] : [];
+	let label = null, body = 0, blocks = 0;
+
+	for (let line in split(trim(content), /\r?\n/)) {
+		line = trim(line);
+		if (label === null) {
+			if (line === '')
+				continue;
+
+			const begin = match(line, /^-----BEGIN ([A-Z0-9 ]+)-----$/);
+			if (!begin || !(begin[1] in types || begin[1] in ignored))
+				return false;
+
+			label = begin[1];
+			body = 0;
+		} else if (line === '') {
+			continue;
+		} else if (line === `-----END ${label}-----`) {
+			if (body === 0)
+				return false;
+			if (label in types)
+				blocks++;
+			label = null;
+		} else if (length(line) > 76 || b64dec(line) === null) {
+			return false;
+		} else {
+			body++;
+		}
+	}
+
+	return label === null && (priv ? blocks === 1 : blocks >= 1);
+}
+
 const HP_DIR = '/etc/homeproxy';
 const RUN_DIR = '/var/run/homeproxy';
 
@@ -69,25 +118,12 @@ const methods = {
 				}
 
 				let filecontent = readfile(tmpcert);
-				if (is_binary(filecontent)) {
+				if (isBinary(filecontent)) {
 					system(`rm -f ${tmpcert}`);
 					return { result: false, error: 'illegal file type: binary' };
 				}
 
-				/* Kanged from luci-proto-openconnect */
-				const beg = priv ? /^-----BEGIN (RSA|EC) PRIVATE KEY-----$/ : /^-----BEGIN CERTIFICATE-----$/,
-				      end = priv ? /^-----END (RSA|EC) PRIVATE KEY-----$/ : /^-----END CERTIFICATE-----$/,
-				      lines = split(trim(filecontent), /[\r\n]/);
-				let start = false, i;
-
-				for (i = 0; i < length(lines); i++) {
-					if (match(lines[i], beg))
-						start = true;
-					else if (start && !b64dec(lines[i]) && length(lines[i]) !== 64)
-						break;
-				}
-
-				if (!start || i < length(lines) - 1 || !match(lines[i], end)) {
+				if (!validPEM(filecontent, priv)) {
 					system(`rm -f ${tmpcert}`);
 					return { result: false, error: 'this does not look like a correct PEM file' };
 				}
@@ -95,7 +131,7 @@ const methods = {
 				/* Sanitize certificate */
 				filecontent = trim(filecontent);
 				filecontent = replace(filecontent, /\r\n?/g, '\n');
-				if (!match(filecontent, /\n$/))
+				if (substr(filecontent, -1) !== '\n')
 					filecontent += '\n';
 
 				system(`mkdir -p ${HP_DIR}/certs`);

@@ -156,6 +156,8 @@ start_service() {
 			procd_add_jail "sing-box-c" log procfs
 			procd_add_jail_mount "$RUN_DIR/sing-box-c.json"
 			procd_add_jail_mount_rw "$RUN_DIR/sing-box-c.log"
+			# Multipath nodes write status files here for the status page
+			procd_add_jail_mount_rw "$RUN_DIR/multipath-status/"
 			[ "$routing_mode" != "bypass_mainland_china" ] || procd_add_jail_mount_rw "$RUN_DIR/cache.db"
 			procd_add_jail_mount "$HP_DIR/certs/"
 			procd_add_jail_mount "/etc/ssl/"
@@ -236,7 +238,10 @@ start_service() {
 		;;
 	esac
 
-	[ "$outbound_node" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"
+	[ "$outbound_node" = "nil" ] || {
+		echo > "$RUN_DIR/sing-box-c.log"
+		mkdir -p "$RUN_DIR/multipath-status"
+	}
 	if [ "$server_enabled" = "1" ]; then
 		echo > "$RUN_DIR/sing-box-s.log"
 		mkdir -p "$HP_DIR/certs"
@@ -310,6 +315,7 @@ stop_service() {
 
 	rm -f "$RUN_DIR/sing-box-c.json" "$RUN_DIR/sing-box-c.log" \
 		"$RUN_DIR/sing-box-s.json" "$RUN_DIR/sing-box-s.log"
+	rm -rf "$RUN_DIR/multipath-status"
 
 	log "Service stopped."
 }

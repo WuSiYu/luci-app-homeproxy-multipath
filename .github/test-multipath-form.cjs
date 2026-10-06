@@ -74,4 +74,17 @@ for (const direction of ['upload', 'download']) {
   assert.equal(fields.get(prefix + 'queue_frames').default, undefined);
   assert.equal(fields.get(prefix + 'activation_window').default, undefined);
 }
-console.log('PASS: beta10 directional OR controls, durations, psk, early write, hidden-value retention, byte sizes, removed legacy controls');
+// UDP may only use a leg whose node carries UDP; failover needs both legs.
+const nodes = { direct: { type: 'direct' }, hy2: { type: 'hysteria2' }, http: { type: 'http' }, ssh: { type: 'ssh' },
+  naive: { type: 'naive' }, naive_uot: { type: 'naive', udp_over_tcp: '1' } };
+sandbox.uci.get = (config, section, option) => nodes[section]?.[option];
+const form = (preferred, secondary) => ({ section: { formvalue: (_, key) => ({ multipath_preferred: preferred, multipath_secondary: secondary })[key] } });
+const udpOutbound = fields.get('multipath_udp_outbound').validate, failover = fields.get('multipath_failover_enabled').validate;
+assert.equal(udpOutbound.call(form('direct', 'http'), 'test', 'preferred'), true);
+assert.notEqual(udpOutbound.call(form('direct', 'http'), 'test', 'secondary'), true);
+assert.notEqual(udpOutbound.call(form('naive', 'hy2'), 'test', 'preferred'), true);
+assert.equal(udpOutbound.call(form('naive_uot', 'hy2'), 'test', 'preferred'), true);
+assert.equal(failover.call(form('direct', 'ssh'), 'test', '0'), true);
+assert.notEqual(failover.call(form('direct', 'ssh'), 'test', '1'), true);
+assert.equal(failover.call(form('direct', 'hy2'), 'test', '1'), true);
+console.log('PASS: beta10 directional OR controls, durations, psk, early write, hidden-value retention, byte sizes, removed legacy controls, UDP-capable legs');

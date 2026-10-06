@@ -96,6 +96,10 @@ msgstr "首选链路速率达到此值时启用辅助链路，单位为 Mbps。"
 msgid "Activation after bytes"
 msgstr "启用前字节数"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js:742
+msgid "Failover requires both legs to support UDP."
+msgstr "故障接管要求两条 leg 都支持 UDP。"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:584
 msgid "Minimum rate after bytes"
 msgstr "字节阈值后的最低速率"
@@ -787,6 +791,10 @@ msgid ""
 "Do not activate the secondary leg before this many bytes have been sent. Accepts "
 "a memory size such as <code>2MB</code>."
 msgstr "发送数据量达到此值前不启用辅助链路。接受 <code>2MB</code> 等内存大小格式。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js:607
+msgid "This leg's node does not support UDP."
+msgstr "该 leg 的节点不支持 UDP。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:585
 msgid "When set, activation_after_bytes also requires this recent rate, in Mbps."

@@ -392,6 +392,16 @@ function multipath_direction(node, direction) {
 	};
 }
 
+/* Outbound types that carry TCP only; naive carries UDP over TCP only. */
+function node_supports_udp(name) {
+	const node = uci.get_all(uciconfig, name) || {};
+	if (node.type in ['http', 'shadowtls', 'ssh', 'tor'])
+		return false;
+	if (node.type === 'naive')
+		return node.udp_over_tcp === '1';
+	return true;
+}
+
 function generate_multipath_outbound(node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
@@ -403,6 +413,13 @@ function generate_multipath_outbound(node) {
 		die(sprintf("%s has invalid multipath legs, please check your configuration.", node['.name']));
 	if (isEmpty(node.multipath_server) || isEmpty(node.multipath_server_port))
 		die(sprintf("%s has no multipath aggregation server, please check your configuration.", node['.name']));
+
+	/* sing-box checks this only when it starts, after DNS is redirected */
+	const udp_leg = (node.multipath_udp_outbound === 'secondary') ? secondary : preferred;
+	for (let leg in ((node.multipath_failover_enabled === '1') ? [preferred, secondary] : [udp_leg]))
+		if (!node_supports_udp(leg))
+			die(sprintf("%s: multipath leg %s does not support UDP, which %s requires.", node['.name'], leg,
+				(node.multipath_failover_enabled === '1') ? 'failover' : 'the UDP outbound'));
 
 	const preferred_tag = 'cfg-' + preferred + '-out',
 	      secondary_tag = 'cfg-' + secondary + '-out';
@@ -489,9 +506,16 @@ function get_ruleset(cfg) {
 
 let generated_node_tags = {}, generating_nodes = {};
 
+/* Dial options of the routing node that uses each node. A node is generated
+ * once, possibly first as a member of a multipath node or URLTest group, so
+ * its options must not depend on which of them is generated first. */
+let routing_dial_options = {};
+
 function add_node(node_name, tag, dial_options) {
 	if (isEmpty(node_name))
 		return null;
+	if (!dial_options)
+		dial_options = routing_dial_options[node_name];
 
 	const outbound_tag = tag || ('cfg-' + node_name + '-out');
 	if (generated_node_tags[outbound_tag])
@@ -872,6 +896,10 @@ if (!isEmpty(main_node)) {
 	} else if (dedicated_udp_node)
 		add_node(main_udp_node, 'main-udp-out');
 } else if (!isEmpty(default_outbound)) {
+	uci.foreach(uciconfig, uciroutingnode, (cfg) => {
+		if (cfg.enabled === '1' && cfg.node !== 'urltest' && !routing_dial_options[cfg.node])
+			routing_dial_options[cfg.node] = cfg;
+	});
 	uci.foreach(uciconfig, uciroutingnode, (cfg) => {
 		if (cfg.enabled !== '1')
 			return;

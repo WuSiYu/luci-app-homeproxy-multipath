@@ -411,6 +411,15 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 		return true;
 	};
+	/* Outbound types that carry TCP only; naive carries UDP over TCP only. */
+	const nodeSupportsUDP = function(name) {
+		const type = uci.get(data[0], name, 'type');
+		if (['http', 'shadowtls', 'ssh', 'tor'].includes(type))
+			return false;
+		if (type === 'naive')
+			return uci.get(data[0], name, 'udp_over_tcp') === '1';
+		return true;
+	};
 	const validateMemorySize = function(section_id, value) {
 		if (section_id && value && !/^\d+\s*(?:[kmgtpe]b?|b)?$/i.test(value.trim()))
 			return _('Expecting: %s').format(_('valid memory size'));
@@ -592,6 +601,13 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.value('preferred', _('Preferred leg'));
 	o.value('secondary', _('Secondary leg'));
 	o.default = 'preferred';
+	o.validate = function(section_id, value) {
+		const leg = this.section.formvalue(section_id, (value === 'secondary') ? 'multipath_secondary' : 'multipath_preferred');
+		if (leg && !nodeSupportsUDP(leg))
+			return _('This leg\'s node does not support UDP.');
+
+		return true;
+	};
 	o.depends('type', 'multipath');
 	o.rmempty = false;
 	o.modalonly = true;
@@ -716,6 +732,18 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 		_('Client-only, disabled by default. TCP sessions already survive the loss of either leg without it; failover adds shared health checks, path selection for new sessions, a UDP relay that keeps the server UDP socket across path switches, and session retention across long outages. Allow both TCP and UDP on the server port; both child nodes must support UDP. UDP is not aggregated.'));
 	o.default = o.disabled;
 	o.rmempty = false;
+	o.validate = function(section_id, value) {
+		if (value !== '1')
+			return true;
+
+		for (const option of ['multipath_preferred', 'multipath_secondary']) {
+			const leg = this.section.formvalue(section_id, option);
+			if (leg && !nodeSupportsUDP(leg))
+				return _('Failover requires both legs to support UDP.');
+		}
+
+		return true;
+	};
 	o.depends('type', 'multipath');
 	o.modalonly = true;
 
