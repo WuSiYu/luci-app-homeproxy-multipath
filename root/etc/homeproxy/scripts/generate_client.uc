@@ -27,12 +27,13 @@ function strToMemoryBytes(value) {
 	return match(value, /^\d+$/) ? int(value) : value;
 }
 
-/* Multipath durations accept 500ms, 2s, 1m or 1h; a bare number is seconds. */
+/* Multipath durations accept 500ms, 2s, 1m or 1h; a bare number is seconds.
+ * Values saved by older forms may use capitals or spaces, which Go rejects. */
 function strToDuration(value) {
 	if (isEmpty(value))
 		return null;
 
-	value = trim(value);
+	value = lc(replace(value, /\s+/g, ''));
 	return match(value, /^\d+$/) ? (value + 's') : value;
 }
 
@@ -392,12 +393,13 @@ function multipath_direction(node, direction) {
 	};
 }
 
-/* Outbound types that carry TCP only; naive carries UDP over TCP only. */
+/* Outbound types that carry TCP only; naive and SOCKS4/4a carry UDP only
+ * over TCP. */
 function node_supports_udp(name) {
 	const node = uci.get_all(uciconfig, name) || {};
 	if (node.type in ['http', 'shadowtls', 'ssh', 'tor'])
 		return false;
-	if (node.type === 'naive')
+	if (node.type === 'naive' || (node.type === 'socks' && node.socks_version in ['4', '4a']))
 		return node.udp_over_tcp === '1';
 	return true;
 }

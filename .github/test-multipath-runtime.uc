@@ -33,10 +33,22 @@ print('PASS: real ucode RPC: schema 5, old-schema diagnostic, malformed/oversize
 /* Migration from beta9: early-write flag, default-valued ceiling, untouched example values. */
 writefile('/etc/config/homeproxy', readfile('/src/root/etc/config/homeproxy'));
 let migration = cursor();
-migration.set('homeproxy', 'multipath_example', 'tcp_fast_open', '1');
-migration.set('homeproxy', 'multipath_example', 'multipath_download_queue_frames', '256');
-migration.set('homeproxy', 'multipath_example', 'multipath_download_activation_threshold_mbps', '120');
-migration.set('homeproxy', 'multipath_example', 'multipath_download_activation_window', '1');
+// The example node exactly as shipped before beta10.
+const shipped_example = {
+	label: 'Multipath (example)', type: 'multipath', multipath_preferred: 'multipath_leg0_example',
+	multipath_secondary: 'multipath_leg1_example', multipath_udp_outbound: 'preferred', multipath_server: '10.66.67.1',
+	multipath_server_port: '39000', multipath_upload_aggregation_enabled: '0', multipath_download_aggregation_enabled: '1',
+	multipath_download_leg0_traffic_saving: '0', multipath_failover_enabled: '0', multipath_failover_timeout: '5',
+	multipath_failback_delay: '30', multipath_download_activation_on_queue: '1', multipath_download_activation_threshold_mbps: '120',
+	multipath_download_activation_window: '1', multipath_frame_size: '64KB', multipath_download_queue_frames: '256', tcp_fast_open: '1'
+};
+function set_example(name, overrides) {
+	migration.delete('homeproxy', name);
+	migration.set('homeproxy', name, 'node');
+	for (let key in shipped_example)
+		migration.set('homeproxy', name, key, (key in overrides) ? overrides[key] : shipped_example[key]);
+}
+set_example('multipath_example', {});
 migration.set('homeproxy', 'mine', 'node');
 migration.set('homeproxy', 'mine', 'type', 'multipath');
 migration.set('homeproxy', 'mine', 'multipath_upload_queue_frames', '512');
@@ -50,7 +62,16 @@ for (let key in ['queue_frames', 'activation_threshold_mbps', 'activation_window
 	check(migration.get('homeproxy', 'multipath_example', 'multipath_download_' + key) == null, 'Example default not cleared: ' + key);
 check(migration.get('homeproxy', 'mine', 'multipath_upload_queue_frames') === '512', 'Custom ceiling must stay');
 check(migration.get('homeproxy', 'mine', 'multipath_upload_activation_threshold_mbps') === '120' && migration.get('homeproxy', 'mine', 'multipath_upload_activation_window') === '1', 'User activation settings must stay');
-print('PASS: beta10 migration keeps user settings and clears untouched example defaults\n');
+
+/* An edited example keeps its values: they may be the user's own. */
+writefile('/etc/config/homeproxy', readfile('/src/root/etc/config/homeproxy'));
+migration = cursor();
+set_example('multipath_example', { label: 'My aggregate', multipath_secondary: 'other_leg' });
+migration.commit('homeproxy');
+check(system('ucode -L /src/root/etc/homeproxy/scripts /src/root/etc/homeproxy/scripts/migrate_config.uc') === 0, 'Migration failed');
+migration = cursor();
+check(migration.get('homeproxy', 'multipath_example', 'multipath_download_activation_threshold_mbps') === '120' && migration.get('homeproxy', 'multipath_example', 'multipath_download_activation_window') === '1', 'Edited example lost its activation settings');
+print('PASS: beta10 migration keeps user settings and clears only the untouched shipped example\n');
 
 writefile('/etc/config/homeproxy', readfile('/src/root/etc/config/homeproxy'));
 const uci = cursor();
@@ -307,3 +328,43 @@ print('PASS: Hysteria server receive windows reach the configuration\n');
 const init = readfile('/src/root/etc/init.d/homeproxy');
 check(index(init, 'mkdir -p "$RUN_DIR/multipath-status"') >= 0 && index(init, 'procd_add_jail_mount_rw "$RUN_DIR/multipath-status/"') >= 0, 'Status directory not prepared for ujail');
 print('PASS: init script creates and mounts the multipath status directory for ujail\n');
+
+/* Server allowed_ips: single addresses become single-host prefixes */
+writefile('/etc/config/homeproxy', readfile('/src/root/etc/config/homeproxy'));
+const sources = cursor();
+sources.set('homeproxy', 'server', 'enabled', '1');
+sources.set('homeproxy', 'mp_src', 'server');
+for (let option in { enabled: '1', type: 'multipath', port: '39002', multipath_psk: 'secret' })
+	sources.set('homeproxy', 'mp_src', option, { enabled: '1', type: 'multipath', port: '39002', multipath_psk: 'secret' }[option]);
+sources.set('homeproxy', 'mp_src', 'multipath_allowed_ips', ['192.0.2.1', '2001:db8::1', '198.51.100.0/24']);
+sources.commit('homeproxy');
+check(system('ucode -L /src/root/etc/homeproxy/scripts /src/root/etc/homeproxy/scripts/generate_server.uc') === 0, 'Server generator failed');
+const allowed = filter(json(readfile('/var/run/homeproxy/sing-box-s.json')).inbounds, (node) => node.type === 'multipath')[0].allowed_ips;
+check(join(',', allowed) === '192.0.2.1/32,2001:db8::1/128,198.51.100.0/24', 'Allowed sources not normalized: ' + join(',', allowed));
+writefile('/tmp/homeproxy-beta10-allowed.json', readfile('/var/run/homeproxy/sing-box-s.json'));
+print('PASS: server allowed_ips turns single addresses into /32 and /128 prefixes\n');
+
+/* Client durations saved with capitals or spaces are emitted as Go parses them;
+ * SOCKS4 legs carry UDP only over TCP */
+writefile('/etc/config/homeproxy', readfile('/src/root/etc/config/homeproxy'));
+const client = cursor();
+client.set('homeproxy', 'config', 'main_node', 'multipath_example');
+client.set('homeproxy', 'config', 'routing_mode', 'global');
+client.set('homeproxy', 'multipath_example', 'multipath_download_activation_window', '500 MS');
+client.set('homeproxy', 'multipath_example', 'multipath_handshake_timeout', ' 15S ');
+client.commit('homeproxy');
+check(system('ucode -L /src/root/etc/homeproxy/scripts /src/root/etc/homeproxy/scripts/generate_client.uc') === 0, 'Generator failed');
+const generated = filter(json(readfile('/var/run/homeproxy/sing-box-c.json')).outbounds, (node) => node.type === 'multipath')[0];
+check(generated.download.activation_window === '500ms' && generated.handshake_timeout === '15s', 'Durations not normalized');
+writefile('/tmp/homeproxy-beta10-durations.json', readfile('/var/run/homeproxy/sing-box-c.json'));
+client.set('homeproxy', 'multipath_leg1_example', 'type', 'socks');
+client.set('homeproxy', 'multipath_leg1_example', 'address', '192.0.2.10');
+client.set('homeproxy', 'multipath_leg1_example', 'port', '1080');
+client.set('homeproxy', 'multipath_leg1_example', 'socks_version', '4a');
+client.set('homeproxy', 'multipath_example', 'multipath_udp_outbound', 'secondary');
+client.commit('homeproxy');
+check(system('ucode -L /src/root/etc/homeproxy/scripts /src/root/etc/homeproxy/scripts/generate_client.uc 2>/dev/null') !== 0, 'SOCKS4a leg accepted for UDP');
+client.set('homeproxy', 'multipath_leg1_example', 'udp_over_tcp', '1');
+client.commit('homeproxy');
+check(system('ucode -L /src/root/etc/homeproxy/scripts /src/root/etc/homeproxy/scripts/generate_client.uc') === 0, 'SOCKS4a leg with UDP over TCP rejected');
+print('PASS: stored durations normalized for Go; SOCKS4/4a legs carry UDP only over TCP\n');

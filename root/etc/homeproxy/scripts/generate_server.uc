@@ -87,7 +87,8 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 
 		/* Multipath */
 		psk: (cfg.type === 'multipath') ? cfg.multipath_psk : null,
-		allowed_ips: (cfg.type === 'multipath') ? cfg.multipath_allowed_ips : null,
+		allowed_ips: (cfg.type === 'multipath') ? map(cfg.multipath_allowed_ips || [], (ip) =>
+			(index(ip, '/') >= 0) ? ip : (ip + ((index(ip, ':') >= 0) ? '/128' : '/32'))) : null,
 		memory_limit: (cfg.type === 'multipath') ? strToMemoryBytes(cfg.multipath_memory_limit) : null,
 		handshake_timeout: (cfg.type === 'multipath') ? strToTime(cfg.multipath_handshake_timeout) : null,
 

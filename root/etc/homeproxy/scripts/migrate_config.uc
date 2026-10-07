@@ -256,9 +256,48 @@ uci.foreach(uciconfig, uciroutingrule, (cfg) => {
 });
 
 /* multipath beta10 */
+/* The multipath example node exactly as shipped before beta10 */
+const shipped_multipath_example = {
+	label: 'Multipath (example)',
+	type: 'multipath',
+	multipath_preferred: 'multipath_leg0_example',
+	multipath_secondary: 'multipath_leg1_example',
+	multipath_udp_outbound: 'preferred',
+	multipath_server: '10.66.67.1',
+	multipath_server_port: '39000',
+	multipath_upload_aggregation_enabled: '0',
+	multipath_download_aggregation_enabled: '1',
+	multipath_download_leg0_traffic_saving: '0',
+	multipath_failover_enabled: '0',
+	multipath_failover_timeout: '5',
+	multipath_failback_delay: '30',
+	multipath_download_activation_on_queue: '1',
+	multipath_download_activation_threshold_mbps: '120',
+	multipath_download_activation_window: '1',
+	multipath_frame_size: '64KB',
+	multipath_download_queue_frames: '256',
+	tcp_fast_open: '1'
+};
+
+function is_shipped_multipath_example(cfg) {
+	if (cfg['.name'] !== 'multipath_example')
+		return false;
+	for (let key in keys(cfg))
+		if (substr(key, 0, 1) !== '.' && cfg[key] !== shipped_multipath_example[key])
+			return false;
+	for (let key in keys(shipped_multipath_example))
+		if (cfg[key] !== shipped_multipath_example[key])
+			return false;
+	return true;
+}
+
 uci.foreach(uciconfig, ucinode, (cfg) => {
 	if (cfg.type !== 'multipath')
 		return;
+
+	/* Only an unmodified example follows the new activation defaults; any
+	 * edit means its values may be the user's own. */
+	const shipped_example = is_shipped_multipath_example(cfg);
 
 	/* multipath early write now has its own switch and defaults to enabled */
 	if (!isEmpty(cfg.tcp_fast_open)) {
@@ -282,7 +321,7 @@ uci.foreach(uciconfig, ucinode, (cfg) => {
 				uci.set(uciconfig, cfg['.name'], prefix + 'activation_window', '10');
 		}
 		/* untouched values from the old example follow the new defaults */
-		if (cfg['.name'] === 'multipath_example') {
+		if (shipped_example) {
 			if (cfg[prefix + 'activation_threshold_mbps'] === '120')
 				uci.delete(uciconfig, cfg['.name'], prefix + 'activation_threshold_mbps');
 			if (cfg[prefix + 'activation_window'] === '1')

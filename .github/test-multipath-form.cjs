@@ -61,7 +61,7 @@ const durations = {
   multipath_handshake_timeout: [['10s', '1', '60', '1000ms'], ['500ms', '61s', '2m', 'abc', '1.5s', '-1']],
   multipath_failover_timeout: [['5', '5s', '1s', '5m', '300s'], ['999ms', '301s', '6m']],
   multipath_failback_delay: [['30', '1s', '1h', '3600s'], ['0', '3601s', '2h']],
-  multipath_upload_activation_window: [['200ms', '20ms', '1', '10s'], ['19ms', '11s', '0', '1m']],
+  multipath_upload_activation_window: [['200ms', '20ms', '1', '10s', ' 500ms '], ['19ms', '11s', '0', '1m', '500MS', '500 ms', '2S']],
   multipath_download_path_stall_timeout_min: [['0', '100ms', '2s', '5m'], ['99ms', '6m', '1h']]
 };
 for (const [key, [valid, invalid]] of Object.entries(durations)) {
@@ -76,7 +76,9 @@ for (const direction of ['upload', 'download']) {
 }
 // UDP may only use a leg whose node carries UDP; failover needs both legs.
 const nodes = { direct: { type: 'direct' }, hy2: { type: 'hysteria2' }, http: { type: 'http' }, ssh: { type: 'ssh' },
-  naive: { type: 'naive' }, naive_uot: { type: 'naive', udp_over_tcp: '1' } };
+  naive: { type: 'naive' }, naive_uot: { type: 'naive', udp_over_tcp: '1' },
+  socks4: { type: 'socks', socks_version: '4' }, socks4a_uot: { type: 'socks', socks_version: '4a', udp_over_tcp: '1' },
+  socks5: { type: 'socks', socks_version: '5' } };
 sandbox.uci.get = (config, section, option) => nodes[section]?.[option];
 const form = (preferred, secondary) => ({ section: { formvalue: (_, key) => ({ multipath_preferred: preferred, multipath_secondary: secondary })[key] } });
 const udpOutbound = fields.get('multipath_udp_outbound').validate, failover = fields.get('multipath_failover_enabled').validate;
@@ -87,4 +89,7 @@ assert.equal(udpOutbound.call(form('naive_uot', 'hy2'), 'test', 'preferred'), tr
 assert.equal(failover.call(form('direct', 'ssh'), 'test', '0'), true);
 assert.notEqual(failover.call(form('direct', 'ssh'), 'test', '1'), true);
 assert.equal(failover.call(form('direct', 'hy2'), 'test', '1'), true);
+assert.notEqual(udpOutbound.call(form('socks4', 'hy2'), 'test', 'preferred'), true);
+assert.equal(udpOutbound.call(form('socks4a_uot', 'hy2'), 'test', 'preferred'), true);
+assert.equal(udpOutbound.call(form('socks5', 'hy2'), 'test', 'preferred'), true);
 console.log('PASS: beta10 directional OR controls, durations, psk, early write, hidden-value retention, byte sizes, removed legacy controls, UDP-capable legs');

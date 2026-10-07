@@ -411,12 +411,13 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 		return true;
 	};
-	/* Outbound types that carry TCP only; naive carries UDP over TCP only. */
+	/* Outbound types that carry TCP only; naive and SOCKS4/4a carry UDP only
+	 * over TCP. */
 	const nodeSupportsUDP = function(name) {
 		const type = uci.get(data[0], name, 'type');
 		if (['http', 'shadowtls', 'ssh', 'tor'].includes(type))
 			return false;
-		if (type === 'naive')
+		if (type === 'naive' || (type === 'socks' && ['4', '4a'].includes(uci.get(data[0], name, 'socks_version'))))
 			return uci.get(data[0], name, 'udp_over_tcp') === '1';
 		return true;
 	};
@@ -426,12 +427,13 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 		return true;
 	};
-	/* Durations accept 500ms, 2s, 1m or 1h; a bare number means seconds. */
+	/* Durations accept 500ms, 2s, 1m or 1h; a bare number means seconds. Units
+	 * are lowercase and follow the number directly, as Go parses them. */
 	const durationMilliseconds = function(value) {
-		const match = /^(\d+)\s*(ms|s|m|h)?$/i.exec(String(value).trim());
+		const match = /^(\d+)(ms|s|m|h)?$/.exec(String(value).trim());
 		if (!match)
 			return null;
-		const scale = { ms: 1, s: 1000, m: 60000, h: 3600000 }[(match[2] || 's').toLowerCase()];
+		const scale = { ms: 1, s: 1000, m: 60000, h: 3600000 }[match[2] || 's'];
 		return Number(match[1]) * scale;
 	};
 	const validateDuration = function(minimum, maximum, allowZero) {
